@@ -13,6 +13,9 @@ import {
   signInWithRedirect,
   getRedirectResult,
   sendPasswordResetEmail,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { storeToRefs } from "pinia";
@@ -36,9 +39,6 @@ export const useAuth = () => {
         password
       );
 
-      const token = await userCred.user.getIdToken();
-      localStorage.setItem("token", token);
-
       const data = await createUser(userCred.user.uid, email, fullname, false);
 
       if (data.success) {
@@ -46,7 +46,6 @@ export const useAuth = () => {
         router.push({ name: "VerifyEmail" });
       } else {
         toast.error("Đăng ký thất bại!. Vui lòng thử lại sau.");
-        localStorage.removeItem("token");
       }
     } catch (error: any) {
       switch (error.code) {
@@ -70,16 +69,12 @@ export const useAuth = () => {
       if (!userCred.user.emailVerified) {
         router.push({ name: "VerifyEmail" });
       } else {
-        const token = await userCred.user.getIdToken();
-        localStorage.setItem("token", token);
-
         const data = await getUser();
         if (data.success) {
           setUser(data.result!.user);
           router.push({ name: "Home" });
         } else {
           toast.error("Đăng nhập thất bại!. Vui lòng thử lại sau.");
-          localStorage.removeItem("token");
         }
       }
     } catch (error: any) {
@@ -102,9 +97,6 @@ export const useAuth = () => {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      const token = await user.getIdToken();
-      localStorage.setItem("token", token);
-
       const data = await createUser(
         user.uid,
         user.email!,
@@ -118,7 +110,6 @@ export const useAuth = () => {
         router.push({ name: "Home" });
       } else {
         toast.error("Đăng nhập thất bại!. Vui lòng thử lại sau.");
-        localStorage.removeItem("token");
       }
     } catch (error) {
       console.log(error);
@@ -141,9 +132,6 @@ export const useAuth = () => {
       console.log(user);
 
       if (user) {
-        const token = await user.getIdToken();
-        localStorage.setItem("token", token);
-
         const data = await createUser(
           user.uid,
           user.email!,
@@ -157,7 +145,6 @@ export const useAuth = () => {
           router.push({ name: "Home" });
         } else {
           toast.error("Đăng nhập thất bại!. Vui lòng thử lại sau.");
-          localStorage.removeItem("token");
         }
       }
     } catch (error) {
@@ -186,11 +173,29 @@ export const useAuth = () => {
     await sendPasswordResetEmail(auth, email);
   };
 
-  const changePassword = async () => {};
+  const changePassword = async (oldPassword: string, newPassword: string) => {
+    try {
+      const user = auth.currentUser!;
+      const credential = EmailAuthProvider.credential(user.email!, oldPassword);
+
+      await reauthenticateWithCredential(user, credential);
+
+      await updatePassword(user, newPassword);
+
+      toast.success("Đổi mật khẩu thành công.");
+    } catch (error: any) {
+      console.log(error);
+      if (error.code == AuthErrorCodes.INVALID_LOGIN_CREDENTIALS) {
+        authError.value = "Mật khẩu hiện tại không đúng.";
+      } else if (error.code == AuthErrorCodes.TOO_MANY_ATTEMPTS_TRY_LATER) {
+        authError.value = "Bạn nhập sai quá nhiều lần! Hãy thử lại sau.";
+      }
+      toast.error("Đổi mật khẩu không thành công.");
+    }
+  };
 
   const signOut = async () => {
     await signOutFirebase(auth);
-    localStorage.clear();
     setUser(null);
   };
 

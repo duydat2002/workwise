@@ -14,6 +14,7 @@ const email = ref(user.value?.email || "");
 const fullname = ref(user.value?.fullname || "");
 const avatar = ref(user.value?.avatar || "");
 const inputAvatar = ref<HTMLInputElement>();
+const loadingUpdateInfo = ref(false);
 
 const showButtons = computed(
   () => fullname.value.trim() != user.value?.fullname
@@ -62,6 +63,7 @@ const cancelUpdateInfo = () => {
 };
 
 const updateInfo = async () => {
+  loadingUpdateInfo.value = true;
   const data = await updateUsserInfo(fullname.value);
   if (data.success) {
     user.value!.fullname = fullname.value;
@@ -69,6 +71,7 @@ const updateInfo = async () => {
   } else {
     toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
   }
+  loadingUpdateInfo.value = false;
 };
 </script>
 
@@ -123,7 +126,10 @@ const updateInfo = async () => {
       <UButton variantType="secondary" @click="cancelUpdateInfo"
         ><span>Hủy</span></UButton
       >
-      <UButton variantType="primary" @click="updateInfo"
+      <UButton
+        variantType="primary"
+        @click="updateInfo"
+        :isLoading="loadingUpdateInfo"
         ><span>Lưu</span></UButton
       >
     </div>

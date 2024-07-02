@@ -51,8 +51,6 @@ onAuthStateChanged(auth, async () => {
 
   const { fetchUser } = useUserStore();
   nextTick(async () => {
-    if (!!localStorage.getItem("token")) {
-      await fetchUser();
-    }
+    if (auth.currentUser) await fetchUser();
   });
 });
