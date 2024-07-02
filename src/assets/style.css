@@ -23,6 +23,8 @@
 
   --hover-color: #a6c5e229;
   --modal-color: #ffffff;
+  --tooltip-bg-color: #9fadbc;
+  --tooltip-text-color: #1d2125;
 
   --scrollbar-thumb: #646464;
   --scrollbar-thumb-hover: #818181;
@@ -45,6 +47,8 @@
   --error-color: rgb(237, 73, 86);
   --hover-color: #091e4224;
   --modal-color: #ffffff;
+  --tooltip-bg-color: #44546f;
+  --tooltip-text-color: #ffffff;
 
   --scrollbar-thumb: #b9b9b9;
   --scrollbar-thumb-hover: #b1b1b1;

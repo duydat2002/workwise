@@ -15,10 +15,12 @@ export default {
           primary: "var(--primary-text-color)",
           secondary: "var(--secondary-text-color)",
           subtitle: "var(--subtitle-text-color)",
+          tooltip: "var(--tooltip-text-color)",
         },
         bgColor: {
           primary: "var(--primary-bg-color)",
           secondary: "var(--secondary-bg-color)",
+          tooltip: "var(--tooltip-bg-color)",
         },
         borderColor: {
           DEFAULT: "var(--border-color)",

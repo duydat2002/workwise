@@ -29,7 +29,13 @@
       "@icons/*": ["./src/assets/icons/*"]
     },
     "typeRoots": ["./node_modules/@types/"],
-    "types": ["vite-plugin-pwa/client"]
+    "types": ["vite-plugin-pwa/client", "vue3-toastify/global"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "src/**/*",
+    "./src/**/*"
+  ]
 }
