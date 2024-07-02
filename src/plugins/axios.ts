@@ -8,8 +8,7 @@ const service = axios.create({
 });
 
 service.interceptors.request.use(async (config) => {
-  const user = JSON.parse(localStorage.getItem("user") || "null");
-  const token = user?.token;
+  const token = localStorage.getItem("token");
 
   config.headers.Authorization = `Bearer ${token}`;
 
