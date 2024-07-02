@@ -65,6 +65,7 @@ const updateInfo = async () => {
   const data = await updateUsserInfo(fullname.value);
   if (data.success) {
     user.value!.fullname = fullname.value;
+    toast.success("Cập nhật thông tin thành công.");
   } else {
     toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
   }
