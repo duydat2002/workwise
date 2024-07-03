@@ -93,6 +93,7 @@ const handleGoogleSignin = async () => {
         type="password"
         v-model:propValue="password"
         :errorMessage="passwordError"
+        autocomplete="new-password"
       />
       <UInputFloat
         class="mb-2"

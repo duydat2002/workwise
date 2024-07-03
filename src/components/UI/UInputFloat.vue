@@ -11,6 +11,7 @@ const props = withDefaults(
     name: string;
     minLength?: string | number;
     errorMessage?: string;
+    autocomplete?: string;
   }>(),
   {
     type: "text",
@@ -20,6 +21,7 @@ const props = withDefaults(
 const inputType = ref(props.type);
 const showPassword = ref(false);
 const isFocus = ref(false);
+const inputRef = ref<HTMLInputElement>();
 
 const emit = defineEmits(["update:propValue", "focus", "blur"]);
 
@@ -44,6 +46,8 @@ const blurInput = () => {
   isFocus.value = false;
   if (emit) emit("blur");
 };
+
+defineExpose({ inputRef });
 </script>
 
 <template>
@@ -55,10 +59,12 @@ const blurInput = () => {
       <div class="flex-auto">
         <input
           class="input w-full p-2 text-base leading-5 truncate bg-bgColor-secondary transition-[padding] duration-100 ease-out"
+          ref="inputRef"
           :id="id"
           :type="inputType"
           :name="name"
           :minlength="minLength"
+          :autocomplete="autocomplete"
           v-model="inputValue"
           @focus="focusInput"
           @blur="blurInput"

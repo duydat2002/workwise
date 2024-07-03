@@ -13,6 +13,7 @@ const props = withDefaults(
     name: string;
     errorMessage?: string;
     disabled?: boolean;
+    autocomplete?: string;
   }>(),
   {
     type: "text",
@@ -72,6 +73,7 @@ const togglePasswordVisibility = () => {
           :id="id"
           :type="inputType"
           :name="name"
+          :autocomplete="autocomplete"
           class="w-full h-5 min-w-5 text-textColor-primary"
           :placeholder="placeholder"
           v-model="inputValue"

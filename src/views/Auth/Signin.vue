@@ -3,7 +3,7 @@ import GoogleIcon from "@icons/google.svg";
 import DownloadIcon from "@icons/downloads.svg";
 import UInputFloat from "@/components/UI/UInputFloat.vue";
 import UButton from "@/components/UI/UButton.vue";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useAuth, useInstallApp } from "@/composables";
 import { validateEmail } from "@/helpers";
 
@@ -15,6 +15,7 @@ const password = ref("");
 const isLoadingSignin = ref(false);
 const emailError = ref<string>();
 const passwordError = ref<string>();
+const inputEmail = ref<InstanceType<typeof UInputFloat>>();
 
 const validate = () => {
   emailError.value = undefined;
@@ -43,6 +44,10 @@ const handleSignIn = async () => {
 const handleGoogleSignin = async () => {
   await signInWithGoogle();
 };
+
+onMounted(() => {
+  inputEmail.value?.inputRef?.focus();
+});
 </script>
 
 <template>
@@ -55,12 +60,15 @@ const handleGoogleSignin = async () => {
         <span class="logo-text big">WorkWise</span>
       </div>
       <span class="py-4 text-base font-semibold">Đăng nhập để tiếp tục</span>
+      <!-- <input type="text" autocomplete=""> -->
       <UInputFloat
+        ref="inputEmail"
         class="mb-2"
         name="email"
         placeholder="Nhập email của bạn"
         v-model:propValue="email"
         :errorMessage="emailError"
+        autocomplete="webauthn"
       />
       <UInputFloat
         class="mb-4"
@@ -69,6 +77,7 @@ const handleGoogleSignin = async () => {
         type="password"
         v-model:propValue="password"
         :errorMessage="passwordError"
+        autocomplete="current-password"
       />
       <UButton
         class="w-full"
