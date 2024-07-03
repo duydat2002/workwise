@@ -1,6 +1,9 @@
 import { auth } from "@/plugins/firebase";
 import routes from "./routes.ts";
 import { createRouter, createWebHistory } from "vue-router";
+import { useAuth } from "@/composables/useAuth.ts";
+import { storeToRefs } from "pinia";
+import { useUserStore } from "@/stores/user.ts";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,20 +23,41 @@ const router = createRouter({
   },
 });
 
-const authPath = ["/signin", "/signup"];
+const authPath = ["/signin", "/signup", "/forgot-password"];
+const specialRoutePath = ["/set-password", "/verify-email"];
 
 router.beforeEach(async (to, _) => {
-  if (to.name == "VerifyEmail") {
-    if (!auth.currentUser) return "/signin";
-    if (auth.currentUser.emailVerified) return "/";
-    return;
+  console.log(to.name);
+  const { user } = storeToRefs(useUserStore());
+  const { checkHasEmailAuth } = useAuth();
+
+  const currentUser = auth.currentUser;
+  const hasEmailAuth = checkHasEmailAuth();
+  const hasVerifyEmail = user.value?.emailVerified;
+
+  console.log(!!currentUser, hasEmailAuth, hasVerifyEmail);
+
+  if (currentUser && !hasEmailAuth && to.path != "/set-password") {
+    return "/set-password";
   }
-  if (authPath.includes(to.path) && auth.currentUser?.emailVerified) {
-    return "/";
+
+  if (currentUser && !hasVerifyEmail && to.path != "/verify-email") {
+    return "/verify-email";
   }
-  if (to.meta.requiresAuth && !auth.currentUser?.emailVerified) {
-    return "/signin";
+
+  if (currentUser && hasVerifyEmail) {
+    if (authPath.includes(to.path)) return "/";
+    if (specialRoutePath.includes(to.path) && hasEmailAuth) return "/";
   }
+
+  if (to.meta.requiresAuth) {
+    if (currentUser && !hasEmailAuth && to.path != "/set-password")
+      return "/set-password";
+    if (currentUser && !hasVerifyEmail && to.path != "/verify-email")
+      return "/verify-email";
+    if (!currentUser) return "/signin";
+  }
+
   return;
 });
 

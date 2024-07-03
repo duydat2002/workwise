@@ -15,7 +15,6 @@ const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const isLoadingSignup = ref(false);
-const isLoadingGoogleSignup = ref(false);
 const fullnameError = ref<string>();
 const emailError = ref<string>();
 const passwordError = ref<string>();
@@ -59,9 +58,7 @@ const handleSignUp = async () => {
 };
 
 const handleGoogleSignin = async () => {
-  isLoadingGoogleSignup.value = true;
   await signInWithGoogle();
-  isLoadingGoogleSignup.value = false;
 };
 </script>
 
@@ -99,7 +96,7 @@ const handleGoogleSignin = async () => {
       />
       <UInputFloat
         class="mb-2"
-        name="confirmpassword"
+        name="confirm_password"
         placeholder="Xác nhận mật khẩu"
         type="password"
         v-model:propValue="confirmPassword"
@@ -124,7 +121,6 @@ const handleGoogleSignin = async () => {
         variant="outlined"
         class="w-full"
         @click="handleGoogleSignin"
-        :isLoading="isLoadingGoogleSignup"
         loadingClass="text-textColor-primary"
       >
         <GoogleIcon class="w-4" />

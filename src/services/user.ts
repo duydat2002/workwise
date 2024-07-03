@@ -7,8 +7,26 @@ export async function getUser() {
   return await api.get<any, IServerData<{ user: IUser }>>(prefix + "get");
 }
 
-export async function verifyUserEmail() {
-  return await api.post<any, IServerData>(prefix + "verify-email");
+export async function findUserByUid(uid: string) {
+  return await api.get<any, IServerData<{ user: IUser | null }>>(
+    prefix + "find-by-uid",
+    {
+      params: { uid },
+    }
+  );
+}
+
+export async function findUsersByEmail(email: string) {
+  return await api.get<any, IServerData<{ users: IUser[] }>>(
+    prefix + "find-by-email",
+    {
+      params: { email },
+    }
+  );
+}
+
+export async function verifyUserEmail(uid: string) {
+  return await api.post<any, IServerData>(prefix + "verify-email", { uid });
 }
 
 export async function createUser(
@@ -27,7 +45,7 @@ export async function createUser(
   });
 }
 
-export async function updateUsserInfo(
+export async function updateUserInfo(
   fullname: string,
   emailVerified?: boolean
 ) {

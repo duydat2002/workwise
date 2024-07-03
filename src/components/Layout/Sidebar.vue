@@ -59,7 +59,7 @@ watch(
 
 <template>
   <div
-    class="relative group w-sidebar-normal has-[.narrow]:w-sidebar-narrow border-r border-borderColor bg-bgColor-primary transition-all duration-300 z-30"
+    class="relative group w-sidebar-normal has-[.narrow]:w-sidebar-narrow border-r border-borderColor bg-bgColor-primary transition-all duration-300 z-20"
     :class="{ narrow: narrowSidebar }"
     v-touch:swipe="handleTouchSidebar"
   >
@@ -71,13 +71,9 @@ watch(
     </div>
     <div class="h-full py-3 parent-[.narrow]:opacity-0">
       <div
-        class="w-full h-full flex flex-col items-center pl-4 pr-2 parent-[.narrow]:pr-0 overflow-y-auto scroll-vert none"
+        class="w-full h-full flex flex-col items-center pl-4 pr-2 parent-[.narrow]:pr-0 overflow-y-scroll scroll-vert none"
         :class="{ 'no-scrollbar': narrowSidebar }"
       >
-        <div class="w-full flex items-center pb-4">
-          <img src="@/assets/images/Logo.png" class="w-[40px]" />
-          <span class="logo-text small">WorkWise</span>
-        </div>
         <div class="w-full flex flex-col">
           <RouterLink
             v-for="tab in tabs"

@@ -23,7 +23,13 @@ const hanldeLoad = () => {
       class="w-full h-full rounded-full overflow-hidden"
     >
       <div v-if="loading" class="w-full h-full skeleton"></div>
-      <img v-show="!loading" :src="avatarUrl" alt="" @load="hanldeLoad" />
+      <img
+        class="object-cover"
+        v-show="!loading"
+        :src="avatarUrl"
+        alt=""
+        @load="hanldeLoad"
+      />
     </div>
     <div
       v-else

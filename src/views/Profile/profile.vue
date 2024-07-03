@@ -2,7 +2,7 @@
 import Avatar from "@/components/Common/Avatar.vue";
 import UButton from "@/components/UI/UButton.vue";
 import UInput from "@/components/UI/UInput.vue";
-import { deleteAvatar, updateAvatar, updateUsserInfo } from "@/services/user";
+import { deleteAvatar, updateAvatar, updateUserInfo } from "@/services/user";
 import { useUserStore } from "@/stores";
 import { storeToRefs } from "pinia";
 import { computed, ref } from "vue";
@@ -12,7 +12,6 @@ const { user } = storeToRefs(useUserStore());
 
 const email = ref(user.value?.email || "");
 const fullname = ref(user.value?.fullname || "");
-const avatar = ref(user.value?.avatar || "");
 const inputAvatar = ref<HTMLInputElement>();
 const loadingUpdateInfo = ref(false);
 
@@ -31,8 +30,8 @@ const getInputAvatar = async (event: Event) => {
     toast.error("Ảnh đại diện phải là ảnh!");
     return;
   }
-  if (file.size <= 5 * 1024 * 124) {
-    toast.error("Ảnh đại diện phải có dung lượng tối đa 5MB!");
+  if (file.size > 5 * 1024 * 124) {
+    toast.error("Ảnh đại diện có dung lượng tối đa 5MB!");
     return;
   }
 
@@ -42,7 +41,8 @@ const getInputAvatar = async (event: Event) => {
 
     const data = await updateAvatar(formData);
     if (data.success) {
-      avatar.value = data.result!.avatar;
+      user.value!.avatar = data.result!.avatar;
+      toast.success("Cập nhật ảnh đại diện thành công.");
     } else {
       toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
     }
@@ -52,7 +52,7 @@ const getInputAvatar = async (event: Event) => {
 const handleDeleteAvatar = async () => {
   const data = await deleteAvatar();
   if (data.success) {
-    avatar.value = "";
+    user.value!.avatar = "";
   } else {
     toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
   }
@@ -64,7 +64,7 @@ const cancelUpdateInfo = () => {
 
 const updateInfo = async () => {
   loadingUpdateInfo.value = true;
-  const data = await updateUsserInfo(fullname.value);
+  const data = await updateUserInfo(fullname.value);
   if (data.success) {
     user.value!.fullname = fullname.value;
     toast.success("Cập nhật thông tin thành công.");
@@ -82,7 +82,7 @@ const updateInfo = async () => {
         >Hình đại diện
       </span>
       <div class="flex items-center">
-        <Avatar class="w-[80px] h-[80px]" :avatarUrl="avatar" />
+        <Avatar class="w-[80px] h-[80px]" :avatarUrl="user!.avatar" />
         <input
           class="hidden"
           ref="inputAvatar"

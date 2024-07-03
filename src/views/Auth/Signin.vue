@@ -8,13 +8,11 @@ import { useAuth, useInstallApp } from "@/composables";
 import { validateEmail } from "@/helpers";
 
 const { handleInstallApp } = useInstallApp();
-const { signIn, signInWithGoogleRedirect, signInWithGoogle, authError } =
-  useAuth();
+const { signIn, signInWithGoogle, authError } = useAuth();
 
 const email = ref("");
 const password = ref("");
 const isLoadingSignin = ref(false);
-const isLoadingGoogleSignin = ref(false);
 const emailError = ref<string>();
 const passwordError = ref<string>();
 
@@ -43,9 +41,7 @@ const handleSignIn = async () => {
 };
 
 const handleGoogleSignin = async () => {
-  isLoadingGoogleSignin.value = true;
   await signInWithGoogle();
-  isLoadingGoogleSignin.value = false;
 };
 </script>
 
@@ -94,7 +90,6 @@ const handleGoogleSignin = async () => {
         class="w-full"
         variant="outlined"
         @click="handleGoogleSignin"
-        :isLoading="isLoadingGoogleSignin"
         loadingClass="text-textColor-primary"
       >
         <GoogleIcon class="w-4" />

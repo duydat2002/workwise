@@ -51,6 +51,7 @@ onAuthStateChanged(auth, async () => {
 
   const { fetchUser } = useUserStore();
   nextTick(async () => {
+    console.log(auth.currentUser);
     if (auth.currentUser) await fetchUser();
   });
 });

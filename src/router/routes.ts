@@ -95,13 +95,22 @@ const routes: Readonly<RouteRecordRaw[]> = [
     },
   },
   {
+    path: "/set-password",
+    name: "SetPassword",
+    component: () => import("@/views/Auth/SetPassword.vue"),
+    meta: {
+      title: "Đặt mật khẩu • WorkWise",
+      layout: BlankLayout,
+      requiresAuth: true,
+    },
+  },
+  {
     path: "/forgot-password",
     name: "ForgotPassword",
     component: () => import("@/views/Auth/ForgotPassword.vue"),
     meta: {
       title: "Đặt lại mật khẩu • WorkWise",
       layout: BlankLayout,
-      requiresAuth: true,
     },
   },
   {

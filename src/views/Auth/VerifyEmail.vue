@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import EmailIcon from "@icons/email-big.svg";
 import UButton from "@/components/UI/UButton.vue";
-import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import { reload } from "firebase/auth";
 import { auth } from "@/plugins/firebase";
 import { useRouter } from "vue-router";
@@ -10,13 +10,13 @@ import { storeToRefs } from "pinia";
 import { useCommonStore, useUserStore } from "@/stores";
 import { differenceInSeconds } from "date-fns";
 import { verifyUserEmail } from "@/services/user";
+import { toast } from "vue3-toastify";
 
 const router = useRouter();
 const { sendVerifyEmail, signOut } = useAuth();
 
 const { user } = storeToRefs(useUserStore());
 const { verifyEmail } = storeToRefs(useCommonStore());
-const isVeriried = ref(false);
 const intervalVerifyId = ref<NodeJS.Timeout>();
 const isLoadingSendVerify = ref(false);
 const cooldown = ref(30);
@@ -27,6 +27,7 @@ const handleSendVerifyEmail = async () => {
   if (auth.currentUser) {
     await sendVerifyEmail();
     cooldown.value = 30;
+    toast.success("Đã gửi email xác minh cho bạn.");
   }
   isLoadingSendVerify.value = false;
 };
@@ -37,14 +38,9 @@ const handleSigninOtherAccount = async () => {
   router.push({ name: "Signin" });
 };
 
-watch(isVeriried, () => {
-  if (isVeriried.value) router.push({ name: "Home" });
-});
-
 onMounted(async () => {
   if (
     verifyEmail.value &&
-    verifyEmail.value.email == auth.currentUser?.email &&
     differenceInSeconds(new Date(), verifyEmail.value.lastResend!) > 30
   ) {
     console.log("send");
@@ -57,15 +53,17 @@ onMounted(async () => {
   }, 1000);
 
   intervalVerifyId.value = setInterval(async () => {
+    console.log("interval");
     if (auth.currentUser) {
       await reload(auth.currentUser);
       if (auth.currentUser.emailVerified) {
         if (user.value && !user.value.emailVerified) {
-          const data = await verifyUserEmail();
+          const data = await verifyUserEmail(user.value.uid);
 
           if (data.success) {
             clearInterval(intervalVerifyId.value);
-            isVeriried.value = true;
+            user.value.emailVerified = true;
+            router.push({ name: "Home" });
           }
         }
       }
@@ -99,6 +97,7 @@ onBeforeUnmount(async () => {
       <span class="text-base font-semibold">{{ auth.currentUser?.email }}</span>
       <UButton
         class="w-full mt-4"
+        variantType="primary"
         :isLoading="isLoadingSendVerify"
         :isDisabled="cooldown > 0"
         @click="handleSendVerifyEmail"

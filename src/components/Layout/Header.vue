@@ -20,7 +20,8 @@ const showAccountMenu = ref(false);
 const showThemeChoose = ref(false);
 
 const handleSignOut = async () => {
-  signOut();
+  showAccountMenu.value = false;
+  await signOut();
 
   router.go(0);
 };
@@ -28,8 +29,12 @@ const handleSignOut = async () => {
 
 <template>
   <div
-    class="fixed top-0 left-0 right-0 h-12 px-4 flex items-center justify-end bg-bgColor-primary z-10"
+    class="fixed top-0 left-0 right-0 h-12 px-4 flex items-center justify-between bg-bgColor-primary border-b border-borderColor z-30"
   >
+    <div class="flex items-center">
+      <img src="@/assets/images/Logo.png" class="w-[40px]" />
+      <span class="logo-text small">WorkWise</span>
+    </div>
     <div class="flex items-center">
       <HeaderSearch />
       <div class="flex flex-center not-lastchild:mr-2">
@@ -65,7 +70,7 @@ const handleSignOut = async () => {
                     >Tài khoản</span
                   >
                   <div class="flex items-center px-4 py-2">
-                    <Avatar class="w-8 mr-2" :avatarUrl="user?.avatar" />
+                    <Avatar class="w-10 mr-2" :avatarUrl="user?.avatar" />
                     <div class="flex flex-col justify-between">
                       <span class="text-textColor-primary">{{
                         user?.fullname

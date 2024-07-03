@@ -10,13 +10,11 @@ onMounted(() => {
 
 <template>
   <div class="w-full h-screen bg-bgColor-primary overflow-hidden">
-    <div class="flex h-full">
+    <Header />
+    <div class="flex h-full pt-12">
       <Sidebar />
-      <main class="flex-1 overflow-auto">
-        <Header />
-        <div class="mt-12">
-          <slot />
-        </div>
+      <main class="flex-1">
+        <slot />
       </main>
     </div>
   </div>

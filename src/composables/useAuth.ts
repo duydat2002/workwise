@@ -1,7 +1,11 @@
-import { auth, db } from "@/plugins/firebase";
-import { createUser, getUser } from "@/services/user";
+import { auth } from "@/plugins/firebase";
+import {
+  createUser,
+  findUserByUid,
+  getUser,
+  verifyUserEmail,
+} from "@/services/user";
 import { useCommonStore, useUserStore } from "@/stores";
-import { IUser } from "@/types";
 import {
   signInWithEmailAndPassword,
   AuthErrorCodes,
@@ -16,8 +20,8 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
+  linkWithCredential,
 } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
@@ -29,7 +33,7 @@ export const useAuth = () => {
 
   const { verifyEmail } = storeToRefs(useCommonStore());
   const authError = ref("");
-  const { setUser } = useUserStore();
+  const { setUser, fetchUser } = useUserStore();
 
   const signUp = async (fullname: string, email: string, password: string) => {
     try {
@@ -64,18 +68,21 @@ export const useAuth = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password);
 
-      if (!userCred.user.emailVerified) {
-        router.push({ name: "VerifyEmail" });
-      } else {
-        const data = await getUser();
-        if (data.success) {
-          setUser(data.result!.user);
-          router.push({ name: "Home" });
+      const data = await getUser();
+
+      if (data.success) {
+        const user = data.result!.user;
+        setUser(user);
+
+        if (!user.emailVerified) {
+          router.push({ name: "VerifyEmail" });
         } else {
-          toast.error("Đăng nhập thất bại!. Vui lòng thử lại sau.");
+          router.push({ name: "Home" });
         }
+      } else {
+        toast.error("Đăng nhập thất bại!. Vui lòng thử lại sau.");
       }
     } catch (error: any) {
       switch (error.code) {
@@ -95,23 +102,31 @@ export const useAuth = () => {
   const signInWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
+
       const user = result.user;
 
-      const data = await createUser(
-        user.uid,
-        user.email!,
-        user.displayName!,
-        true,
-        user.photoURL
-      );
+      const checkUser = await findUserByUid(user.uid);
 
-      if (data.success) {
-        setUser(data.result!.user);
-        router.push({ name: "Home" });
+      if (!checkUser.success) {
+        const data = await createUser(
+          user.uid,
+          user.email!,
+          user.displayName!,
+          true,
+          user.photoURL
+        );
+
+        if (data.success) {
+          setUser(data.result!.user);
+          router.push({ name: "SetPassword" });
+        } else {
+          toast.error("Đăng nhập thất bại!. Vui lòng thử lại sau.");
+        }
       } else {
-        toast.error("Đăng nhập thất bại!. Vui lòng thử lại sau.");
+        await fetchUser();
+        router.push({ name: "Home" });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
     }
   };
@@ -129,22 +144,24 @@ export const useAuth = () => {
       const userCred = await getRedirectResult(auth);
       const user = userCred?.user;
 
-      console.log(user);
-
       if (user) {
-        const data = await createUser(
-          user.uid,
-          user.email!,
-          user.displayName!,
-          true,
-          user.photoURL
-        );
+        const checkUser = await findUserByUid(user.uid);
 
-        if (data.success) {
-          setUser(data.result!.user);
-          router.push({ name: "Home" });
-        } else {
-          toast.error("Đăng nhập thất bại!. Vui lòng thử lại sau.");
+        if (!checkUser.success) {
+          const data = await createUser(
+            user.uid,
+            user.email!,
+            user.displayName!,
+            true,
+            user.photoURL
+          );
+
+          if (data.success) {
+            setUser(data.result!.user);
+            router.push({ name: "Home" });
+          } else {
+            toast.error("Đăng nhập thất bại!. Vui lòng thử lại sau.");
+          }
         }
       }
     } catch (error) {
@@ -160,13 +177,6 @@ export const useAuth = () => {
         lastResend: new Date(),
       };
     }
-  };
-
-  const updateUserEmailVerified = async () => {
-    if (auth.currentUser)
-      await updateDoc(doc(db, "users", auth.currentUser.uid), {
-        emailVerified: true,
-      });
   };
 
   const sendResetPasswordEmail = async (email: string) => {
@@ -194,9 +204,37 @@ export const useAuth = () => {
     }
   };
 
+  const linkGoogleWithEmailUser = async (email: string, password: string) => {
+    const user = auth.currentUser!;
+    const credential = EmailAuthProvider.credential(email, password);
+
+    await linkWithCredential(user, credential);
+    await verifyUserEmail(user.uid);
+
+    router.push({ name: "Home" });
+  };
+
+  const checkHasEmailAuth = () => {
+    return (
+      auth.currentUser &&
+      auth.currentUser.providerData.some(
+        (provider) => provider.providerId == EmailAuthProvider.PROVIDER_ID
+      )
+    );
+  };
+
+  const checkHasVerifyEmail = async () => {
+    return (
+      auth.currentUser &&
+      auth.currentUser.providerData.some(
+        (provider) => provider.providerId == EmailAuthProvider.PROVIDER_ID
+      )
+    );
+  };
+
   const signOut = async () => {
-    await signOutFirebase(auth);
     setUser(null);
+    await signOutFirebase(auth);
   };
 
   return {
@@ -208,8 +246,10 @@ export const useAuth = () => {
     getGoogleRedirectResult,
     sendVerifyEmail,
     sendResetPasswordEmail,
-    updateUserEmailVerified,
     changePassword,
+    linkGoogleWithEmailUser,
+    checkHasEmailAuth,
+    checkHasVerifyEmail,
     signOut,
   };
 };

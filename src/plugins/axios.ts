@@ -22,6 +22,9 @@ service.interceptors.request.use(async (config) => {
 service.interceptors.response.use(
   (response) => {
     return response.data;
+  },
+  async (error) => {
+    return error?.response?.data;
   }
   // async (error) => {
   //   console.log(error);
