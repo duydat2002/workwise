@@ -3,48 +3,44 @@ import XIcon from "@icons/x.svg";
 import EditIcon from "@icons/edit.svg";
 import CheckIcon from "@icons/check.svg";
 import UInput from "@/components/UI/UInput.vue";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { ILabel } from "@/types";
 import EditLabel from "./EditLabel.vue";
+import { storeToRefs } from "pinia";
+import { useUserStore } from "@/stores";
+import { computed } from "vue";
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(["update:labels", "close"]);
+
+const props = defineProps<{
+  labels: ILabel[];
+}>();
+
+const { user } = storeToRefs(useUserStore());
 
 const tab = ref<"list" | "edit">("list");
 const search = ref("");
-const activeLabels = ref<ILabel[]>([]);
-const labels = ref<ILabel[]>([
-  {
-    name: "Game",
-    color: "#fea362",
-    colorName: "Cam",
-  },
-  {
-    name: "Work",
-    color: "#7ee2b8",
-    colorName: "Xanh lá",
-  },
-  {
-    name: "Frontend",
-    color: "#f87168",
-    colorName: "Đỏ",
-  },
-  {
-    name: "Backend",
-    color: "#9f8fef",
-    colorName: "Tím",
-  },
-]);
+const createdProjectLabels = ref<ILabel[]>(
+  user.value!.createdProjectLabels || []
+);
 const editLabel = ref<ILabel>();
 
+const activedLabels = computed({
+  get: () => props.labels,
+  set: (value) => {
+    emit("update:labels", value);
+  },
+});
+
 const handleToogleLabel = (label: ILabel) => {
-  if (!activeLabels.value.includes(label)) {
-    activeLabels.value.push(label);
+  if (!activedLabels.value.includes(label)) {
+    activedLabels.value.push(label);
   } else {
-    const newActiveLabels = activeLabels.value.filter(
+    const newActiveLabels = activedLabels.value.filter(
       (l) => l.name != label.name
     );
 
-    activeLabels.value = newActiveLabels;
+    activedLabels.value = newActiveLabels;
   }
 };
 
@@ -61,11 +57,36 @@ const handleEditLabel = (label: ILabel) => {
 const closePopup = () => {
   emit("close");
 };
+
+const sloseEditPopup = () => {
+  closePopup();
+  editLabel.value = undefined;
+  tab.value = "list";
+};
+
+watch(search, () => {
+  createdProjectLabels.value =
+    user.value!.createdProjectLabels?.filter((l) =>
+      l.name.toLowerCase().includes(search.value.toLowerCase())
+    ) || [];
+});
+
+watch(
+  () => user.value?.createdProjectLabels,
+  (labels) => {
+    search.value = "";
+    createdProjectLabels.value =
+      labels?.sort((l1, l2) =>
+        l1.name.toLowerCase().localeCompare(l2.name.toLowerCase())
+      ) || [];
+  },
+  { deep: true }
+);
 </script>
 
 <template>
   <div
-    class="absolute left-0 bottom-0 p-3 w-[300px] max-h-[600px] bg-bgColor-primary shadow rounded-lg"
+    class="absolute left-0 bottom-full mb-2 p-3 w-[300px] max-h-[600px] bg-bgColor-primary shadow rounded-lg"
     v-click-outside.short="closePopup"
   >
     <template v-if="tab == 'list'">
@@ -80,7 +101,6 @@ const closePopup = () => {
       </div>
       <div class="mt-3">
         <UInput
-          class="w-[250px]"
           name="search_label"
           v-model:propValue="search"
           placeholder="Tìm nhãn"
@@ -91,19 +111,22 @@ const closePopup = () => {
         <span class="mb-1 text-xs font-bold text-textColor-subtitle">Nhãn</span>
         <div class="flex flex-col not-lastchild:mb-1">
           <div
-            v-for="label in labels"
-            :key="label.name"
+            v-for="label in createdProjectLabels"
+            :key="label.id"
             class="flex items-center cursor-pointer"
-            :class="{ active: activeLabels.includes(label) }"
+            :class="{ active: activedLabels.find((l) => l.id == label.id) }"
             @click="handleToogleLabel(label)"
           >
             <div
               class="w-4 h-4 flex flex-center rounded-sm parent-[.active]:bg-primary border border-textColor-secondary"
             >
-              <CheckIcon class="w-3 fill-white" />
+              <CheckIcon
+                v-if="activedLabels.find((l) => l.id == label.id)"
+                class="w-3 fill-white"
+              />
             </div>
             <div
-              class="flex-1 px-3 mx-2 rounded text-textColor-subtitle font-medium leading-8"
+              class="flex-1 px-3 mx-2 rounded text-[#44546f] font-medium leading-8"
               :style="{ background: label.color }"
             >
               <span>{{ label.name }}</span>
@@ -129,7 +152,8 @@ const closePopup = () => {
     <EditLabel
       v-else
       :label="editLabel"
-      @close="
+      @close="sloseEditPopup"
+      @back="
         () => {
           editLabel = undefined;
           tab = 'list';

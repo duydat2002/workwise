@@ -22,11 +22,11 @@ defineProps<{
       </div>
     </div>
     <RouterLink
-      :to="{ name: 'Project', params: { projectId: i } }"
+      :to="{ name: 'Project', params: { projectId: 1 } }"
       class="mt-2 flex flex-col"
     >
       <span class="text-base font-bold text-textColor-primary"
-        >Dự án {{ i }}</span
+        >Dự án {{ 1 }}</span
       >
       <span class="text-sm text-textColor-secondary text-dots"
         >Lorem ipsum dolor sit amet consectetur adipisicing elit. Fugiat,

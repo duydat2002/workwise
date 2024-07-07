@@ -17,6 +17,7 @@ const clickTest = (value: string) => {
 };
 
 const deleteFilter = (tag: string, index: number) => {
+  console.log(tag);
   tagsFilter.value.splice(index, 1);
 };
 

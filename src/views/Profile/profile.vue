@@ -6,7 +6,7 @@ import { deleteAvatar, updateAvatar, updateUserInfo } from "@/services/user";
 import { useUserStore } from "@/stores";
 import { storeToRefs } from "pinia";
 import { computed, ref } from "vue";
-import { toast, type ToastOptions } from "vue3-toastify";
+import { toast } from "vue3-toastify";
 
 const { user } = storeToRefs(useUserStore());
 

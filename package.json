@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "devhost": "vite --host"
   },
   "dependencies": {
+    "@vuepic/vue-datepicker": "^8.8.1",
+    "@vueup/vue-quill": "^1.2.0",
     "axios": "^1.7.2",
     "date-fns": "^3.6.0",
     "firebase": "^10.12.2",

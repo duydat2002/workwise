@@ -1,5 +1,5 @@
 import api from "@/plugins/axios";
-import { IServerData, IUser } from "@/types";
+import { ILabel, IServerData, IUser } from "@/types";
 
 const prefix = "/users/";
 
@@ -73,4 +73,35 @@ export async function deleteAvatar() {
 
 export async function getTest() {
   return await api.get<any, IServerData>(prefix + "test");
+}
+
+// CreatedProjectLabels
+export async function getUserProjectLabels() {
+  return await api.get<any, IServerData<{ createdProjectLabels: ILabel[] }>>(
+    prefix + "created-labels"
+  );
+}
+
+export async function createUserProjectLabel(name: string, color: string) {
+  return await api.post<any, IServerData<{ label: ILabel }>>(
+    prefix + "created-labels",
+    { name, color }
+  );
+}
+
+export async function updateUserProjectLabel(
+  labelId: string,
+  name: string,
+  color: string
+) {
+  return await api.patch<any, IServerData<{ label: ILabel }>>(
+    prefix + "created-labels/" + labelId,
+    { name, color }
+  );
+}
+
+export async function deleteUserProjectLabel(labelId: string) {
+  return await api.delete<any, IServerData>(
+    prefix + "created-labels/" + labelId
+  );
 }

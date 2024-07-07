@@ -1,21 +1,62 @@
 <script setup lang="ts">
 import XIcon from "@icons/x.svg";
 import PlusIcon from "@icons/plus.svg";
+import ExclamationIcon from "@icons/exclamation-mark.svg";
 import Modal from "./Modal.vue";
-import { ref } from "vue";
+import { onBeforeUnmount, ref, watch } from "vue";
 import UInput from "@/components/UI/UInput.vue";
-import Avatar from "@/components/Common/Avatar.vue";
 import UButton from "@/components/UI/UButton.vue";
 import LabelPopup from "@/components/Popup/LabelPopup/LabelPopup.vue";
-import { getDynamicImage } from "@/helpers";
+import UQuill from "../UI/UQuill.vue";
+import { Delta } from "@vueup/vue-quill";
+import VueDatePicker from "@vuepic/vue-datepicker";
+import { storeToRefs } from "pinia";
+import { useThemeStore, useUserStore } from "@/stores";
+import ImagePopup from "@/components/Popup/ImagePopup/ImagePopup.vue";
+import { ILabel } from "@/types";
 
 const emit = defineEmits(["close"]);
 
+const { user } = storeToRefs(useUserStore());
+
 const inputBackground = ref<HTMLInputElement>();
 const name = ref("");
-const description = ref("");
-const background = ref<string>(getDynamicImage("Rectangle.png"));
-const labelPopup = ref(false);
+const description = ref<Delta>();
+const background = ref<string>("");
+const backgroundFile = ref<File>();
+const labels = ref<ILabel[]>([]);
+const startDate = ref();
+const dueDate = ref();
+const nameError = ref<string>();
+const backgroundError = ref<string>();
+const descMode = ref<"snow" | "bubble">("bubble");
+const activeLabelPopup = ref(false);
+const activeImagePopup = ref(false);
+
+const { theme } = storeToRefs(useThemeStore());
+
+const validate = () => {
+  nameError.value = undefined;
+  backgroundError.value = undefined;
+  let check = true;
+
+  if (name.value.trim() == "") {
+    nameError.value = "Tên dự án không được để trống.";
+    check = false;
+  }
+
+  if (!background.value && !backgroundFile.value) {
+    backgroundError.value = "Ảnh bìa là bắt buộc.";
+    check = false;
+  }
+
+  return check;
+};
+
+const handleCreateProject = async () => {
+  if (validate()) {
+  }
+};
 
 const closeModal = () => {
   console.log("object");
@@ -27,28 +68,54 @@ const handleUploadBackground = () => {
 };
 
 const getInputBackground = (event: Event) => {
+  backgroundFile.value = undefined;
   const file = (event.target as HTMLInputElement).files![0];
 
   if (file && file.type.includes("image")) {
+    backgroundFile.value = file;
     const theReader = new FileReader();
     theReader.onloadend = async () => {
-      background.value =
-        (await theReader.result?.toString()) ||
-        getDynamicImage("Rectangle.png");
+      background.value = (await theReader.result?.toString()) || "";
     };
     theReader.readAsDataURL(file);
   }
 };
 
-const handleAddLabel = () => {
-  labelPopup.value = true;
+const chooseBackgroundTemplate = (url: string) => {
+  background.value = url;
+  backgroundFile.value = undefined;
 };
+
+const handleAddLabel = () => {
+  activeLabelPopup.value = true;
+};
+
+const handleFocusDesc = () => {
+  descMode.value = "snow";
+};
+
+const handleBlurDesc = () => {
+  descMode.value = "bubble";
+};
+
+watch(
+  () => user.value?.createdProjectLabels,
+  (createdProjectLabels) => {
+    labels.value = labels.value.filter((l) =>
+      createdProjectLabels?.find((pl) => pl.id == l.id)
+    );
+  }
+);
+
+onBeforeUnmount(() => {
+  background.value = "";
+});
 </script>
 
 <template>
   <Modal @click-outside="closeModal">
     <div
-      class="flex flex-col m-5 h-[calc(100vh-40px)] w-[500px] bg-bgColor-primary p-4 rounded-lg overflow-y-auto scroll-vert"
+      class="flex flex-col m-5 h-[calc(100vh-40px)] w-[800px] bg-bgColor-primary p-4 rounded-lg"
     >
       <div class="flex items-center justify-between">
         <span class="text-lg font-semibold text-textColor-primary"
@@ -58,91 +125,153 @@ const handleAddLabel = () => {
           <XIcon class="w-3 fill-textColor-secondary" />
         </div>
       </div>
-      <div class="mt-3 not-firstchild:mt-2">
-        <div class="flex flex-col">
-          <label class="mb-1 text-xs font-bold text-textColor-subtitle"
-            >Ảnh bìa
-          </label>
-          <div class="relative group">
-            <img :src="background" alt="" />
+      <div class="my-3 overflow-y-auto scroll-vert none">
+        <div class="not-firstchild:mt-5">
+          <div class="flex flex-col">
+            <label class="mb-1 text-sm font-bold text-textColor-subtitle"
+              >Ảnh bìa
+            </label>
             <div
-              class="absolute group-hover:flex top-0 left-0 right-0 bottom-0 hidden flex-center bg-[#0000004f] not-lastchild:mr-2"
+              class="relative w-full h-[300px] group bg-cover bg-center bg-no-repeat bg-bgColor-secondary"
+              :style="{ backgroundImage: `url(${background})` }"
             >
-              <UButton
-                variantType="secondary"
-                class="hover:bg-hover"
-                @click="handleUploadBackground"
+              <div
+                class="absolute group-hover:flex top-0 left-0 right-0 bottom-0 hidden flex-center bg-[#0000004f] not-lastchild:mr-2 has-[.noBackground]:flex"
+                :class="{ noBackground: background == '' }"
               >
-                <span class="to-bgColor-primary">Tải từ máy tính</span>
-              </UButton>
-              <UButton variantType="secondary" class="hover:bg-hover">
-                <span class="to-bgColor-primary">Chọn ảnh có sẵn</span>
-              </UButton>
+                <UButton
+                  variantType="secondary"
+                  class="hover:opacity-80"
+                  @click="handleUploadBackground"
+                >
+                  <span class="to-bgColor-primary">Tải từ máy tính</span>
+                </UButton>
+                <UButton
+                  variantType="secondary"
+                  class="hover:opacity-80"
+                  @click="
+                    () => {
+                      activeImagePopup = true;
+                    }
+                  "
+                >
+                  <span class="to-bgColor-primary">Chọn ảnh có sẵn</span>
+                </UButton>
+              </div>
+              <input
+                class="hidden"
+                ref="inputBackground"
+                accept="image/jpeg,image/png,image/jpg"
+                type="file"
+                @change="getInputBackground"
+              />
+              <ImagePopup
+                v-if="activeImagePopup"
+                @choose="chooseBackgroundTemplate"
+                @close="
+                  () => {
+                    activeImagePopup = false;
+                  }
+                "
+              ></ImagePopup>
             </div>
-            <input
-              class="hidden"
-              ref="inputBackground"
-              accept="image/jpeg,image/png,image/jpg"
-              type="file"
-              @change="getInputBackground"
+            <div v-if="backgroundError" class="flex items-center">
+              <ExclamationIcon class="w-4 fill-error mr-1 flex-shrink-0" />
+              <span class="text-sm text-error">{{ backgroundError }}</span>
+            </div>
+          </div>
+          <div class="flex flex-col">
+            <label class="mb-1 text-sm font-bold text-textColor-subtitle"
+              >Tên dự án
+            </label>
+            <UInput
+              name="name"
+              v-model:propValue="name"
+              placeholder="Tên dự án"
+              :errorMessage="nameError"
+            >
+            </UInput>
+          </div>
+          <div class="flex flex-col">
+            <label class="mb-1 text-sm font-bold text-textColor-subtitle"
+              >Mô tả
+            </label>
+            <UQuill
+              v-model:content="description"
+              :theme="descMode"
+              :enable="descMode == 'snow'"
+              @focus="handleFocusDesc"
+              v-click-outside.short="handleBlurDesc"
+            ></UQuill>
+          </div>
+          <div class="flex flex-col">
+            <label class="mb-1 text-sm font-bold text-textColor-subtitle"
+              >Thời gian triển khai
+            </label>
+            <div class="flex items-center">
+              <div class="flex items-center mr-5">
+                <span class="text-sm font-semibold text-textColor-primary mr-3"
+                  >Ngày bắt đầu</span
+                >
+                <div class="w-[200px]">
+                  <VueDatePicker
+                    v-model="startDate"
+                    auto-apply
+                    :enable-time-picker="false"
+                    placeholder="mm/dd/yyyy"
+                    format="dd/MM/yyyy"
+                    :dark="theme == 'dark'"
+                  ></VueDatePicker>
+                </div>
+              </div>
+              <div class="flex items-center">
+                <span class="text-sm font-semibold text-textColor-primary mr-3"
+                  >Ngày kết thúc</span
+                >
+                <div class="w-[200px]">
+                  <VueDatePicker
+                    v-model="dueDate"
+                    auto-apply
+                    :enable-time-picker="false"
+                    placeholder="mm/dd/yyyy"
+                    format="dd/MM/yyyy"
+                    :dark="theme == 'dark'"
+                  ></VueDatePicker>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="relative flex flex-col">
+            <label class="mb-1 text-sm font-bold text-textColor-subtitle"
+              >Nhãn
+            </label>
+            <div class="flex items-center not-lastchild:mr-1">
+              <span
+                v-for="label in labels"
+                :key="label.name"
+                class="px-3 py-1 text-sm font-semibold text-[#44546f] rounded-md cursor-pointer"
+                :style="{ background: label.color }"
+                >{{ label.name }}</span
+              >
+              <span
+                class="px-3 py-2 bg-bgColor-secondary hover:bg-hover rounded-md cursor-pointer"
+                title="Thêm nhãn"
+                @click="handleAddLabel"
+                ><PlusIcon class="w-3 fill-textColor-primary"
+              /></span>
+            </div>
+            <LabelPopup
+              v-if="activeLabelPopup"
+              v-model:labels="labels"
+              @close="
+                () => {
+                  activeLabelPopup = false;
+                }
+              "
             />
           </div>
-        </div>
-        <div class="flex flex-col">
-          <label class="mb-1 text-xs font-bold text-textColor-subtitle"
-            >Tên dự án
-          </label>
-          <UInput
-            class="w-[250px]"
-            name="name"
-            v-model:propValue="name"
-            placeholder="Tên dự án"
-          >
-          </UInput>
-        </div>
-        <div class="flex flex-col">
-          <label class="mb-1 text-xs font-bold text-textColor-subtitle"
-            >Mô tả
-          </label>
-          <UInput
-            class="w-[250px]"
-            name="description"
-            v-model:propValue="description"
-            placeholder="Mô tả"
-          >
-          </UInput>
-        </div>
-        <div class="relative flex flex-col">
-          <label class="mb-1 text-xs font-bold text-textColor-subtitle"
-            >Nhãn
-          </label>
-          <div class="flex items-center not-lastchild:mr-1">
-            <span
-              class="px-3 py-1 text-sm font-semibold text-white bg-orange-500 rounded-md cursor-pointer"
-              >Work</span
-            >
-            <span
-              class="px-3 py-1 text-sm font-semibold text-white bg-green-500 rounded-md cursor-pointer"
-              >Game</span
-            >
-            <span
-              class="px-3 py-2 bg-bgColor-secondary hover:bg-hover rounded-md cursor-pointer"
-              title="Thêm nhãn"
-              @click="handleAddLabel"
-              ><PlusIcon class="w-3 fill-textColor-primary"
-            /></span>
-          </div>
-          <LabelPopup
-            v-if="labelPopup"
-            @close="
-              () => {
-                labelPopup = false;
-              }
-            "
-          />
-        </div>
-        <div class="flex flex-col">
-          <label class="mb-1 text-xs font-bold text-textColor-subtitle"
+          <!-- <div class="flex flex-col">
+          <label class="mb-1 text-sm font-bold text-textColor-subtitle"
             >Thành viên
           </label>
           <div class="flex items-center not-lastchild:mr-1">
@@ -154,15 +283,16 @@ const handleAddLabel = () => {
               <PlusIcon class="w-3 fill-textColor-primary" />
             </div>
           </div>
+        </div> -->
         </div>
-      </div>
-      <div class="flex items-center justify-end not-lastchild:mr-2">
-        <UButton variantType="error" @click="closeModal"
-          ><span class="text-white font-semibold">Hủy</span></UButton
-        >
-        <UButton variantType="primary"
-          ><span class="text-white font-semibold">Tạo</span></UButton
-        >
+        <div class="flex items-center justify-end not-lastchild:mr-2">
+          <UButton variantType="error" @click="closeModal"
+            ><span class="text-white font-semibold">Hủy</span></UButton
+          >
+          <UButton variantType="primary" @click="handleCreateProject"
+            ><span class="text-white font-semibold">Tạo</span></UButton
+          >
+        </div>
       </div>
     </div>
   </Modal>

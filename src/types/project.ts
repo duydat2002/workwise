@@ -1,5 +1,7 @@
-import { ILabel, IUserInfo } from "./user";
+import { ILabel } from "./label";
+import { IUserInfo } from "./user";
 import { ITaskGroup } from "./taskGroup";
+import { IActivity } from "./activity";
 
 export interface IProject {
   id: string;
@@ -11,12 +13,15 @@ export interface IProject {
   members: {
     user: IUserInfo;
     role: "admin" | "member";
+    createdAt: string;
+    updatedAt: string;
   }[];
-  taskLabels: ILabel[];
+  createdTaskLabels: ILabel[];
   status: "active" | "archived";
   startDate: string;
   dueDate: string;
   taskGroups: ITaskGroup[];
+  activities: IActivity[];
   createdAt: string;
   updatedAt: string;
 }

@@ -1,3 +1,4 @@
+import { ILabel } from "./label";
 import { IProject } from "./project";
 
 export interface IUser {
@@ -7,7 +8,7 @@ export interface IUser {
   fullname: string;
   avatar?: string;
   emailVerified: boolean;
-  projectLabels?: ILabel[];
+  createdProjectLabels: ILabel[];
   projects: IProject[];
   createdAt: string;
   updatedAt: string;
@@ -18,9 +19,4 @@ export interface IUserInfo {
   email: string;
   fullname: string;
   avatar?: string;
-}
-
-export interface ILabel {
-  name: string;
-  color: string;
 }

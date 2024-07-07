@@ -8,7 +8,7 @@ import AddUserIcon from "@icons/add-user.svg";
 import MoreIcon from "@icons/more.svg";
 import { ref } from "vue";
 import UButton from "@/components/UI/UButton.vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 
 type ITab = "Kanban" | "List" | "Calendar" | "Timeline" | "Attach";
 
