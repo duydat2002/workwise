@@ -61,6 +61,7 @@ const handleChangePassword = async () => {
         name="old_password"
         v-model:propValue="oldPassword"
         :errorMessage="oldPasswordError"
+        autocomplete="new-password"
       >
       </UInput>
     </div>
@@ -74,6 +75,7 @@ const handleChangePassword = async () => {
         name="new_password"
         v-model:propValue="newPassword"
         :errorMessage="newPasswordError"
+        autocomplete="new-password"
       >
       </UInput>
     </div>
@@ -87,6 +89,7 @@ const handleChangePassword = async () => {
         name="confirm_password"
         v-model:propValue="confirmPassword"
         :errorMessage="confirmPasswordError"
+        autocomplete="new-password"
       >
       </UInput>
     </div>

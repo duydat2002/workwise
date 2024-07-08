@@ -1,16 +1,24 @@
 <script setup lang="ts">
+import LoadingIcon from "@icons/loading.svg";
 import SearchIcon from "@icons/search.svg";
 import UInput from "@/components/UI/UInput.vue";
 import UTagInput from "@/components/UI/UTagInput.vue";
 import UButton from "@/components/UI/UButton.vue";
 import CreateProjectModal from "@/components/Modal/CreateProjectModal.vue";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
+import { getProjects } from "@/services/project";
+import { storeToRefs } from "pinia";
+import { useProjectStore } from "@/stores";
+import { toast } from "vue3-toastify";
+
+const { projects } = storeToRefs(useProjectStore());
 
 const search = ref("");
 const filter = ref("");
 const tagsFilter = ref<string[]>([]);
 const activeFilterDropdown = ref(false);
 const activeCreateProjectModal = ref(false);
+const isLoadingProject = ref(true);
 
 const clickTest = (value: string) => {
   tagsFilter.value.push(value);
@@ -24,6 +32,18 @@ const deleteFilter = (tag: string, index: number) => {
 const handleClickCreateProject = () => {
   activeCreateProjectModal.value = true;
 };
+
+onMounted(async () => {
+  isLoadingProject.value = true;
+  const data = await getProjects();
+
+  if (data.success) {
+    projects.value = data.result!.projects;
+  } else {
+    toast.error("Hiện không thể tải dữ liệu dự án! Hãy thử lại sau.");
+  }
+  isLoadingProject.value = false;
+});
 </script>
 
 <template>
@@ -91,7 +111,10 @@ const handleClickCreateProject = () => {
         </UTagInput>
       </div>
     </div>
-    <div class="flex flex-wrap mt-5 -mx-2 bg-bgColor-secondary">
+    <div v-if="isLoadingProject" class="flex-1 flex flex-center">
+      <LoadingIcon class="w-6 fill-textColor-primary" />
+    </div>
+    <div v-else class="flex flex-wrap mt-5 -mx-2 bg-bgColor-secondary">
       <div v-for="i in 5" :key="i" class="w-1/4 p-2">
         <div
           class="w-full px-3 py-2 bg-bgColor-primary flex flex-col justify-between rounded-lg shadow"
