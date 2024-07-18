@@ -1,101 +1,594 @@
 <script setup lang="ts">
+import LoadingIcon from "@icons/loading.svg";
+import EditIcon from "@icons/edit.svg";
+import MoreIcon from "@icons/more.svg";
+import ClockIcon from "@icons/clock.svg";
+import TagsIcon from "@icons/tag.svg";
+import OwnerIcon from "@icons/group-users.svg";
 import KanbanIcon from "@icons/kanban.svg";
 import ListIcon from "@icons/list.svg";
 import CalendarIcon from "@icons/calendar.svg";
 import TimelineIcon from "@icons/timeline.svg";
+import ApprovedIcon from "@icons/approved.svg";
 import AttachIcon from "@icons/attach.svg";
+import ActivityIcon from "@icons/history.svg";
+import ChartIcon from "@icons/pie-chart.svg";
+import DragIcon from "@icons/drag.svg";
+import WaitIcon from "@icons/wait.svg";
+import InfoIcon from "@icons/info-circle.svg";
 import AddUserIcon from "@icons/add-user.svg";
-import MoreIcon from "@icons/more.svg";
+import AdminUserIcon from "@icons/user-gear.svg";
+import ArchiveIcon from "@icons/archive.svg";
+import UnarchiveIcon from "@icons/unarchive.svg";
+import DeleteIcon from "@icons/delete.svg";
+import NotFoundIcon from "@icons/not-found.svg";
+import Avatar from "@/components/Common/Avatar.vue";
+import { nextTick, shallowRef, watch } from "vue";
+import { onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
+import { useProjectStore, useUserStore } from "@/stores";
+import { formatDate } from "@/helpers";
 import { ref } from "vue";
+import { VueDraggable } from "vue-draggable-plus";
 import UButton from "@/components/UI/UButton.vue";
-import { useRoute } from "vue-router";
+import ProjectMembersModal from "@/components/Modal/ProjectMembersModal.vue";
+import UpdateProjectModal from "@/components/Modal/UpdateProjectModal.vue";
+import ActivitiesSidebar from "@/components/Pages/Activities/ActivitiesSidebar.vue";
+import Popper from "vue3-popper";
+import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
+import {
+  archiveProject,
+  deleteProject,
+  unarchiveProject,
+} from "@/services/project";
+import { toast } from "vue3-toastify";
 
-type ITab = "Kanban" | "List" | "Calendar" | "Timeline" | "Attach";
-
+const router = useRouter();
 const route = useRoute();
 
-const projectName = ref("Dự án");
-// const tabView = ref<ITab>("kanban");
-const TABS: { name: ITab; icon: any; text: string }[] = [
-  {
-    name: "Kanban",
-    icon: KanbanIcon,
-    text: "Kanban",
-  },
-  {
-    name: "List",
-    icon: ListIcon,
-    text: "Danh sách",
-  },
-  {
-    name: "Calendar",
-    icon: CalendarIcon,
-    text: "Lịch",
-  },
-  {
-    name: "Timeline",
-    icon: TimelineIcon,
-    text: "Lịch trình",
-  },
-  {
-    name: "Attach",
-    icon: AttachIcon,
-    text: "Tài liệu",
-  },
-];
+const { user } = storeToRefs(useUserStore());
+const { projects, project } = storeToRefs(useProjectStore());
 
-// const handleChangeTab = (tab: ITab) => {
-//   tabView.value = tab;
-// };
+const isLoadingProject = ref(false);
+const isLoadingAction = ref(false);
+const isHiddenProjectInfo = ref(false);
+const projectInfoRef = ref<HTMLDivElement>();
+const tabs = shallowRef([
+  { name: "Kanban", link: "Kanban", icon: KanbanIcon },
+  { name: "Bảng", link: "List", icon: ListIcon },
+  { name: "Lịch", link: "Calendar", icon: CalendarIcon },
+  { name: "Lịch trình", link: "Timeline", icon: TimelineIcon },
+  { name: "Phê duyệt", link: "Approvals", icon: ApprovedIcon },
+  { name: "Tài liệu", link: "Attachments", icon: AttachIcon },
+  { name: "Báo cáo", link: "Statistics", icon: ChartIcon },
+]);
+const sidebarRightTabs = ref<"activities" | "archives">();
+const showProjectMemberModal = ref(false);
+const showUpdateProject = ref(false);
+const showProjectOption = ref(false);
+const showArchiveConfirm = ref(false);
+const showDeleteConfirm = ref(false);
+
+const handleArchiveProject = async () => {
+  isLoadingAction.value = true;
+  const data = await archiveProject(project.value!.id);
+
+  if (data.success) {
+    toast.success(
+      "Lưu trữ dự án thành công! Bạn có thể tìm và mở lại ở trang các dự án của bạn."
+    );
+    showArchiveConfirm.value = false;
+    showProjectOption.value = false;
+  }
+
+  isLoadingAction.value = false;
+};
+
+const handleUnarchiveProject = async () => {
+  isLoadingAction.value = true;
+
+  const data = await unarchiveProject(project.value!.id);
+
+  if (data.success) {
+    toast.success("Khôi phục dự án thành công!");
+    showProjectOption.value = false;
+  }
+
+  isLoadingAction.value = false;
+};
+
+const handleDeleteProject = async () => {
+  isLoadingAction.value = true;
+
+  const data = await deleteProject(project.value!.id);
+
+  if (data.success) {
+    toast.success("Xóa dự án thành công!");
+    showProjectOption.value = false;
+    router.push({ name: "Projects" });
+  }
+
+  isLoadingAction.value = false;
+};
+
+const toggleProjectInfo = () => {
+  if (isHiddenProjectInfo.value) {
+    projectInfoRef.value!.style.maxHeight =
+      projectInfoRef.value!.scrollHeight + "px";
+    isHiddenProjectInfo.value = false;
+  } else {
+    projectInfoRef.value!.style.maxHeight = "0px";
+    isHiddenProjectInfo.value = true;
+  }
+};
+
+const handleHiddenInfo = () => {
+  if (!isHiddenProjectInfo.value) {
+    projectInfoRef.value!.style.maxHeight = "0px";
+    isHiddenProjectInfo.value = true;
+  }
+};
+
+const getProject = () => {
+  isLoadingProject.value = true;
+  project.value =
+    projects.value.find((p) => p.id == route.params.projectId) || null;
+
+  if (project.value) {
+    project.value.members.sort((a, b) => {
+      if (a.user.id == user.value!.id) return -1;
+      if (b.user.id == user.value!.id) return 1;
+
+      if (a.status !== b.status) {
+        return a.status === "accepted" ? -1 : 1;
+      }
+
+      if (a.status === "accepted" && b.status === "accepted") {
+        return a.role === "admin" ? -1 : 1;
+      }
+
+      return 0;
+    });
+  }
+  isLoadingProject.value = false;
+
+  nextTick(() => {
+    projectInfoRef.value!.style.maxHeight =
+      projectInfoRef.value!.scrollHeight + "px";
+  });
+};
+
+watch(
+  projects,
+  () => {
+    getProject();
+  },
+  { immediate: true }
+);
+
+onBeforeRouteUpdate(async (to, from) => {
+  if (to.params.projectId != from.params.projectId) getProject();
+});
 </script>
 
 <template>
-  <div class="pt-5 h-full flex flex-col">
-    <div class="px-6 flex flex-col pb-3 border-b border-borderColor">
-      <div class="flex items-center justify-between">
-        <input
-          type="text"
-          class="px-2 py-[2px] text-lg font-semibold text-textColor-primary rounded border border-solid border-transparent focus:border-primary"
-          v-model="projectName"
-        />
-        <!-- <UButton2><span class="">Tùy chỉnh dự án</span></UButton2> -->
+  <div v-if="isLoadingProject" class="flex-1 h-full flex flex-center">
+    <LoadingIcon class="w-6 fill-textColor-secondary animate-spin" />
+  </div>
+  <div v-if="project && !isLoadingProject" class="flex h-full">
+    <div class="flex-grow flex flex-col h-full overflow-hidden">
+      <div
+        v-if="project.isArchived"
+        class="px-3 py-2 flex flex-center bg-primary-extraLight"
+      >
+        <InfoIcon class="w-5 fill-primary-light" />
+        <span class="mx-2"
+          >Dự án này đã được lưu trữ. Khôi phục dự án để thực hiện thay
+          đổi.</span
+        >
+        <span
+          v-if="!isLoadingAction"
+          class="text-link hover:underline active:underline cursor-pointer"
+          @click="handleUnarchiveProject"
+          >Khôi phục dự án</span
+        >
+        <span v-else class="text-textColor-secondary"
+          >Đang khôi phục dự án...</span
+        >
       </div>
-      <div class="flex items-center justify-between mt-3">
-        <div class="flex items-center not-lastchild:mr-2">
-          <RouterLink
-            v-for="tab in TABS"
-            :key="tab.name"
-            :to="{ name: tab.name }"
-            class="flex items-center px-2 py-1 hover:bg-bgColor-secondary active:bg-bgColor-secondary exact-link:bg-bgColor-secondary rounded-md cursor-pointer"
-            :class="{ active: route.name == tab.name }"
+      <div class="relative group/desc mb-3">
+        <div class="px-5 py-2 flex flex-wrap items-center justify-between">
+          <span
+            class="px-2 py-[2px] text-lg font-semibold text-textColor-primary"
+            >{{ project.name }}</span
           >
-            <component
-              :is="tab.icon"
-              class="w-4 fill-textColor-secondary parent-[.active]:fill-primary mr-1"
-            />
-            <span
-              class="text-sm font-semibold text-textColor-secondary parent-[.active]:text-primary"
-              >{{ tab.text }}</span
-            >
-          </RouterLink>
-        </div>
-        <div class="flex items-center">
-          <UButton variant="outlined" size="small">
-            <div class="flex items-center">
-              <AddUserIcon class="w-4 fill-textColor-primary mr-1" />
-              <span class="">Thành viên</span>
+          <div class="flex">
+            <div class="flex mr-2">
+              <div class="flex mr-3">
+                <div
+                  v-for="(member, i) in project.members"
+                  :key="member.user.id"
+                  class="relative -mr-1 cursor-pointer"
+                  :style="{ zIndex: project.members.length - i }"
+                  :title="`${member.user.fullname} (${member.user.email}) ${
+                    member.status == 'pending'
+                      ? '- đang chờ'
+                      : member.role == 'admin'
+                      ? '- quản trị viên'
+                      : ' - thành viên'
+                  }`"
+                >
+                  <Avatar :avatarUrl="member.user.avatar" class="w-8" />
+                  <div
+                    v-if="member.status == 'pending'"
+                    class="absolute flex flex-center bg-white rounded-full -bottom-[2px] -right-[2px]"
+                  >
+                    <WaitIcon class="w-4 fill-error" />
+                  </div>
+                  <div
+                    v-else-if="member.role == 'admin'"
+                    class="absolute flex flex-center bg-white rounded-full -bottom-[2px] -right-[2px]"
+                  >
+                    <AdminUserIcon class="w-4 fill-black" />
+                  </div>
+                </div>
+              </div>
+              <UButton
+                variantType="secondary"
+                @click="
+                  () => {
+                    showProjectMemberModal = true;
+                  }
+                "
+                ><AddUserIcon class="w-4 fill-textColor-primary" /><span
+                  class="ml-1 text-textColor-primary font-semibold text-dots"
+                  >Chia sẻ</span
+                ></UButton
+              >
             </div>
-          </UButton>
+
+            <div
+              class="mr-1 flex flex-center h-8 w-8 rounded-md hover:bg-hover active:bg-hover cursor-pointer"
+              @click="
+                () => {
+                  showUpdateProject = true;
+                }
+              "
+            >
+              <EditIcon class="w-4 fill-textColor-primary" />
+            </div>
+            <div
+              class="relative"
+              v-click-outside.short="{
+                handle: () => {
+                  showProjectOption = false;
+                },
+                excludes: [
+                  '#confirm_archive_project',
+                  '#confirm_delete_project',
+                ],
+              }"
+            >
+              <div
+                class="flex flex-center h-8 w-8 rounded-md hover:bg-hover active:bg-hover cursor-pointer"
+                @click.stop="
+                  () => {
+                    showProjectOption = !showProjectOption;
+                  }
+                "
+              >
+                <MoreIcon class="w-4 fill-textColor-primary" />
+              </div>
+              <div
+                v-if="showProjectOption"
+                class="absolute mt-1 top-full right-0 w-max bg-bgColor-primary overflow-hidden rounded-lg shadow z-10"
+              >
+                <div class="flex flex-col">
+                  <div
+                    class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                    @click="
+                      () => {
+                        sidebarRightTabs = 'activities';
+                        showProjectOption = false;
+                      }
+                    "
+                  >
+                    <ActivityIcon class="w-4 fill-textColor-primary mr-2" />
+                    <span class="text-sm text-textColor-primary"
+                      >Lịch sử hoạt động</span
+                    >
+                  </div>
+                  <div
+                    v-if="!project.isArchived"
+                    class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                    @click="
+                      () => {
+                        showArchiveConfirm = true;
+                      }
+                    "
+                  >
+                    <ArchiveIcon class="w-4 fill-textColor-primary mr-2" />
+                    <span class="text-sm text-textColor-primary"
+                      >Lưu trữ dự án</span
+                    >
+                  </div>
+                  <div
+                    v-else
+                    class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                    @click="handleUnarchiveProject"
+                  >
+                    <UnarchiveIcon class="w-4 fill-textColor-primary mr-2" />
+                    <span class="text-sm text-textColor-primary"
+                      >Khôi phục dự án</span
+                    >
+                  </div>
+                  <div
+                    class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                    @click="
+                      () => {
+                        showDeleteConfirm = true;
+                      }
+                    "
+                  >
+                    <DeleteIcon class="w-4 fill-error mr-2" />
+                    <span class="text-sm text-error">Xóa dự án</span>
+                  </div>
+                </div>
+                <ConfirmPopup
+                  v-if="showArchiveConfirm"
+                  id="confirm_archive_project"
+                  title="Lưu trữ dự án?"
+                  confirmMessage="Lưu trữ"
+                  :isLoadingConfirm="isLoadingAction"
+                  @confirm="handleArchiveProject"
+                  @cancel="
+                    () => {
+                      showArchiveConfirm = false;
+                      showProjectOption = false;
+                    }
+                  "
+                >
+                  <div class="w-full py-2">
+                    <span class="text-textColor-secondary mr-1"
+                      >Bạn có thể tìm và khôi phục lại các dự án đã lưu trữ.
+                      <br />
+                      Xem các dự án đã lưu trữ ở trang
+                    </span>
+                    <RouterLink
+                      :to="{ name: 'Projects' }"
+                      class="text-link underline"
+                      >Các dự án của bạn</RouterLink
+                    >
+                  </div>
+                </ConfirmPopup>
+                <ConfirmPopup
+                  v-if="showDeleteConfirm"
+                  id="confirm_delete_project"
+                  title="Xóa dự án?"
+                  confirmMessage="Xóa"
+                  desc="Tất cả mọi nhóm công việc, công việc và hành động sẽ bị xóa. Không thể hoàn tác."
+                  :isLoadingConfirm="isLoadingAction"
+                  @confirm="handleDeleteProject"
+                  @cancel="
+                    () => {
+                      showDeleteConfirm = false;
+                      showProjectOption = false;
+                    }
+                  "
+                ></ConfirmPopup>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          ref="projectInfoRef"
+          class="px-4 overflow-hidden transition-all duration-200"
+        >
           <div
-            class="flex flex-center ml-2 p-2 hover:bg-bgColor-secondary active:bg-bgColor-secondary rounded cursor-pointer"
+            class="relative h-[200px] bg-cover bg-center bg-no-repeat rounded-xl overflow-hidden"
+            :style="{
+              backgroundImage: `url(${project.background})`,
+            }"
           >
-            <MoreIcon class="w-4 fill-textColor-primary" />
+            <div
+              class="absolute flex items-center justify-between px-3 pb-3 bottom-0 left-0 right-0"
+            >
+              <span></span>
+              <div
+                class="bg-[#ffffff75] p-2 rounded-lg backdrop-blur-md flex not-lastchild:mr-3"
+              >
+                <div class="flex flex-col">
+                  <span class="text-sm text-black font-medium"
+                    >Ngày bắt đầu</span
+                  >
+                  <span class="text-base text-black font-semibold">{{
+                    project.startDate
+                      ? formatDate(project.startDate)
+                      : "--/--, --:--"
+                  }}</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-sm text-black font-medium"
+                    >Ngày kết thúc</span
+                  >
+                  <span class="text-base text-black font-semibold">{{
+                    project.dueDate
+                      ? formatDate(project.dueDate)
+                      : "--/--, --:--"
+                  }}</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-sm text-black font-medium">Tiến trình</span>
+                  <span class="text-base text-black font-semibold">75%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-wrap px-2 py-3">
+            <div class="flex-1 flex flex-col">
+              <div class="flex items-center py-1">
+                <ClockIcon class="w-4 fill-textColor-secondary mr-2" />
+                <span
+                  class="w-[100px] text-sm font-semibold text-textColor-secondary"
+                  >Thời gian tạo</span
+                >
+                <span class="flex-1">{{
+                  formatDate(project.createdAt, "dd/MM/yyyy, HH:mm")
+                }}</span>
+              </div>
+              <div class="flex items-center py-1">
+                <OwnerIcon class="w-4 fill-textColor-secondary mr-2" />
+                <span
+                  class="w-[100px] text-sm font-semibold text-textColor-secondary"
+                  >Người tạo</span
+                >
+                <div class="flex items-center">
+                  <div class="w-6 mr-2">
+                    <Avatar :avatarUrl="project.createdBy.avatar" />
+                  </div>
+                  <span class="text-sm text-textColor-primary">{{
+                    project.createdBy.fullname
+                  }}</span>
+                </div>
+              </div>
+              <div class="flex items-center py-1">
+                <TagsIcon class="w-4 fill-textColor-secondary mr-2" />
+                <span
+                  class="w-[100px] text-sm font-semibold text-textColor-secondary"
+                  >Nhãn</span
+                >
+                <div class="flex flex-wrap not-lastchild:mr-2">
+                  <template v-if="project.labels.length > 0">
+                    <div
+                      v-for="label in project.labels"
+                      class="px-2 rounded cursor-pointer text-sm text-[#44546f]"
+                      :style="{
+                        background: label.color,
+                      }"
+                    >
+                      {{ label.name }}
+                    </div>
+                  </template>
+                  <div v-else class="text-sm text-textColor-secondary">
+                    Không có
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex-1 flex flex-col">
+              <span class="text-sm font-semibold text-textColor-secondary"
+                >Mô tả</span
+              >
+              <span
+                v-if="project.description"
+                class="text-sm text-textColor-primary line-clamp-3"
+                >{{ project.description }}</span
+              >
+              <span v-else class="text-sm text-textColor-secondary"
+                >Chưa có mô tả.</span
+              >
+            </div>
+          </div>
+        </div>
+        <div class="relative mx-5">
+          <div class="w-full h-[1px] bg-borderColor"></div>
+          <div
+            class="group-hover/desc:block hidden absolute-center px-2 rounded-lg bg-primary-light cursor-pointer"
+            @click="toggleProjectInfo"
+          >
+            <span class="text-xs text-bgColor-primary">{{
+              isHiddenProjectInfo ? "Xem chi tiết" : "Ẩn đi"
+            }}</span>
           </div>
         </div>
       </div>
+      <div class="flex-1 flex flex-col">
+        <div class="px-5">
+          <VueDraggable
+            class="flex w-full pb-1 overflow-x-scroll scroll-hori border-b border-borderColor not-lastchild:mr-2"
+            :animation="150"
+            v-model="tabs"
+            handle=".drag-trigger"
+            chosenClass="chosen"
+            dragClass="drag"
+            ghostClass="ghost"
+          >
+            <div class="flex-shrink-0" v-for="tab in tabs" :key="tab.name">
+              <RouterLink
+                :to="{ name: tab.link }"
+                class="tab flex items-center px-2 py-1 hover:bg-bgColor-secondary active:bg-bgColor-secondary exact-link:bg-primary rounded-md cursor-pointer"
+                :class="{ active: route.name == tab.link }"
+              >
+                <div class="group mr-1 drag-trigger">
+                  <component
+                    :is="tab.icon"
+                    class="group-hover:hidden block w-4 fill-textColor-secondary parent-[.tab.active]:fill-white"
+                  />
+                  <DragIcon
+                    class="group-hover:block hidden w-4 fill-textColor-secondary parent-[.tab.active]:fill-white cursor-grab"
+                  />
+                </div>
+                <span
+                  class="text-sm font-semibold text-textColor-secondary parent-[.tab.active]:text-white"
+                  >{{ tab.name }}</span
+                >
+              </RouterLink>
+            </div>
+          </VueDraggable>
+        </div>
+        <div class="flex-1 pt-4">
+          <RouterView @hiddenInfo="handleHiddenInfo"></RouterView>
+        </div>
+      </div>
+      <ProjectMembersModal
+        v-if="showProjectMemberModal"
+        @close="
+          () => {
+            showProjectMemberModal = false;
+          }
+        "
+      />
+      <UpdateProjectModal
+        v-if="showUpdateProject"
+        :project="project!"
+        @close="
+          () => {
+            showUpdateProject = false;
+          }
+        "
+      />
     </div>
-    <div class="flex-1">
-      <RouterView></RouterView>
+    <transition name="slideRight">
+      <ActivitiesSidebar
+        v-if="sidebarRightTabs == 'activities'"
+        @close="
+          () => {
+            sidebarRightTabs = undefined;
+          }
+        "
+      />
+    </transition>
+  </div>
+  <div v-else class="flex-1 h-full flex flex-center">
+    <div class="flex flex-col items-center">
+      <NotFoundIcon class="w-20" />
+      <span class="text-2xl font-semibold text-textColor-primary"
+        >Không tìn thấy dự án</span
+      >
+      <span class="my-6 text-base text-textColor-secondary"
+        >Dự án này có thể đã bị xóa hoặc bạn không có quyền xem</span
+      >
+      <div class="">
+        <UButton
+          variantType="primary"
+          @click="
+            () => {
+              router.push({ name: 'Projects' });
+            }
+          "
+          ><span class="">Xem tất cả dự án của bạn</span></UButton
+        >
+      </div>
     </div>
   </div>
 </template>

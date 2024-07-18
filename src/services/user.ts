@@ -1,5 +1,5 @@
 import api from "@/plugins/axios";
-import { ILabel, IServerData, IUser } from "@/types";
+import { ILabel, INotification, IServerData, IUser } from "@/types";
 
 const prefix = "/users/";
 
@@ -21,6 +21,15 @@ export async function findUsersByEmail(email: string) {
     prefix + "find-by-email",
     {
       params: { email },
+    }
+  );
+}
+
+export async function findUsersByNameOrEmail(search: string) {
+  return await api.get<any, IServerData<{ users: IUser[] }>>(
+    prefix + "find-by-name-or-email",
+    {
+      params: { search },
     }
   );
 }
@@ -75,6 +84,37 @@ export async function getTest() {
   return await api.get<any, IServerData>(prefix + "test");
 }
 
+//Project members
+export async function acceptInviteProject(
+  projectId: string,
+  senderId: string,
+  notificationId: string
+) {
+  return await api.post<any, IServerData>(prefix + "accept-join-project", {
+    projectId,
+    senderId,
+    notificationId,
+  });
+}
+
+export async function unacceptInviteProject(
+  projectId: string,
+  senderId: string,
+  notificationId: string
+) {
+  return await api.post<any, IServerData>(prefix + "unaccept-join-project", {
+    projectId,
+    senderId,
+    notificationId,
+  });
+}
+
+export async function leaveProject(projectId: string) {
+  return await api.post<any, IServerData>(prefix + "leave-project", {
+    projectId,
+  });
+}
+
 // CreatedProjectLabels
 export async function getUserProjectLabels() {
   return await api.get<any, IServerData<{ createdProjectLabels: ILabel[] }>>(
@@ -103,5 +143,24 @@ export async function updateUserProjectLabel(
 export async function deleteUserProjectLabel(labelId: string) {
   return await api.delete<any, IServerData>(
     prefix + "created-labels/" + labelId
+  );
+}
+
+// Notifications
+export async function getNotifications() {
+  return await api.get<any, IServerData<{ notifications: INotification[] }>>(
+    prefix + "notifications"
+  );
+}
+
+export async function readNotification(notificationId: string) {
+  return await api.post<any, IServerData>(
+    prefix + "notifications/" + notificationId + "/read"
+  );
+}
+
+export async function unreadNotification(notificationId: string) {
+  return await api.post<any, IServerData>(
+    prefix + "notifications/" + notificationId + "/unread"
   );
 }

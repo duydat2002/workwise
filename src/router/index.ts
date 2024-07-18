@@ -27,7 +27,7 @@ const authPath = ["/signin", "/signup", "/forgot-password"];
 const specialRoutePath = ["/set-password", "/verify-email"];
 
 router.beforeEach(async (to, _) => {
-  console.log(to.name);
+  // console.log(to.name);
   const { user } = storeToRefs(useUserStore());
   const { checkHasEmailAuth } = useAuth();
 
@@ -35,7 +35,7 @@ router.beforeEach(async (to, _) => {
   const hasEmailAuth = checkHasEmailAuth();
   const hasVerifyEmail = user.value?.emailVerified;
 
-  console.log(!!currentUser, hasEmailAuth, hasVerifyEmail);
+  // console.log(!!currentUser, hasEmailAuth, hasVerifyEmail);
 
   if (currentUser && !hasEmailAuth && to.path != "/set-password") {
     return "/set-password";

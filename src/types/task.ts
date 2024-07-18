@@ -16,10 +16,10 @@ export interface ITask {
   startDate: string;
   dueDate: string;
   finishDate: string;
-  status: "todo" | "inprogress" | "completed" | "archived";
+  status: "todo" | "inprogress" | "completed";
+  isArchived: boolean;
   projectId: string;
   taskGroupId: string;
-  activities: IActivity[];
   attachments: IAttachment[];
   approvals: IApproval[];
   comments: IComment[];

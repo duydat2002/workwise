@@ -24,7 +24,7 @@ const hanldeLoad = () => {
     >
       <div v-if="loading" class="w-full h-full skeleton"></div>
       <img
-        class="object-cover"
+        class="object-cover block"
         v-show="!loading"
         :src="avatarUrl"
         alt=""

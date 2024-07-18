@@ -145,7 +145,7 @@ const backToList = () => {
       Chọn màu nhãn
     </div>
     <div
-      class="grid grid-cols-5 -mx-1 max-h-[200px] overflow-y-scroll scroll-vert"
+      class="grid grid-cols-5 -mx-1 max-h-[150px] overflow-y-scroll scroll-vert"
     >
       <div
         v-for="color in LABEL_COLORS"

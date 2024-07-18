@@ -26,15 +26,11 @@ export async function createProject(data: FormData) {
 }
 
 export async function updateProject(projectId: string, data: FormData) {
-  return await api.patch<any, IServerData<{ project: IProject }>>(
-    prefix + projectId,
-    data,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  return await api.patch<any, IServerData>(prefix + projectId, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 }
 
 export async function archiveProject(projectId: string) {
@@ -47,4 +43,42 @@ export async function unarchiveProject(projectId: string) {
 
 export async function deleteProject(projectId: string) {
   return await api.delete<any, IServerData>(prefix + projectId);
+}
+
+// Project members
+export async function inviteProjectMember(
+  projectId: string,
+  members: string[],
+  role: string
+) {
+  return await api.post<any, IServerData>(
+    prefix + projectId + "/invite-members",
+    {
+      members,
+      role,
+    }
+  );
+}
+
+export async function changeProjectMemberRole(
+  projectId: string,
+  member: string,
+  role: string
+) {
+  return await api.patch<any, IServerData>(
+    prefix + projectId + "/change-role",
+    {
+      member,
+      role,
+    }
+  );
+}
+
+export async function deleteProjectMember(projectId: string, member: string) {
+  return await api.post<any, IServerData>(
+    prefix + projectId + "/delete-member",
+    {
+      member,
+    }
+  );
 }

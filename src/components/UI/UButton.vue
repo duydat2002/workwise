@@ -79,7 +79,7 @@ const variantClass = computed(() => {
 <template>
   <button
     :class="[
-      'relative group disabled:opacity-60 disabled:pointer-events-none overflow-hidden ',
+      'relative group disabled:opacity-60 disabled:pointer-events-none  overflow-hidden ',
       sizeClass,
       variantTypeClass,
       variantClass,

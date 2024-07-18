@@ -6,11 +6,12 @@ import ProjectIcon from "@icons/project.svg";
 import TaskIcon from "@icons/task.svg";
 import LeftIcon from "@icons/left.svg";
 import { storeToRefs } from "pinia";
-import { useCommonStore, useResizeStore } from "@/stores";
+import { useCommonStore, useProjectStore, useResizeStore } from "@/stores";
 import { shallowRef, watch } from "vue";
 
 const { narrowSidebar } = storeToRefs(useCommonStore());
 const { dimensions } = storeToRefs(useResizeStore());
+const { showCreateProject } = storeToRefs(useProjectStore());
 
 const tabs = shallowRef([
   {
@@ -26,11 +27,6 @@ const tabs = shallowRef([
   {
     name: "Công việc",
     icon: TaskIcon,
-    link: { name: "Signin" },
-  },
-  {
-    name: "Thống kê",
-    icon: ChartIcon,
     link: { name: "Signin" },
   },
 ]);
@@ -101,6 +97,11 @@ watch(
               <title>Tạo dự án mới</title>
               <PlusIcon
                 class="w-5 p-1 rounded-sm bg-primary-light fill-white cursor-pointer"
+                @click="
+                  () => {
+                    showCreateProject = true;
+                  }
+                "
               />
             </div>
           </div>

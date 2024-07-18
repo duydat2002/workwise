@@ -7,15 +7,14 @@ import { onBeforeUnmount, ref, watch } from "vue";
 import UInput from "@/components/UI/UInput.vue";
 import UButton from "@/components/UI/UButton.vue";
 import LabelPopup from "@/components/Popup/LabelPopup/LabelPopup.vue";
-import UQuill from "../UI/UQuill.vue";
-import { Delta } from "@vueup/vue-quill";
 import VueDatePicker from "@vuepic/vue-datepicker";
 import { storeToRefs } from "pinia";
-import { useThemeStore, useUserStore } from "@/stores";
+import { useProjectStore, useThemeStore, useUserStore } from "@/stores";
 import ImagePopup from "@/components/Popup/ImagePopup/ImagePopup.vue";
 import { ILabel } from "@/types";
 import { createProject } from "@/services/project";
 import { toast } from "vue3-toastify";
+import UTextarea from "@/components/UI/UTextarea.vue";
 
 const emit = defineEmits(["close"]);
 
@@ -23,21 +22,22 @@ const { user } = storeToRefs(useUserStore());
 
 const inputBackground = ref<HTMLInputElement>();
 const name = ref("");
-const description = ref<Delta>();
+const description = ref("");
 const background = ref<string>("");
 const backgroundFile = ref<File>();
 const labels = ref<ILabel[]>([]);
 const startDate = ref();
 const dueDate = ref();
 const nameError = ref<string>();
+const descriptionError = ref<string>();
 const backgroundError = ref<string>();
 const dateError = ref<string>();
-const descMode = ref<"snow" | "bubble">("bubble");
 const activeLabelPopup = ref(false);
 const activeImagePopup = ref(false);
 const isLoadingCreate = ref(false);
 
 const { theme } = storeToRefs(useThemeStore());
+const { addProjectStore } = useProjectStore();
 
 const validate = () => {
   nameError.value = undefined;
@@ -87,20 +87,20 @@ const handleCreateProject = async () => {
     }
 
     formData.append("name", name.value);
-    formData.append("description", JSON.stringify(description.value));
+    formData.append("description", description.value);
     formData.append("labels", JSON.stringify(labels.value.map((l) => l.id)));
-    formData.append("startDate", startDate.value);
-    formData.append("dueDate", dueDate.value);
+    if (startDate.value) formData.append("startDate", startDate.value);
+    if (dueDate.value) formData.append("dueDate", dueDate.value);
 
     const data = await createProject(formData);
 
     if (data.success) {
+      addProjectStore(data.result!.project);
       toast.success("Tạo dự án thành công!");
       emit("close");
     } else {
       toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
     }
-    console.log(data);
     isLoadingCreate.value = false;
   }
 };
@@ -136,14 +136,6 @@ const handleAddLabel = () => {
   activeLabelPopup.value = true;
 };
 
-const handleFocusDesc = () => {
-  descMode.value = "snow";
-};
-
-const handleBlurDesc = () => {
-  descMode.value = "bubble";
-};
-
 watch(
   () => user.value?.createdProjectLabels,
   (createdProjectLabels) => {
@@ -162,9 +154,9 @@ onBeforeUnmount(() => {
   <Modal @click-outside="closeModal">
     <div class="p-5">
       <div
-        class="flex flex-col h-[calc(100vh-40px)] w-full max-w-[800px] bg-bgColor-primary p-4 rounded-lg"
+        class="flex flex-col h-[calc(100vh-40px)] w-full max-w-[800px] bg-bgColor-primary py-4 rounded-lg"
       >
-        <div class="flex items-center justify-between">
+        <div class="px-4 flex items-center justify-between">
           <span class="text-lg font-semibold text-textColor-primary"
             >Thêm dự án mới</span
           >
@@ -172,7 +164,7 @@ onBeforeUnmount(() => {
             <XIcon class="w-3 fill-textColor-secondary" />
           </div>
         </div>
-        <div class="my-3 overflow-y-auto scroll-vert none">
+        <div class="px-4 mt-3 overflow-y-auto scroll-vert none">
           <div class="not-firstchild:mt-5">
             <div class="flex flex-col">
               <label class="mb-1 text-sm font-bold text-textColor-subtitle"
@@ -243,13 +235,11 @@ onBeforeUnmount(() => {
               <label class="mb-1 text-sm font-bold text-textColor-subtitle"
                 >Mô tả
               </label>
-              <UQuill
-                v-model:content="description"
-                :theme="descMode"
-                :enable="descMode == 'snow'"
-                @focus="handleFocusDesc"
-                v-click-outside.short="handleBlurDesc"
-              ></UQuill>
+              <UTextarea
+                v-model:value="description"
+                name="description"
+                :errorMessage="descriptionError"
+              />
             </div>
             <div class="flex flex-col">
               <label class="mb-1 text-sm font-bold text-textColor-subtitle"
@@ -265,6 +255,7 @@ onBeforeUnmount(() => {
                     <VueDatePicker
                       v-model="startDate"
                       auto-apply
+                      partial-flow
                       :enable-time-picker="false"
                       placeholder="mm/dd/yyyy"
                       format="dd/MM/yyyy"
@@ -281,6 +272,7 @@ onBeforeUnmount(() => {
                     <VueDatePicker
                       v-model="dueDate"
                       auto-apply
+                      partial-flow
                       :enable-time-picker="false"
                       placeholder="mm/dd/yyyy"
                       format="dd/MM/yyyy"
@@ -307,7 +299,7 @@ onBeforeUnmount(() => {
                   >{{ label.name }}</span
                 >
                 <span
-                  class="px-3 py-2 bg-bgColor-secondary hover:bg-hover rounded-md cursor-pointer"
+                  class="add-label px-3 py-2 bg-bgColor-secondary hover:bg-hover rounded-md cursor-pointer"
                   title="Thêm nhãn"
                   @click="handleAddLabel"
                   ><PlusIcon class="w-3 fill-textColor-primary"
@@ -338,17 +330,17 @@ onBeforeUnmount(() => {
           </div>
         </div> -->
           </div>
-          <div class="flex items-center justify-end not-lastchild:mr-2">
-            <UButton variantType="error" @click="closeModal"
-              ><span class="text-white font-semibold">Hủy</span></UButton
-            >
-            <UButton
-              variantType="primary"
-              @click="handleCreateProject"
-              :isLoading="isLoadingCreate"
-              ><span class="text-white font-semibold">Tạo</span></UButton
-            >
-          </div>
+        </div>
+        <div class="px-4 flex items-center justify-end not-lastchild:mr-2">
+          <UButton variantType="error" @click="closeModal"
+            ><span class="text-white font-semibold">Hủy</span></UButton
+          >
+          <UButton
+            variantType="primary"
+            @click="handleCreateProject"
+            :isLoading="isLoadingCreate"
+            ><span class="text-white font-semibold">Tạo</span></UButton
+          >
         </div>
       </div>
     </div>

@@ -2,8 +2,9 @@
 import BellIcon from "@icons/bell.svg";
 import RightIcon from "@icons/right.svg";
 import Avatar from "../Common/Avatar.vue";
+import HeaderNotification from "./HeaderNotification.vue";
 import HeaderSearch from "./HeaderSearch.vue";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useThemeStore, useUserStore } from "@/stores";
 import { useAuth } from "@/composables";
@@ -14,10 +15,20 @@ const { signOut } = useAuth();
 
 const router = useRouter();
 
-const { user } = storeToRefs(useUserStore());
+const { user, notifications } = storeToRefs(useUserStore());
 const { theme } = storeToRefs(useThemeStore());
 const showAccountMenu = ref(false);
+const showNotification = ref(false);
 const showThemeChoose = ref(false);
+
+const hasNewNotification = computed(() => {
+  return (
+    notifications.value.length > 0 &&
+    !notifications.value[0].readBy.includes(user.value!.id) &&
+    new Date(notifications.value[0].createdAt).getTime() ==
+      new Date(notifications.value[0].updatedAt).getTime()
+  );
+});
 
 const handleSignOut = async () => {
   showAccountMenu.value = false;
@@ -31,15 +42,36 @@ const handleSignOut = async () => {
   <div
     class="fixed top-0 left-0 right-0 h-12 px-4 flex items-center justify-between bg-bgColor-primary border-b border-borderColor z-30"
   >
-    <div class="flex items-center">
+    <RouterLink :to="{ name: 'Home' }" class="flex items-center">
       <img src="@/assets/images/Logo.png" class="w-[40px]" />
       <span class="logo-text small">WorkWise</span>
-    </div>
+    </RouterLink>
     <div class="flex items-center">
       <HeaderSearch />
-      <div class="flex flex-center not-lastchild:mr-2">
-        <div class="relative p-1 cursor-pointer">
-          <BellIcon class="w-5 fill-textColor-primary" />
+      <div class="relative flex flex-center not-lastchild:mr-2">
+        <div
+          class="p-1"
+          v-click-outside.short="
+            () => {
+              showNotification = false;
+            }
+          "
+        >
+          <div
+            class="relative cursor-pointer"
+            @click.stop="
+              () => {
+                showNotification = !showNotification;
+              }
+            "
+          >
+            <BellIcon class="w-5 fill-textColor-primary" />
+            <div
+              v-if="hasNewNotification"
+              class="absolute top-0 right-0 w-2 h-2 rounded-full bg-error"
+            ></div>
+          </div>
+          <HeaderNotification v-if="showNotification" />
         </div>
         <div
           class="relative"

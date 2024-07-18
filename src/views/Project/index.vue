@@ -1,53 +1,116 @@
 <script setup lang="ts">
-import LoadingIcon from "@icons/loading.svg";
 import SearchIcon from "@icons/search.svg";
 import UInput from "@/components/UI/UInput.vue";
 import UTagInput from "@/components/UI/UTagInput.vue";
 import UButton from "@/components/UI/UButton.vue";
-import CreateProjectModal from "@/components/Modal/CreateProjectModal.vue";
-import { onMounted, ref } from "vue";
-import { getProjects } from "@/services/project";
+import { ref, watchEffect } from "vue";
 import { storeToRefs } from "pinia";
-import { useProjectStore } from "@/stores";
-import { toast } from "vue3-toastify";
+import { useProjectStore, useUserStore } from "@/stores";
+import ProjectItem from "@/components/Pages/Project/ProjectItem.vue";
+import { IOption, IProject } from "@/types";
+import USelect from "@/components/UI/USelect.vue";
 
-const { projects } = storeToRefs(useProjectStore());
+const { user } = storeToRefs(useUserStore());
+const { projects, showCreateProject } = storeToRefs(useProjectStore());
 
+const showProjects = ref<IProject[]>(projects.value);
 const search = ref("");
-const filter = ref("");
-const tagsFilter = ref<string[]>([]);
-const activeFilterDropdown = ref(false);
-const activeCreateProjectModal = ref(false);
-const isLoadingProject = ref(true);
-
-const clickTest = (value: string) => {
-  tagsFilter.value.push(value);
-};
-
-const deleteFilter = (tag: string, index: number) => {
-  console.log(tag);
-  tagsFilter.value.splice(index, 1);
-};
+const sortSelected = ref<string>("dueSoon");
+const sortOptions = ref<IOption[]>([
+  { key: "dueSoon", value: "Sắp tới hạn" },
+  { key: "latest", value: "Được tạo mới nhất" },
+  { key: "earliest", value: "Được tạo sớm nhất" },
+  { key: "mostRecent", value: "Hoạt động gần đây nhất" },
+  { key: "leastRecent", value: "Ít hoạt động gần đây nhất" },
+  { key: "atoz", value: "Theo bảng chữ cái A-Z" },
+  { key: "ztoa", value: "Theo bảng chữ cái Z-A" },
+]);
+const searchLabel = ref("");
+const labelsSelected = ref<IOption[]>([]);
+const labelOptions = ref<IOption[]>(
+  user.value?.createdProjectLabels.map((l) => {
+    return { key: l.id, value: l.name, data: l };
+  }) || []
+);
 
 const handleClickCreateProject = () => {
-  activeCreateProjectModal.value = true;
+  showCreateProject.value = true;
 };
 
-onMounted(async () => {
-  isLoadingProject.value = true;
-  const data = await getProjects();
-
-  if (data.success) {
-    projects.value = data.result!.projects;
-  } else {
-    toast.error("Hiện không thể tải dữ liệu dự án! Hãy thử lại sau.");
+const handleChooseSort = (option: IOption) => {
+  switch (option.key) {
+    case "dueSoon":
+      showProjects.value = showProjects.value.sort((p1, p2) => {
+        if (!p1.dueDate) return 1;
+        if (!p2.dueDate) return -1;
+        return new Date(p1.dueDate).getTime() - new Date(p2.dueDate).getTime();
+      });
+      break;
+    case "earliest":
+      showProjects.value = showProjects.value.sort((p1, p2) => {
+        return (
+          new Date(p1.createdAt).getTime() - new Date(p2.createdAt).getTime()
+        );
+      });
+      break;
+    case "latest":
+      showProjects.value = showProjects.value.sort((p1, p2) => {
+        return (
+          new Date(p2.createdAt).getTime() - new Date(p1.createdAt).getTime()
+        );
+      });
+      break;
+    case "mostRecent":
+      showProjects.value = showProjects.value.sort((p1, p2) => {
+        return (
+          new Date(p1.updatedAt).getTime() - new Date(p2.updatedAt).getTime()
+        );
+      });
+      break;
+    case "leastRecent":
+      showProjects.value = showProjects.value.sort((p1, p2) => {
+        return (
+          new Date(p2.updatedAt).getTime() - new Date(p1.updatedAt).getTime()
+        );
+      });
+      break;
+    case "atoz":
+      showProjects.value = showProjects.value.sort((p1, p2) => {
+        return p1.name.toLowerCase().localeCompare(p2.name.toLowerCase());
+      });
+      break;
+    case "ztoa":
+      showProjects.value = showProjects.value.sort((p1, p2) => {
+        return p2.name.toLowerCase().localeCompare(p1.name.toLowerCase());
+      });
+      break;
+    default:
+      return 0;
   }
-  isLoadingProject.value = false;
+};
+
+const handleChooseLabel = (option: IOption) => {
+  if (!labelsSelected.value.some((l) => l.key == option.key)) {
+    searchLabel.value = "";
+    labelsSelected.value.push(option);
+  }
+};
+
+watchEffect(() => {
+  const filterTagIds = labelsSelected.value.map((t) => t.key);
+  showProjects.value = projects.value.filter((p) => {
+    const nameMatch = p.name.toLowerCase().includes(search.value.toLowerCase());
+
+    if (filterTagIds.length == 0) return nameMatch;
+
+    const tagMatch = p.labels.some((l) => filterTagIds.includes(l.id));
+    return nameMatch && tagMatch;
+  });
 });
 </script>
 
 <template>
-  <div class="px-6">
+  <div class="px-6 pb-6 flex flex-col h-full">
     <div class="pt-6 mb-4 flex items-center justify-between">
       <span class="text-xl font-medium text-textColor-primary"
         >Tất cả dự án</span
@@ -58,8 +121,8 @@ onMounted(async () => {
         >
       </div>
     </div>
-    <div class="flex items-center justify-between">
-      <div class="flex flex-col">
+    <div class="flex flex-wrap items-center justify-between">
+      <div class="flex flex-col pr-10 mt-1">
         <label class="mb-1 text-xs font-bold text-textColor-subtitle"
           >Tìm kiếm</label
         >
@@ -74,144 +137,59 @@ onMounted(async () => {
           </template>
         </UInput>
       </div>
-      <div class="flex flex-col pl-10">
-        <label class="mb-1 text-xs font-bold text-textColor-subtitle"
-          >Lọc theo</label
-        >
-        <UTagInput
-          class="relative"
-          name="filter_project"
-          :tags="tagsFilter"
-          v-model:propValue="filter"
-          @deleteItem="deleteFilter"
-          @click="
-            () => {
-              activeFilterDropdown = !activeFilterDropdown;
-            }
-          "
-          v-click-outside.short="
-            () => {
-              activeFilterDropdown = false;
-            }
-          "
-        >
-          <template v-if="activeFilterDropdown" #dropdown>
-            <div class="flex flex-col mt-1 bg-bgColor-primary shadow">
-              <span class="w-full hover:bg-hover" @click.stop="clickTest('A')"
-                >A</span
-              >
-              <span class="w-full hover:bg-hover" @click.stop="clickTest('B')"
-                >B</span
-              >
-              <span class="w-full hover:bg-hover" @click.stop="clickTest('C')"
-                >C</span
-              >
-            </div>
-          </template>
-        </UTagInput>
-      </div>
-    </div>
-    <div v-if="isLoadingProject" class="flex-1 flex flex-center">
-      <LoadingIcon class="w-6 fill-textColor-primary" />
-    </div>
-    <div v-else class="flex flex-wrap mt-5 -mx-2 bg-bgColor-secondary">
-      <div v-for="i in 5" :key="i" class="w-1/4 p-2">
-        <div
-          class="w-full px-3 py-2 bg-bgColor-primary flex flex-col justify-between rounded-lg shadow"
-        >
-          <img src="@/assets/images/Rectangle.png" alt="" class="h-[100px]" />
-          <div class="mt-2 flex items-center not-lastchild:mr-1">
-            <div
-              class="relative group w-10 h-2 rounded bg-red-400 cursor-pointer"
-            >
-              <div class="hidden group-hover:block absolute top-full pt-1">
-                <span
-                  class="px-[6px] py-[2px] text-xs text-textColor-tooltip bg-bgColor-tooltip rounded"
-                  >Game</span
-                >
-              </div>
-            </div>
-            <div
-              class="relative group w-10 h-2 rounded bg-green-400 cursor-pointer"
-            >
-              <div class="hidden group-hover:block absolute top-full pt-1">
-                <span
-                  class="px-[6px] py-[2px] text-xs text-textColor-tooltip bg-bgColor-tooltip rounded"
-                  >Work</span
-                >
-              </div>
-            </div>
-          </div>
-          <RouterLink
-            :to="{ name: 'Project', params: { projectId: i } }"
-            class="mt-2 flex flex-col"
+      <div class="flex flex-wrap mt-1">
+        <div class="flex flex-col w-[200px] mr-2">
+          <label class="mb-1 text-xs font-bold text-textColor-subtitle"
+            >Sắp xếp</label
           >
-            <span class="text-base font-bold text-textColor-primary"
-              >Dự án {{ i }}</span
-            >
-            <span class="text-sm text-textColor-secondary text-dots"
-              >Lorem ipsum dolor sit amet consectetur adipisicing elit. Fugiat,
-              quo?</span
-            >
-          </RouterLink>
-          <div class="mt-3">
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-textColor-primary"
-                >Tiến trình</span
-              >
-              <span class="text-sm text-primary-light">75%</span>
-            </div>
-            <div class="relative w-full h-2 bg-[#c6d3ff] rounded">
-              <div
-                class="absolute left-0 top-0 bottom-0 w-[80%] bg-primary rounded"
-              ></div>
-              <div
-                class="absolute left-[80%] top-1/2 -translate-y-1/2 -translate-x-1 w-3 h-3 border-[2px] border-white rounded-full bg-primary box-content"
-              ></div>
-            </div>
-            <div class="mt-3 flex items-center justify-between">
-              <div class="flex items-center">
-                <span class="text-xs text-textColor-secondary">Người tạo</span>
-                <div
-                  class="w-5 h-5 bg-bgColor-secondary border border-white rounded-full overflow-hidden"
-                >
-                  <img src="@/assets/images/Logo.png" alt="" class="" />
+          <USelect
+            v-model:selected="sortSelected"
+            :options="sortOptions"
+            @choose="handleChooseSort"
+            placeholder="Chọn sắp xếp theo"
+          />
+        </div>
+        <div class="flex flex-col">
+          <label class="mb-1 text-xs font-bold text-textColor-subtitle"
+            >Lọc theo nhãn</label
+          >
+          <UTagInput
+            v-model:search="searchLabel"
+            v-model:selecteds="labelsSelected"
+            :options="labelOptions"
+            placeholder="Tìm kiếm nhãn"
+          >
+            <template #dropdown>
+              <div class="p-2 bg-bgColor-primary rounded-lg shadow">
+                <div class="flex flex-col">
+                  <div
+                    v-for="label in labelOptions"
+                    :key="label.key"
+                    class="flex items-center flex-1 p-2 rounded-lg hover:bg-hover active:bg-hover has-[.block]:cursor-not-allowed cursor-pointer"
+                    :class="{
+                      block: labelsSelected.some((l) => l.key == label.key),
+                    }"
+                    @click="handleChooseLabel(label)"
+                  >
+                    <div
+                      class="w-8 h-5 rounded mr-2"
+                      :style="{ background: label.data.color }"
+                    ></div>
+                    <span class="text-textColor-primary">{{
+                      label.value
+                    }}</span>
+                  </div>
                 </div>
               </div>
-              <div class="flex items-center not-firstchild:-ml-[6px]">
-                <div
-                  class="w-5 h-5 bg-bgColor-secondary border border-white rounded-full overflow-hidden"
-                >
-                  <img src="@/assets/images/Logo.png" alt="" class="" />
-                </div>
-                <div
-                  class="w-5 h-5 bg-bgColor-secondary border border-white rounded-full overflow-hidden"
-                >
-                  <img src="@/assets/images/Logo.png" alt="" class="" />
-                </div>
-                <div
-                  class="w-5 h-5 bg-bgColor-secondary border border-white rounded-full overflow-hidden"
-                >
-                  <img src="@/assets/images/Logo.png" alt="" class="" />
-                </div>
-                <div
-                  class="w-5 h-5 bg-bgColor-secondary border border-white rounded-full overflow-hidden"
-                >
-                  <img src="@/assets/images/Logo.png" alt="" class="" />
-                </div>
-              </div>
-            </div>
-          </div>
+            </template>
+          </UTagInput>
         </div>
       </div>
     </div>
-    <CreateProjectModal
-      v-if="activeCreateProjectModal"
-      @close="
-        () => {
-          activeCreateProjectModal = false;
-        }
-      "
-    />
+    <div class="flex-1 flex flex-wrap mt-5 -mx-2 bg-bgColor-secondary">
+      <div v-for="project in showProjects" :key="project.id" class="w-1/4 p-2">
+        <ProjectItem :project />
+      </div>
+    </div>
   </div>
 </template>

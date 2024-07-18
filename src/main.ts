@@ -1,6 +1,7 @@
 import "./assets/style.css";
 import "vue3-toastify/dist/index.css";
 import "@vuepic/vue-datepicker/dist/main.css";
+import "vue3-colorpicker/style.css";
 
 import App from "./App.vue";
 import router from "./router";
@@ -15,7 +16,9 @@ import Vue3TouchEvents, {
   type Vue3TouchEventsOptions,
 } from "vue3-touch-events";
 import Vue3Toasity, { type ToastContainerOptions } from "vue3-toastify";
-import { useUserStore } from "./stores";
+import Vue3ColorPicker from "vue3-colorpicker";
+import { useProjectStore, useUserStore } from "./stores";
+import { initializeSocket, socket } from "@/plugins/socket";
 
 registerSW({
   onNeedRefresh() {
@@ -45,14 +48,29 @@ onAuthStateChanged(auth, async () => {
     app.use(Vue3Toasity, {
       autoClose: 2000,
       theme: "colored",
+      pauseOnHover: false,
+      position: "bottom-right",
     } as ToastContainerOptions);
+    app.use(Vue3ColorPicker);
+    initializeSocket(pinia);
 
     app.mount("#app");
   }
 
-  const { fetchUser } = useUserStore();
+  const { fetchUser, getUser, fetchNotification } = useUserStore();
+  const { fetchProjectStore } = useProjectStore();
   nextTick(async () => {
     console.log(auth.currentUser);
     if (auth.currentUser) await fetchUser();
+
+    const user = getUser();
+
+    if (user) {
+      await fetchProjectStore();
+      await fetchNotification();
+      socket.connect();
+      console.log("init");
+      socket.emit("init", user);
+    } else socket.disconnect();
   });
 });

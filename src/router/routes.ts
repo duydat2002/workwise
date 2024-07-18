@@ -20,7 +20,7 @@ const routes: Readonly<RouteRecordRaw[]> = [
     name: "Project",
     redirect: { name: "Kanban" },
     component: () => import("@/views/Project/project.vue"),
-    meta: { title: "Dự án • WorkWise", layout: AppLayout, requiresAuth: true },
+    meta: { layout: AppLayout, requiresAuth: true },
     children: [
       {
         path: "",
@@ -35,17 +35,32 @@ const routes: Readonly<RouteRecordRaw[]> = [
       {
         path: "calendar",
         name: "Calendar",
-        component: () => import("@/views/Project/Views/list.vue"),
+        component: () => import("@/views/Project/Views/calendar.vue"),
       },
       {
         path: "timeline",
         name: "Timeline",
-        component: () => import("@/views/Project/Views/list.vue"),
+        component: () => import("@/views/Project/Views/timeline.vue"),
       },
       {
-        path: "attach",
-        name: "Attach",
-        component: () => import("@/views/Project/Views/list.vue"),
+        path: "approvals",
+        name: "Approvals",
+        component: () => import("@/views/Project/Views/approvals.vue"),
+      },
+      {
+        path: "attachments",
+        name: "Attachments",
+        component: () => import("@/views/Project/Views/attachments.vue"),
+      },
+      {
+        path: "activities",
+        name: "Activities",
+        component: () => import("@/views/Project/Views/activities.vue"),
+      },
+      {
+        path: "statistics",
+        name: "Statistics",
+        component: () => import("@/views/Project/Views/statistics.vue"),
       },
     ],
   },

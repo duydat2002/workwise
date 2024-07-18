@@ -3,6 +3,14 @@ import { IUserInfo } from "./user";
 import { ITaskGroup } from "./taskGroup";
 import { IActivity } from "./activity";
 
+export interface IMember {
+  user: IUserInfo;
+  role: "admin" | "member";
+  status: "pending" | "accepted";
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IProject {
   id: string;
   name: string;
@@ -10,18 +18,12 @@ export interface IProject {
   background: string;
   labels: ILabel[];
   createdBy: IUserInfo;
-  members: {
-    user: IUserInfo;
-    role: "admin" | "member";
-    createdAt: string;
-    updatedAt: string;
-  }[];
+  members: IMember[];
   createdTaskLabels: ILabel[];
-  status: "active" | "archived";
-  startDate: string;
-  dueDate: string;
+  isArchived: boolean;
+  startDate?: string;
+  dueDate?: string;
   taskGroups: ITaskGroup[];
-  activities: IActivity[];
   createdAt: string;
   updatedAt: string;
 }

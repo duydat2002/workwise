@@ -14,3 +14,10 @@ export interface IServerData<T = any> {
   message: string | any[];
   keyValue?: string | string[];
 }
+
+export interface IOption {
+  key: string;
+  value: string;
+  disabled?: boolean;
+  data?: any;
+}

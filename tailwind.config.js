@@ -10,6 +10,7 @@ export default {
         primary: {
           DEFAULT: "#546fff",
           light: "#8aa0e8",
+          extraLight: "var(--primary-extraLight-color)",
         },
         textColor: {
           primary: "var(--primary-text-color)",
@@ -25,7 +26,7 @@ export default {
         borderColor: {
           DEFAULT: "var(--border-color)",
           dark: "var(--border-dark-color)",
-          superdark: "var(--border-super-dark-color)",
+          extraDark: "var(--border-super-dark-color)",
         },
         link: "var(--link-color)",
         error: "var(--error-color)",
@@ -38,6 +39,7 @@ export default {
       },
       boxShadow: {
         DEFAULT: "4px 0 24px rgba(0,0,0,0.15)",
+        item: "0px 1px 1px #091E4240, 0px 0px 1px #091E424F",
       },
     },
   },
@@ -74,6 +76,15 @@ export default {
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
+        },
+      });
+      addUtilities({
+        ".line-clamp-3": {
+          display: "-webkit-box",
+          "-webkit-box-orient": "vertical",
+          "-webkit-line-clamp": "3",
+          overflow: "hidden",
+          "text-overflow": "ellipsis",
         },
       });
     }),

@@ -10,13 +10,14 @@ const props = withDefaults(
     propValue: string | number;
     placeholder?: string;
     id?: string;
-    name: string;
+    name?: string;
     errorMessage?: string;
     disabled?: boolean;
     autocomplete?: string;
   }>(),
   {
     type: "text",
+    autocomplete: "off",
   }
 );
 
@@ -61,7 +62,7 @@ const togglePasswordVisibility = () => {
     v-click-outside.short="blurInput"
   >
     <div
-      class="w-full flex items-center px-3 py-1 min-h-[36px] rounded border border-borderColor has-[.focus]:border-primary-light"
+      class="w-full flex flex-wrap items-center px-3 py-1 min-h-[36px] rounded border border-borderColor has-[.focus]:border-primary-light"
       :class="{ focus: isFocus }"
     >
       <div v-if="slots.left" class="flex-shrink-0 mr-2">

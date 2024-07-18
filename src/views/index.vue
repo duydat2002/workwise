@@ -1,14 +1,21 @@
 <script setup lang="ts">
+import USelect from "@/components/UI/USelect.vue";
+import UTagInput from "@/components/UI/UTagInput.vue";
 import { auth } from "@/plugins/firebase";
 import { useUserStore } from "@/stores";
-import { QuillEditor } from "@vueup/vue-quill";
+import { IOption } from "@/types";
 import { storeToRefs } from "pinia";
 import { ref } from "vue";
-import "@vueup/vue-quill/dist/vue-quill.snow.css";
 
 const { user } = storeToRefs(useUserStore());
 
-const abc = ref("");
+const options = ref<IOption[]>([
+  { key: "a", value: "a" },
+  { key: "b", value: "b" },
+  { key: "c", value: "class" },
+]);
+const selected = ref<string>(options.value[0].key);
+const selecteds = ref<IOption[]>([options.value[0]]);
 
 const cac = () => {
   console.log(auth.currentUser);
@@ -20,24 +27,13 @@ const cac = () => {
   <button @click="cac">Logout</button>
   <p>{{ user?.email }}</p>
 
-  <div class="p-5 mt-5 flex flex-col">
-    <QuillEditor
-      class="h-[200px]"
-      toolbar="essential"
-      v-model:content="abc"
-      contentType="html"
-      placeholder="Nhập mô tả..."
-    />
-  </div>
+  <USelect v-model:selected="selected" :options></USelect>
+  <br />
+  <br />
+  <br />
+  <!-- <UTagInput name="cac" v-model:selecteds="selecteds" :options>
+    <template v-slot:default="{ item }">
+      <span>{{ item.value }}</span>
+    </template>
+  </UTagInput> -->
 </template>
-
-<style>
-/* .ql-container {
-  height: 200px;
-} */
-
-.ql-editor {
-  height: 100%;
-  min-height: 200px;
-}
-</style>

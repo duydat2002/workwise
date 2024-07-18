@@ -3,11 +3,10 @@ import { ITask } from "./task";
 export interface ITaskGroup {
   id: string;
   name: string;
-  description?: string;
-  color?: string;
+  color: string;
   createdBy: string;
   projectId: string;
-  status: "active" | "archived";
+  isArchived: boolean;
   tasks: ITask[];
   createdAt: string;
   updatedAt: string;

@@ -87,7 +87,7 @@ watch(
 <template>
   <div
     class="absolute left-0 bottom-full mb-2 p-3 w-[300px] max-h-[600px] bg-bgColor-primary shadow rounded-lg"
-    v-click-outside.short="closePopup"
+    v-click-outside.short="{ handle: closePopup, excludes: ['.add-label'] }"
   >
     <template v-if="tab == 'list'">
       <div class="relative flex flex-center">
