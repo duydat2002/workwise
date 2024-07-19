@@ -1,10 +1,11 @@
-import { getProjects } from "@/services/project";
-import { IProject, ITask, ITaskGroup } from "@/types";
+import { getProjectActivities, getProjects } from "@/services/project";
+import { IActivity, IProject, ITask, ITaskGroup } from "@/types";
 import { defineStore } from "pinia";
 
 interface IState {
   projects: IProject[];
   project: IProject | null;
+  activities: IActivity[];
   showProjectLabel: boolean;
   showCreateProject: boolean;
 }
@@ -13,6 +14,7 @@ export const useProjectStore = defineStore("project", {
   state: (): IState => ({
     projects: [],
     project: null,
+    activities: [],
     showProjectLabel: false,
     showCreateProject: false,
   }),
@@ -119,6 +121,16 @@ export const useProjectStore = defineStore("project", {
             taskGroup.tasks.splice(index, 1);
           }
         }
+      }
+    },
+
+    async fetchActivities(projectId: string) {
+      const data = await getProjectActivities(projectId);
+      console.log("lon");
+      if (data.success) {
+        this.activities = data.result!.activities;
+      } else {
+        this.activities = [];
       }
     },
   },

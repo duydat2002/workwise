@@ -98,7 +98,8 @@ const handleChooseLabel = (option: IOption) => {
 
 watchEffect(() => {
   const filterTagIds = labelsSelected.value.map((t) => t.key);
-  showProjects.value = projects.value.filter((p) => {
+  const projectsTemp = projects.value;
+  showProjects.value = projectsTemp.filter((p) => {
     const nameMatch = p.name.toLowerCase().includes(search.value.toLowerCase());
 
     if (filterTagIds.length == 0) return nameMatch;

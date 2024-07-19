@@ -1,0 +1,205 @@
+<script setup lang="ts">
+import Avatar from "@/components/Common/Avatar.vue";
+import { findDifferences, formatDate } from "@/helpers";
+import { IActivity } from "@/types";
+import { ref, onMounted } from "vue";
+
+const props = defineProps<{
+  activity: IActivity;
+}>();
+
+const content = ref("");
+const updated = ref("");
+
+const linkRender = (link: string, content: string = "") => {
+  return `<a class='link' href='${link}'>${content}</a>`;
+};
+
+const boldRender = (content: string = "") => {
+  return `<span class='font-semibold'>${content}</span>`;
+};
+
+onMounted(() => {
+  const projectActivity = props.activity.project;
+  let member, project, taskGroup, task;
+  switch (props.activity.type) {
+    case "update_project":
+      content.value = `đã cập nhập dự án này.`;
+
+      if (props.activity.datas.oldProject && props.activity.datas.newProject) {
+        const diff = findDifferences(
+          props.activity.datas.oldProject,
+          props.activity.datas.newProject,
+          ["name", "background", "description", "startDate", "dueDate"]
+        );
+
+        let updatedHtml = "";
+        Object.keys(diff).forEach((d) => {
+          switch (d) {
+            case "name":
+              updatedHtml += `<span class='diff-item'>Tên: từ <span class='bold'>${
+                diff[d].obj1 ?? "'null'"
+              }</span> thành <span class='bold'>${
+                diff[d].obj2 ?? "'null'"
+              }</span></span>`;
+              break;
+            case "background":
+              updatedHtml += `<span class='diff-item'>Ảnh bìa</span>`;
+              break;
+            case "description":
+              updatedHtml += `<span class='diff-item'>Mô tả: từ <span class='bold'>${
+                diff[d].obj1 && diff[d].obj1 != "" ? diff[d].obj1 : "'null'"
+              }</span> thành <span class='bold'>${
+                diff[d].obj2 && diff[d].obj2 != "" ? diff[d].obj2 : "'null'"
+              }</span></span>`;
+              break;
+            case "startDate":
+              updatedHtml += `<span class='diff-item'>Ngày bắt đầu: từ <span class='bold'>${
+                diff[d].obj1 ? formatDate(diff[d].obj1) : "'null'"
+              }</span> thành <span class='bold'>${
+                diff[d].obj2 ? formatDate(diff[d].obj2) : "'null'"
+              }</span></span>`;
+              break;
+            case "dueDate":
+              updatedHtml += `<span class='diff-item'>Hạn chót: từ <span class='bold'>${
+                diff[d].obj1 ? formatDate(diff[d].obj1) : "'null'"
+              }</span> thành <span class='bold'>${
+                diff[d].obj2 ? formatDate(diff[d].obj2) : "'null'"
+              }</span></span>`;
+              break;
+            default:
+              break;
+          }
+        });
+
+        updated.value = updatedHtml;
+      }
+      break;
+    case "archive_project":
+      content.value = `đã lưu trữ dự án này.`;
+      break;
+    case "unarchive_project":
+      content.value = `đã khôi phục dự án này.`;
+      break;
+    case "member_join_project":
+      content.value = `đã tham gia vào dự án này.`;
+      break;
+    case "member_left_project":
+      content.value = `đã rời khỏi dự án này.`;
+      break;
+    case "change_role_member_project":
+      member = props.activity.datas.member;
+      content.value = `đã chỉ định ${boldRender(member.fullname)} là ${
+        member.role == "admin" ? "quản lý" : "thành viên"
+      } của dự án này.`;
+      break;
+    case "remove_member_project":
+      member = props.activity.datas.member;
+      content.value = `đã xóa ${boldRender(member.fullname)} khỏi dự án này.`;
+      break;
+    case "create_taskgroup":
+      taskGroup = props.activity.taskGroup;
+      content.value = `đã tạo nhóm công việc ${linkRender(
+        "",
+        taskGroup?.name
+      )}.`;
+      break;
+    case "update_taskgroup":
+      break;
+    case "archive_taskgroup":
+      taskGroup = props.activity.taskGroup;
+      content.value = `đã lưu trữ nhóm công việc ${boldRender(
+        taskGroup?.name
+      )}.`;
+      break;
+    case "unarchive_taskgroup":
+      taskGroup = props.activity.taskGroup;
+      content.value = `đã khôi phục nhóm công việc ${linkRender(
+        "",
+        taskGroup?.name
+      )}.`;
+      break;
+    case "remove_taskgroup":
+      taskGroup = props.activity.datas.taskGroup;
+      content.value = `đã xóa nhóm công việc ${boldRender(taskGroup?.name)}.`;
+      break;
+    case "create_task":
+      taskGroup = props.activity.taskGroup;
+      task = props.activity.task;
+      content.value = `đã tạo công việc ${boldRender(
+        task?.name
+      )} vào nhóm công việc ${boldRender(taskGroup?.name)}.`;
+      break;
+    case "update_task":
+      break;
+    case "archive_task":
+      task = props.activity.task;
+      content.value = `đã lưu trữ công việc ${boldRender(task?.name)}.`;
+      break;
+    case "unarchive_task":
+      task = props.activity.task;
+      content.value = `đã khôi phục công việc ${boldRender(task?.name)}.`;
+      break;
+    case "remove_task":
+      content.value = `đã xóa công việc .`;
+      break;
+    case "assign_task":
+      break;
+    case "unassign_task":
+      break;
+    case "approval_task":
+      break;
+    case "comment_task":
+      break;
+    case "add_attachment_task":
+      break;
+    case "remove_attachment_task":
+      break;
+    default:
+      return props.activity.type;
+      break;
+  }
+});
+</script>
+
+<template>
+  <div class="flex px-4 py-2">
+    <div
+      class="mr-2"
+      @click="
+        () => {
+          console.log(activity.datas);
+        }
+      "
+    >
+      <Avatar :avatarUrl="activity.user.avatar" class="w-8" />
+    </div>
+    <div class="flex flex-col">
+      <div class="text-sm text-textColor-primary">
+        <span class="font-semibold mr-1">{{ activity.user.fullname }}</span>
+        <span class="" v-html="content != '' ? content : activity.type"></span>
+      </div>
+      <div
+        class="flex flex-col text-sm text-textColor-secondary"
+        v-html="updated"
+      ></div>
+      <span class="text-xs text-textColor-secondary">{{
+        formatDate(activity.createdAt)
+      }}</span>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+:deep(.bold) {
+  font-weight: 700;
+}
+
+:deep(.link) {
+  color: var(--link-color);
+}
+
+:deep(.link:hover) {
+  text-decoration: underline;
+}
+</style>

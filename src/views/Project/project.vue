@@ -34,7 +34,6 @@ import UButton from "@/components/UI/UButton.vue";
 import ProjectMembersModal from "@/components/Modal/ProjectMembersModal.vue";
 import UpdateProjectModal from "@/components/Modal/UpdateProjectModal.vue";
 import ActivitiesSidebar from "@/components/Pages/Activities/ActivitiesSidebar.vue";
-import Popper from "vue3-popper";
 import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
 import {
   archiveProject,
@@ -47,7 +46,7 @@ const router = useRouter();
 const route = useRoute();
 
 const { user } = storeToRefs(useUserStore());
-const { projects, project } = storeToRefs(useProjectStore());
+const { projects, project, activities } = storeToRefs(useProjectStore());
 
 const isLoadingProject = ref(false);
 const isLoadingAction = ref(false);
@@ -135,6 +134,7 @@ const getProject = () => {
     projects.value.find((p) => p.id == route.params.projectId) || null;
 
   if (project.value) {
+    activities.value = [];
     project.value.members.sort((a, b) => {
       if (a.user.id == user.value!.id) return -1;
       if (b.user.id == user.value!.id) return 1;

@@ -1,5 +1,5 @@
 import api from "@/plugins/axios";
-import { IServerData, IProject } from "@/types";
+import { IServerData, IProject, IActivity } from "@/types";
 
 const prefix = "/projects/";
 
@@ -80,5 +80,12 @@ export async function deleteProjectMember(projectId: string, member: string) {
     {
       member,
     }
+  );
+}
+
+// Project activities
+export async function getProjectActivities(projectId: string) {
+  return await api.get<any, IServerData<{ activities: IActivity[] }>>(
+    prefix + projectId + "/activities"
   );
 }

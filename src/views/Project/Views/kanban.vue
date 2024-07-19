@@ -2,6 +2,7 @@
 import SearchIcon from "@icons/search.svg";
 import FilterIcon from "@icons/filter.svg";
 import MoreIcon from "@icons/more.svg";
+import BucketIcon from "@icons/bucket.svg";
 import BarIcon from "@icons/bar.svg";
 import PlusIcon from "@icons/plus.svg";
 import XIcon from "@icons/x.svg";
@@ -12,8 +13,13 @@ import UTextarea from "@/components/UI/UTextarea.vue";
 import UButton from "@/components/UI/UButton.vue";
 import { storeToRefs } from "pinia";
 import { useProjectStore, useThemeStore } from "@/stores";
-import { createTaskGroups, reorderTaskGroup } from "@/services/taskGroup";
+import {
+  createTaskGroups,
+  reorderTaskGroup,
+  updateTaskGroup,
+} from "@/services/taskGroup";
 import { createTask } from "@/services/task";
+import { ITaskGroup } from "@/types";
 
 const emits = defineEmits(["hiddenInfo"]);
 
@@ -63,7 +69,6 @@ const handleCreateTaskGroup = async () => {
     );
 
     if (data.success) {
-      project.value!.taskGroups?.push(data.result!.taskGroup);
     }
   }
 };
@@ -79,6 +84,30 @@ const handleCreateTask = async (taskGroupId: string) => {
     if (data.success) {
       showCreateTask.value = undefined;
     }
+  }
+};
+
+const changeTaskGroupName = async (event: Event, taskGroup: ITaskGroup) => {
+  const target = event.target as HTMLInputElement;
+  console.log(target.value, taskGroup);
+  const data = await updateTaskGroup(
+    taskGroup.id,
+    target.value.trim(),
+    taskGroup.color
+  );
+  if (data.success) {
+  } else {
+  }
+};
+
+const changeTaskGroupColor = async (taskGroup: ITaskGroup) => {
+  const data = await updateTaskGroup(
+    taskGroup.id,
+    taskGroup.name,
+    taskGroup.color
+  );
+  if (data.success) {
+  } else {
   }
 };
 
@@ -172,9 +201,29 @@ const unactiveCreateTask = () => {
                   type="text"
                   class="flex-1 w-full px-2 py-[4px] text-sm font-semibold text-white rounded border border-solid border-transparent focus:border-primary cursor-pointer focus:cursor-auto"
                   :value="taskGroup.name"
+                  @change="changeTaskGroupName($event, taskGroup)"
                 />
                 <div
-                  class="flex-shrink-0 flex flex-center w-8 h-8 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer ml-2"
+                  class="relative flex-shrink-0 flex flex-center w-8 h-8 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer ml-2"
+                >
+                  <BucketIcon class="w-4 fill-white" />
+                  <div
+                    class="absolute top-0 left-0 right-0 bottom-0 z-10 opacity-0"
+                  >
+                    <ColorPicker
+                      format="hex"
+                      shape="square"
+                      disable-alpha
+                      lang="En"
+                      v-on:update:pureColor="(color: string) => {taskGroup.color = color}"
+                      v-on:pureColorChange="changeTaskGroupColor(taskGroup)"
+                      :theme="isDark ? 'black' : 'white'"
+                      :pure-color="taskGroup.color"
+                    />
+                  </div>
+                </div>
+                <div
+                  class="flex-shrink-0 flex flex-center w-8 h-8 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer ml-1"
                 >
                   <MoreIcon class="w-3 fill-white" />
                 </div>

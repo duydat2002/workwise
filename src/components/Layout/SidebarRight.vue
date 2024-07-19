@@ -27,7 +27,7 @@ const handleClose = () => {
         <XIcon class="w-3 fill-textColor-primary group-hover:fill-error" />
       </div>
     </div>
-    <div class="flex flex-col">
+    <div class="flex flex-col h-full overflow-y-auto scroll-vert my-3">
       <slot />
     </div>
   </div>

@@ -96,9 +96,11 @@ const handleUpdateProject = async () => {
     formData.append("name", name.value);
     formData.append("description", description.value);
     formData.append("labels", JSON.stringify(labels.value.map((l) => l.id)));
-    if (startDate.value)
-      formData.append("startDate", startDate.value.toString());
-    if (dueDate.value) formData.append("dueDate", dueDate.value.toString());
+    formData.append(
+      "startDate",
+      startDate.value ? startDate.value.toString() : ""
+    );
+    formData.append("dueDate", dueDate.value ? dueDate.value.toString() : "");
 
     const data = await updateProject(props.project.id, formData);
 

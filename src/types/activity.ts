@@ -5,6 +5,10 @@ interface IInfo {
   name: string;
 }
 
+interface IInfoColor extends IInfo {
+  color: string;
+}
+
 export type IActivityType =
   | "update_project"
   | "archive_project"
@@ -34,6 +38,7 @@ export interface IActivity {
   id: string;
   user: IUserInfo;
   project: IInfo;
+  taskGroup?: IInfoColor;
   task?: IInfo;
   datas: any;
   type: IActivityType;
