@@ -1,5 +1,5 @@
 import api from "@/plugins/axios";
-import { IServerData, IProject, IActivity } from "@/types";
+import { IServerData, IProject, IActivity, ILabel } from "@/types";
 
 const prefix = "/projects/";
 
@@ -43,6 +43,51 @@ export async function unarchiveProject(projectId: string) {
 
 export async function deleteProject(projectId: string) {
   return await api.delete<any, IServerData>(prefix + projectId);
+}
+
+// Project tasklabels
+export async function getCreatedTaskLabels(projectId: string) {
+  return await api.get<any, IServerData<{ createdTaskLabels: ILabel[] }>>(
+    prefix + projectId + "/created-labels"
+  );
+}
+
+export async function createCreatedTaskLabel(
+  projectId: string,
+  name: string,
+  color: string
+) {
+  return await api.post<any, IServerData<{ label: ILabel }>>(
+    prefix + projectId + "/created-labels",
+    {
+      name,
+      color,
+    }
+  );
+}
+
+export async function updateCreatedTaskLabel(
+  projectId: string,
+  labelId: string,
+  name: string,
+  color: string
+) {
+  return await api.patch<any, IServerData<{ label: ILabel }>>(
+    prefix + projectId + "/created-labels/" + labelId,
+    {
+      name,
+      color,
+    }
+  );
+}
+
+export async function deleteCreatedTaskLabel(
+  projectId: string,
+  labelId: string
+) {
+  return await api.delete<any, IServerData>(
+    prefix + projectId + "/created-labels/" + labelId
+  );
 }
 
 // Project members

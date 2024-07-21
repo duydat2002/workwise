@@ -6,6 +6,7 @@ const emit = defineEmits(["confirm", "cancel", "click-outside"]);
 withDefaults(
   defineProps<{
     id?: string;
+    class?: string;
     title?: string;
     desc?: string;
     confirmMessage?: string;

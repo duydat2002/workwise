@@ -19,6 +19,8 @@ import UTextarea from "@/components/UI/UTextarea.vue";
 const emit = defineEmits(["close"]);
 
 const { user } = storeToRefs(useUserStore());
+const { theme } = storeToRefs(useThemeStore());
+const { addProjectStore } = useProjectStore();
 
 const inputBackground = ref<HTMLInputElement>();
 const name = ref("");
@@ -35,9 +37,6 @@ const dateError = ref<string>();
 const activeLabelPopup = ref(false);
 const activeImagePopup = ref(false);
 const isLoadingCreate = ref(false);
-
-const { theme } = storeToRefs(useThemeStore());
-const { addProjectStore } = useProjectStore();
 
 const validate = () => {
   nameError.value = undefined;
@@ -277,6 +276,7 @@ onBeforeUnmount(() => {
                       placeholder="mm/dd/yyyy"
                       format="dd/MM/yyyy"
                       :dark="theme == 'dark'"
+                      position="right"
                     ></VueDatePicker>
                   </div>
                 </div>
@@ -307,7 +307,8 @@ onBeforeUnmount(() => {
               </div>
               <LabelPopup
                 v-if="activeLabelPopup"
-                v-model:labels="labels"
+                :labels="user!.createdProjectLabels"
+                v-model:labelSelected="labels"
                 @close="
                   () => {
                     activeLabelPopup = false;
@@ -331,7 +332,7 @@ onBeforeUnmount(() => {
         </div> -->
           </div>
         </div>
-        <div class="px-4 flex items-center justify-end not-lastchild:mr-2">
+        <div class="px-4 pt-4 flex items-center justify-end not-lastchild:mr-2">
           <UButton variantType="error" @click="closeModal"
             ><span class="text-white font-semibold">Hủy</span></UButton
           >

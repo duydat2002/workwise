@@ -3,6 +3,8 @@ import { IApproval } from "./approval";
 import { IAttachment } from "./attachment";
 import { IComment } from "./comment";
 import { ILabel } from "./label";
+import { IProject } from "./project";
+import { ITaskGroup } from "./taskGroup";
 import { IUserInfo } from "./user";
 
 export interface ITask {
@@ -18,8 +20,8 @@ export interface ITask {
   finishDate: string;
   status: "todo" | "inprogress" | "completed";
   isArchived: boolean;
-  projectId: string;
-  taskGroupId: string;
+  project: IProject;
+  taskGroup: ITaskGroup;
   attachments: IAttachment[];
   approvals: IApproval[];
   comments: IComment[];

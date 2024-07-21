@@ -1,7 +1,11 @@
 import api from "@/plugins/axios";
-import { IServerData, ITask, ITaskGroup, IUser } from "@/types";
+import { IServerData, ITask } from "@/types";
 
 const prefix = "/tasks/";
+
+export async function getTaskById(taskId: string) {
+  return await api.get<any, IServerData<{ task: ITask }>>(prefix + taskId);
+}
 
 export async function createTask(
   projectId: string,
@@ -13,4 +17,54 @@ export async function createTask(
     taskGroupId,
     name,
   });
+}
+
+export async function reorderTask(
+  taskId: string,
+  fromTaskGroupId: string,
+  toTaskGroupId: string,
+  orders: string[]
+) {
+  return await api.patch<any, IServerData>(prefix + taskId + "/reorder", {
+    fromTaskGroupId,
+    toTaskGroupId,
+    orders,
+  });
+}
+
+export async function updateTask(task: ITask, labels?: string) {
+  return await api.patch<any, IServerData>(prefix + task.id, {
+    name: task.name,
+    description: task.description,
+    priority: task.priority,
+    labels: labels,
+    assignee: task.assignee,
+    startDate: task.startDate,
+    dueDate: task.dueDate,
+    finishDate: task.finishDate,
+  });
+}
+
+export async function changeStatusTask(taskId: string, status: string) {
+  return await api.patch<any, IServerData>(prefix + taskId + "/change-status", {
+    status,
+  });
+}
+
+export async function assignTask(taskId: string, assignee?: string) {
+  return await api.patch<any, IServerData>(prefix + taskId + "/assign", {
+    assignee: assignee ?? null,
+  });
+}
+
+export async function archiveTask(taskId: string) {
+  return await api.patch<any, IServerData>(prefix + taskId + "/archive");
+}
+
+export async function unarchiveTask(taskId: string) {
+  return await api.patch<any, IServerData>(prefix + taskId + "/unarchive");
+}
+
+export async function deleteTask(taskId: string) {
+  return await api.delete<any, IServerData>(prefix + taskId);
 }

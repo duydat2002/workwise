@@ -6,6 +6,7 @@ import ClockIcon from "@icons/clock.svg";
 import TagsIcon from "@icons/tag.svg";
 import OwnerIcon from "@icons/group-users.svg";
 import KanbanIcon from "@icons/kanban.svg";
+import DashboardIcon from "@icons/dashboard.svg";
 import ListIcon from "@icons/list.svg";
 import CalendarIcon from "@icons/calendar.svg";
 import TimelineIcon from "@icons/timeline.svg";
@@ -41,20 +42,23 @@ import {
   unarchiveProject,
 } from "@/services/project";
 import { toast } from "vue3-toastify";
+import TaskDetail from "@/components/Pages/Task/TaskDetail.vue";
 
 const router = useRouter();
 const route = useRoute();
 
 const { user } = storeToRefs(useUserStore());
-const { projects, project, activities } = storeToRefs(useProjectStore());
+const { projects, project, activities, showProjectInfo } = storeToRefs(
+  useProjectStore()
+);
 
 const isLoadingProject = ref(false);
 const isLoadingAction = ref(false);
-const isHiddenProjectInfo = ref(false);
 const projectInfoRef = ref<HTMLDivElement>();
 const tabs = shallowRef([
-  { name: "Kanban", link: "Kanban", icon: KanbanIcon },
-  { name: "Bảng", link: "List", icon: ListIcon },
+  { name: "Tổng quan", link: "Sumary", icon: DashboardIcon },
+  { name: "Bảng", link: "Kanban", icon: KanbanIcon },
+  { name: "Danh sách", link: "List", icon: ListIcon },
   { name: "Lịch", link: "Calendar", icon: CalendarIcon },
   { name: "Lịch trình", link: "Timeline", icon: TimelineIcon },
   { name: "Phê duyệt", link: "Approvals", icon: ApprovedIcon },
@@ -111,20 +115,17 @@ const handleDeleteProject = async () => {
 };
 
 const toggleProjectInfo = () => {
-  if (isHiddenProjectInfo.value) {
-    projectInfoRef.value!.style.maxHeight =
-      projectInfoRef.value!.scrollHeight + "px";
-    isHiddenProjectInfo.value = false;
-  } else {
-    projectInfoRef.value!.style.maxHeight = "0px";
-    isHiddenProjectInfo.value = true;
-  }
+  showProjectInfo.value = !showProjectInfo.value;
 };
 
-const handleHiddenInfo = () => {
-  if (!isHiddenProjectInfo.value) {
-    projectInfoRef.value!.style.maxHeight = "0px";
-    isHiddenProjectInfo.value = true;
+const changeHeightInfo = () => {
+  if (projectInfoRef.value) {
+    if (showProjectInfo.value) {
+      projectInfoRef.value!.style.maxHeight =
+        projectInfoRef.value!.scrollHeight + "px";
+    } else {
+      projectInfoRef.value!.style.maxHeight = "0px";
+    }
   }
 };
 
@@ -153,8 +154,7 @@ const getProject = () => {
   isLoadingProject.value = false;
 
   nextTick(() => {
-    projectInfoRef.value!.style.maxHeight =
-      projectInfoRef.value!.scrollHeight + "px";
+    changeHeightInfo();
   });
 };
 
@@ -162,6 +162,14 @@ watch(
   projects,
   () => {
     getProject();
+  },
+  { immediate: true }
+);
+
+watch(
+  showProjectInfo,
+  () => {
+    changeHeightInfo();
   },
   { immediate: true }
 );
@@ -296,6 +304,20 @@ onBeforeRouteUpdate(async (to, from) => {
                     <ActivityIcon class="w-4 fill-textColor-primary mr-2" />
                     <span class="text-sm text-textColor-primary"
                       >Lịch sử hoạt động</span
+                    >
+                  </div>
+                  <div
+                    class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                    @click="
+                      () => {
+                        sidebarRightTabs = 'archives';
+                        showProjectOption = false;
+                      }
+                    "
+                  >
+                    <ActivityIcon class="w-4 fill-textColor-primary mr-2" />
+                    <span class="text-sm text-textColor-primary"
+                      >Các mục đã lưu trữ</span
                     >
                   </div>
                   <div
@@ -497,7 +519,7 @@ onBeforeRouteUpdate(async (to, from) => {
             @click="toggleProjectInfo"
           >
             <span class="text-xs text-bgColor-primary">{{
-              isHiddenProjectInfo ? "Xem chi tiết" : "Ẩn đi"
+              showProjectInfo ? "Ẩn đi" : "Xem chi tiết"
             }}</span>
           </div>
         </div>
@@ -537,7 +559,8 @@ onBeforeRouteUpdate(async (to, from) => {
           </VueDraggable>
         </div>
         <div class="flex-1 pt-4">
-          <RouterView @hiddenInfo="handleHiddenInfo"></RouterView>
+          <RouterView></RouterView>
+          <!-- <RouterView name="modal"></RouterView> -->
         </div>
       </div>
       <ProjectMembersModal
@@ -591,4 +614,5 @@ onBeforeRouteUpdate(async (to, from) => {
       </div>
     </div>
   </div>
+  <TaskDetail v-if="route.query.taskSelected" />
 </template>

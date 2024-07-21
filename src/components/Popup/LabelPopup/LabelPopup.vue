@@ -1,46 +1,50 @@
 <script setup lang="ts">
 import XIcon from "@icons/x.svg";
 import EditIcon from "@icons/edit.svg";
+const emit = defineEmits(["update:labelSelected", "choose", "close"]);
 import CheckIcon from "@icons/check.svg";
 import UInput from "@/components/UI/UInput.vue";
 import { ref, watch } from "vue";
 import { ILabel } from "@/types";
 import EditLabel from "./EditLabel.vue";
-import { storeToRefs } from "pinia";
-import { useUserStore } from "@/stores";
 import { computed } from "vue";
 
-const emit = defineEmits(["update:labels", "close"]);
-
-const props = defineProps<{
-  labels: ILabel[];
-}>();
-
-const { user } = storeToRefs(useUserStore());
+const props = withDefaults(
+  defineProps<{
+    labels: ILabel[];
+    labelSelected: ILabel[];
+    placement?: string;
+    labelFor?: "Project" | "Task";
+  }>(),
+  {
+    placement: "left-0 bottom-full mb-2",
+    labelFor: "Project",
+  }
+);
 
 const tab = ref<"list" | "edit">("list");
 const search = ref("");
-const createdProjectLabels = ref<ILabel[]>(
-  user.value!.createdProjectLabels || []
-);
+const labelsTemp = ref<ILabel[]>(props.labels);
 const editLabel = ref<ILabel>();
 
 const activedLabels = computed({
-  get: () => props.labels,
+  get: () => props.labelSelected,
   set: (value) => {
-    emit("update:labels", value);
+    emit("update:labelSelected", value);
   },
 });
 
 const handleToogleLabel = (label: ILabel) => {
   if (!activedLabels.value.includes(label)) {
     activedLabels.value.push(label);
+    emit("choose", activedLabels.value);
   } else {
     const newActiveLabels = activedLabels.value.filter(
       (l) => l.name != label.name
     );
 
     activedLabels.value = newActiveLabels;
+    emit("choose", newActiveLabels);
   }
 };
 
@@ -65,17 +69,17 @@ const sloseEditPopup = () => {
 };
 
 watch(search, () => {
-  createdProjectLabels.value =
-    user.value!.createdProjectLabels?.filter((l) =>
+  labelsTemp.value =
+    props.labels.filter((l) =>
       l.name.toLowerCase().includes(search.value.toLowerCase())
     ) || [];
 });
 
 watch(
-  () => user.value?.createdProjectLabels,
+  () => props.labels,
   (labels) => {
     search.value = "";
-    createdProjectLabels.value =
+    labelsTemp.value =
       labels?.sort((l1, l2) =>
         l1.name.toLowerCase().localeCompare(l2.name.toLowerCase())
       ) || [];
@@ -86,7 +90,8 @@ watch(
 
 <template>
   <div
-    class="absolute left-0 bottom-full mb-2 p-3 w-[300px] max-h-[600px] bg-bgColor-primary shadow rounded-lg"
+    class="absolute p-3 w-[300px] max-h-[600px] bg-bgColor-primary shadow rounded-lg z-10"
+    :class="[placement]"
     v-click-outside.short="{ handle: closePopup, excludes: ['.add-label'] }"
   >
     <template v-if="tab == 'list'">
@@ -111,7 +116,7 @@ watch(
         <span class="mb-1 text-xs font-bold text-textColor-subtitle">Nhãn</span>
         <div class="flex flex-col not-lastchild:mb-1">
           <div
-            v-for="label in createdProjectLabels"
+            v-for="label in labelsTemp"
             :key="label.id"
             class="flex items-center cursor-pointer"
             :class="{ active: activedLabels.find((l) => l.id == label.id) }"
@@ -151,6 +156,7 @@ watch(
     </template>
     <EditLabel
       v-else
+      :labelFor="labelFor"
       :label="editLabel"
       @close="sloseEditPopup"
       @back="

@@ -5,12 +5,20 @@ import { ref } from "vue";
 
 const emit = defineEmits(["update:selected", "choose", "change"]);
 
-defineProps<{
-  placeholder?: string;
-  selected?: string;
-  options: IOption[];
-  isDisabled?: boolean;
-}>();
+withDefaults(
+  defineProps<{
+    placeholder?: string;
+    selected?: string;
+    options: IOption[];
+    isDisabled?: boolean;
+    padding?: string;
+    placement?: string;
+  }>(),
+  {
+    padding: "px-3 py-1",
+    placement: "left-0 w-max min-w-full top-full pt-1",
+  }
+);
 
 const isShowDropdown = ref(false);
 
@@ -38,7 +46,11 @@ const handleHidden = () => {
     :class="{ disabled: isDisabled }"
     v-click-outside.short="handleHidden"
   >
-    <div class="flex w-full h-full items-center px-3 py-1" @click="handleShow">
+    <div
+      class="flex w-full h-full items-center"
+      :class="[padding]"
+      @click="handleShow"
+    >
       <span
         v-if="!selected"
         class="flex-1 text-sm text-textColor-secondary text-dots"
@@ -49,10 +61,7 @@ const handleHidden = () => {
       }}</span>
       <DownIcon class="w-4 fill-textColor-secondary ml-2" />
     </div>
-    <div
-      v-if="isShowDropdown"
-      class="absolute left-0 right-0 top-full pt-1 z-10"
-    >
+    <div v-if="isShowDropdown" class="absolute z-10" :class="[placement]">
       <div class="flex-col bg-bgColor-primary shadow">
         <div
           v-for="option in options"

@@ -37,45 +37,51 @@ export function initializeSocket(pinia: Pinia) {
 
   // Task Group
   socket.on("taskgroup:created", (taskGroup: ITaskGroup) => {
+    console.log("taskgroup:created");
     projectStore.addTaskGroupStore(taskGroup);
   });
 
   socket.on(
     "taskgroup:ordered",
     (projectId: string, taskGroups: ITaskGroup[]) => {
+      console.log("taskgroup:ordered");
       projectStore.reorderTaskGroupStore(projectId, taskGroups);
     }
   );
 
   socket.on("taskgroup:updated", (taskGroup: ITaskGroup) => {
+    console.log("taskgroup:updated");
     projectStore.updateTaskGroupStore(taskGroup);
   });
 
   socket.on("taskgroup:deleted", (projectId: string, taskGroupId: string) => {
+    console.log("taskgroup:deleted");
     projectStore.deleteTaskGroupStore(projectId, taskGroupId);
   });
 
   // Task
   socket.on("task:created", (task: ITask) => {
     console.log("task:created");
-
     projectStore.addTaskStore(task);
   });
 
   socket.on(
     "task:ordered",
-    (projectId: string, taskGroupId: string, tasks: ITask[]) => {
-      projectStore.reorderTaskStore(projectId, taskGroupId, tasks);
+    (fromTaskGroup: ITaskGroup | null, toTaskGroup: ITaskGroup) => {
+      console.log("task:ordered");
+      projectStore.reorderTaskStore(fromTaskGroup, toTaskGroup);
     }
   );
 
   socket.on("task:updated", (task: ITask) => {
+    console.log("task:updated");
     projectStore.updateTaskStore(task);
   });
 
   socket.on(
     "task:deleted",
     (projectId: string, taskGroupId: string, taskId: string) => {
+      console.log("task:deleted");
       projectStore.deleteTaskStore(projectId, taskGroupId, taskId);
     }
   );

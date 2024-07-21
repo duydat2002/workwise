@@ -27,7 +27,6 @@ const authPath = ["/signin", "/signup", "/forgot-password"];
 const specialRoutePath = ["/set-password", "/verify-email"];
 
 router.beforeEach(async (to, _) => {
-  // console.log(to.name);
   const { user } = storeToRefs(useUserStore());
   const { checkHasEmailAuth } = useAuth();
 

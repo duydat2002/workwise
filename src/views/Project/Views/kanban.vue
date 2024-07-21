@@ -1,32 +1,42 @@
 <script setup lang="ts">
 import SearchIcon from "@icons/search.svg";
 import FilterIcon from "@icons/filter.svg";
+import BarIcon from "@icons/bar.svg";
+import UInput from "@/components/UI/UInput.vue";
 import MoreIcon from "@icons/more.svg";
 import BucketIcon from "@icons/bucket.svg";
-import BarIcon from "@icons/bar.svg";
+import PowerIcon from "@icons/power.svg";
 import PlusIcon from "@icons/plus.svg";
 import XIcon from "@icons/x.svg";
-import UInput from "@/components/UI/UInput.vue";
+import ArchiveIcon from "@icons/archive.svg";
+import DeleteIcon from "@icons/delete.svg";
 import { ref } from "vue";
-import { VueDraggable } from "vue-draggable-plus";
+import { SortableEvent, VueDraggable } from "vue-draggable-plus";
 import UTextarea from "@/components/UI/UTextarea.vue";
 import UButton from "@/components/UI/UButton.vue";
 import { storeToRefs } from "pinia";
 import { useProjectStore, useThemeStore } from "@/stores";
 import {
+  archiveTaskGroup,
   createTaskGroups,
+  deleteTaskGroup,
   reorderTaskGroup,
   updateTaskGroup,
 } from "@/services/taskGroup";
-import { createTask } from "@/services/task";
-import { ITaskGroup } from "@/types";
-
-const emits = defineEmits(["hiddenInfo"]);
+import { createTask, reorderTask } from "@/services/task";
+import { IOption, IProject, ITaskGroup } from "@/types";
+import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
+import { toast } from "vue3-toastify";
+import TaskItem from "@/components/Pages/Task/TaskItem.vue";
+import Popper from "vue3-popper";
+import USelect from "@/components/UI/USelect.vue";
+import { watch } from "vue";
 
 const { isDark } = storeToRefs(useThemeStore());
-const { project } = storeToRefs(useProjectStore());
+const { project, showProjectInfo } = storeToRefs(useProjectStore());
 
 const DEFAULT_COLOR = "#93c5fd";
+const projectTemp = ref<IProject | null>(null);
 const search = ref("");
 const taskName = ref("");
 const taskNameErr = ref<string>();
@@ -35,6 +45,21 @@ const taskGroupNameErr = ref<string>();
 const taskGroupColor = ref(DEFAULT_COLOR);
 const showCreateTaskGroup = ref(false);
 const showCreateTask = ref<string>();
+const showOptionTaskGroup = ref<string>("");
+const showPowerTaskGroup = ref<string>("");
+const showArchiveTaskGroup = ref<string>("");
+const showDeleteTaskGroup = ref<string>("");
+const isLoadingAction = ref(false);
+const isLoadingCreateTaskGroup = ref(false);
+const isLoadingCreateTask = ref(false);
+
+const autoSelected = ref<"none" | "todo" | "inprogress" | "completed">("none");
+const autoOptions = ref<IOption[]>([
+  { key: "none", value: "Không tự động" },
+  { key: "completed", value: "Đã hoàn thành" },
+  { key: "inprogress", value: "Đang thực hiện" },
+  { key: "todo", value: "Cần thực hiện" },
+]);
 
 const validateCreateTaskGroup = () => {
   taskGroupNameErr.value = undefined;
@@ -61,6 +86,7 @@ const validateCreateTask = () => {
 };
 
 const handleCreateTaskGroup = async () => {
+  isLoadingCreateTaskGroup.value = true;
   if (validateCreateTaskGroup()) {
     const data = await createTaskGroups(
       project.value!.id,
@@ -69,11 +95,14 @@ const handleCreateTaskGroup = async () => {
     );
 
     if (data.success) {
+      taskGroupName.value = "";
     }
   }
+  isLoadingCreateTaskGroup.value = false;
 };
 
 const handleCreateTask = async (taskGroupId: string) => {
+  isLoadingCreateTask.value = true;
   if (validateCreateTask()) {
     const data = await createTask(
       project.value!.id,
@@ -82,9 +111,11 @@ const handleCreateTask = async (taskGroupId: string) => {
     );
 
     if (data.success) {
+      taskName.value = "";
       showCreateTask.value = undefined;
     }
   }
+  isLoadingCreateTask.value = false;
 };
 
 const changeTaskGroupName = async (event: Event, taskGroup: ITaskGroup) => {
@@ -112,7 +143,7 @@ const changeTaskGroupColor = async (taskGroup: ITaskGroup) => {
 };
 
 const activeCreateTaskGroup = () => {
-  emits("hiddenInfo");
+  showProjectInfo.value = false;
   taskGroupNameErr.value = undefined;
   showCreateTaskGroup.value = true;
 };
@@ -122,6 +153,28 @@ const handleReorderTaskGroup = async () => {
   const data = await reorderTaskGroup(project.value!.id, orders);
 
   if (data.success) {
+  }
+};
+
+const handleReorderTask = async (event: SortableEvent) => {
+  console.log(event);
+  const taskId = event.item.dataset.taskid;
+  const fromTaskGroupId = event.from.dataset.taskgroupid;
+  const toTaskGroupId = event.to.dataset.taskgroupid;
+  const orders = project
+    .value!.taskGroups.find((g) => g.id == toTaskGroupId)
+    ?.tasks.map((t) => t.id);
+
+  if (taskId && fromTaskGroupId && toTaskGroupId && orders) {
+    const data = await reorderTask(
+      taskId,
+      fromTaskGroupId,
+      toTaskGroupId,
+      orders
+    );
+
+    if (data.success) {
+    }
   }
 };
 
@@ -137,10 +190,57 @@ const activeCreateTask = (taskGroupId: string) => {
 const unactiveCreateTask = () => {
   showCreateTask.value = undefined;
 };
+
+const handleArchiveTaskGroup = async (taskGroupId: string) => {
+  isLoadingAction.value = true;
+  const data = await archiveTaskGroup(taskGroupId);
+
+  if (data.success) {
+    toast.success("Đã lưu trữ nhóm công việc.");
+  }
+
+  showOptionTaskGroup.value = "";
+  showArchiveTaskGroup.value = "";
+  isLoadingAction.value = false;
+};
+
+const handleDeleteTaskGroup = async (taskGroupId: string) => {
+  isLoadingAction.value = true;
+  const data = await deleteTaskGroup(taskGroupId);
+
+  if (data.success) {
+    toast.success("Đã xóa nhóm công việc.");
+  }
+
+  showOptionTaskGroup.value = "";
+  showDeleteTaskGroup.value = "";
+  isLoadingAction.value = false;
+};
+
+watch(
+  () => project.value,
+  () => {
+    console.log("project updated");
+    projectTemp.value = Object.assign({}, project.value);
+  },
+  { deep: true, immediate: true }
+);
+
+watch(search, () => {
+  projectTemp.value = {
+    ...project.value!,
+    taskGroups: project.value!.taskGroups.map((g) => ({
+      ...g,
+      tasks: g.tasks.filter((t) =>
+        t.name.toLowerCase().includes(search.value.toLowerCase())
+      ),
+    })),
+  };
+});
 </script>
 
 <template>
-  <div class="flex flex-col h-full">
+  <div v-if="projectTemp" class="flex flex-col h-full">
     <div class="flex flex-wrap justify-between px-5 gap-3 pb-3">
       <div class="">
         <UInput
@@ -161,14 +261,6 @@ const unactiveCreateTask = () => {
           <FilterIcon class="w-4 fill-textColor-primary mr-1" />
           <span class="text-sm font-semibold text-textColor-primary">Lọc</span>
         </div>
-        <div
-          class="relative flex items-center px-2 py-1 rounded-md hover:bg-hover cursor-pointer"
-        >
-          <BarIcon class="w-4 fill-textColor-primary mr-1" />
-          <span class="text-sm font-semibold text-textColor-primary"
-            >Nhóm theo: Nhóm công việc</span
-          >
-        </div>
       </div>
     </div>
     <div class="relative flex-1 h-full">
@@ -178,7 +270,7 @@ const unactiveCreateTask = () => {
         <VueDraggable
           class="flex h-full not-lastchild:mr-2"
           :animation="150"
-          v-model="project!.taskGroups"
+          v-model="projectTemp!.taskGroups"
           handle=".header"
           chosenClass="chosen"
           dragClass="drag"
@@ -186,15 +278,15 @@ const unactiveCreateTask = () => {
           :onSort="handleReorderTaskGroup"
         >
           <div
-            v-for="taskGroup in project!.taskGroups"
+            v-for="taskGroup in projectTemp!.taskGroups.filter(g => !g.isArchived)"
             :key="taskGroup.id"
             class="h-full"
           >
             <div
-              class="flex-shrink-0 flex flex-col max-h-full w-[250px] rounded-lg bg-bgColor-secondary overflow-hidden"
+              class="flex-shrink-0 flex flex-col max-h-full w-[250px] rounded-lg bg-bgColor-secondary overflow-visible"
             >
               <div
-                class="header flex items-center p-1"
+                class="header flex items-center p-1 rounded-tl-lg rounded-tr-lg"
                 :style="{ background: taskGroup.color }"
               >
                 <input
@@ -203,29 +295,137 @@ const unactiveCreateTask = () => {
                   :value="taskGroup.name"
                   @change="changeTaskGroupName($event, taskGroup)"
                 />
+                <div class="relative">
+                  <Popper hover offsetDistance="8" content="Chọn màu">
+                    <div
+                      class="flex-shrink-0 flex flex-center w-8 h-8 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
+                    >
+                      <BucketIcon class="w-4 fill-white" />
+                      <div
+                        class="absolute top-0 left-0 right-0 bottom-0 z-10 opacity-0 overflow-hidden"
+                      >
+                        <ColorPicker
+                          format="hex"
+                          shape="square"
+                          disable-alpha
+                          lang="En"
+                          v-on:update:pureColor="(color: string) => {taskGroup.color = color}"
+                          v-on:pureColorChange="changeTaskGroupColor(taskGroup)"
+                          :theme="isDark ? 'black' : 'white'"
+                          :pure-color="taskGroup.color"
+                        />
+                      </div>
+                    </div>
+                  </Popper>
+                </div>
                 <div
-                  class="relative flex-shrink-0 flex flex-center w-8 h-8 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer ml-2"
+                  class="relative"
+                  v-click-outside.short="{
+                    handle: () => {
+                      showPowerTaskGroup = '';
+                    },
+                    excludes: ['.taskgroup_power'],
+                  }"
                 >
-                  <BucketIcon class="w-4 fill-white" />
+                  <Popper hover offsetDistance="8" content="Tự động">
+                    <div
+                      class="relative flex-shrink-0 flex flex-center w-8 h-8 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
+                      @click.stop="
+                        () => {
+                          showPowerTaskGroup = taskGroup.id;
+                        }
+                      "
+                    >
+                      <PowerIcon class="w-4 fill-white" />
+                    </div>
+                  </Popper>
                   <div
-                    class="absolute top-0 left-0 right-0 bottom-0 z-10 opacity-0"
+                    v-if="showPowerTaskGroup == taskGroup.id"
+                    class="taskgroup_power absolute mt-1 top-full left-1/2 -translate-x-1/2 min-w-full w-max max-w-[300px] bg-bgColor-primary rounded-lg shadow z-10"
                   >
-                    <ColorPicker
-                      format="hex"
-                      shape="square"
-                      disable-alpha
-                      lang="En"
-                      v-on:update:pureColor="(color: string) => {taskGroup.color = color}"
-                      v-on:pureColorChange="changeTaskGroupColor(taskGroup)"
-                      :theme="isDark ? 'black' : 'white'"
-                      :pure-color="taskGroup.color"
-                    />
+                    <div class="flex flex-col px-3 py-2">
+                      <span class="font-semibold text-textColor-primary mb-2"
+                        >Quy trình tự động</span
+                      >
+                      <span class="text-textColor-secondary mb-2"
+                        >Hệ thống tự động chuyển trạng thái công việc khi công
+                        việc được chuyển đến cột này.</span
+                      >
+                      <div class="flex items-center">
+                        <div class="flex items-center">
+                          <span class="text-textColor-primary mr-2"
+                            >Trạng thái tự động</span
+                          >
+                          <USelect
+                            class="!min-h-8 !w-auto"
+                            v-model:selected="autoSelected"
+                            :options="autoOptions"
+                            padding="px-1 py-[1px]"
+                            placement="top-full min-w-full w-max right-0 pt-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div
-                  class="flex-shrink-0 flex flex-center w-8 h-8 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer ml-1"
+                  class="relative"
+                  v-click-outside.short="{
+                    handle: () => {
+                      showOptionTaskGroup = '';
+                    },
+                    excludes: [
+                      '.taskgroup_options',
+                      '.confirm_archive_taskgroup',
+                      '.confirm_delete_taskgroup',
+                    ],
+                  }"
                 >
-                  <MoreIcon class="w-3 fill-white" />
+                  <Popper hover offsetDistance="8" content="Xem thêm">
+                    <div
+                      class="flex-shrink-0 flex flex-center w-8 h-8 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
+                      @click.stop="
+                        () => {
+                          showOptionTaskGroup = taskGroup.id;
+                        }
+                      "
+                    >
+                      <MoreIcon class="w-3 fill-white" />
+                    </div>
+                  </Popper>
+                  <div
+                    v-if="showOptionTaskGroup == taskGroup.id"
+                    class="taskgroup_options absolute mt-1 top-full right-0 w-max bg-bgColor-primary overflow-hidden rounded-lg shadow z-10"
+                  >
+                    <div class="flex flex-col">
+                      <div
+                        class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                        @click="
+                          () => {
+                            showArchiveTaskGroup = taskGroup.id;
+                          }
+                        "
+                      >
+                        <ArchiveIcon class="w-4 fill-textColor-primary mr-2" />
+                        <span class="text-sm text-textColor-primary"
+                          >Lưu trữ nhóm công việc</span
+                        >
+                      </div>
+                      <div
+                        class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                        @click="
+                          () => {
+                            showDeleteTaskGroup = taskGroup.id;
+                          }
+                        "
+                      >
+                        <DeleteIcon class="w-4 fill-error mr-2" />
+                        <span class="text-sm text-error"
+                          >Xóa nhóm công việc</span
+                        >
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div
@@ -239,14 +439,15 @@ const unactiveCreateTask = () => {
                   dragClass="drag"
                   ghostClass="ghost"
                   group="task"
-                  :onSort="(event) => {}"
+                  :data-taskGroupId="taskGroup.id"
+                  :onEnd="handleReorderTask"
                 >
-                  <div v-for="task in taskGroup.tasks" :key="task.id">
-                    <div
-                      class="w-full px-3 py-2 rounded-md bg-bgColor-primary border border-borderColor cursor-pointer shadow-md"
-                    >
-                      {{ task.name }}
-                    </div>
+                  <div
+                    v-for="task in taskGroup.tasks.filter((t) => !t.isArchived)"
+                    :key="task.id"
+                    :data-taskId="task.id"
+                  >
+                    <TaskItem :task />
                   </div>
                   <div v-if="showCreateTask == taskGroup.id" class="py-1">
                     <UTextarea
@@ -277,6 +478,7 @@ const unactiveCreateTask = () => {
                   <UButton
                     variantType="primary"
                     class="flex-1"
+                    :isLoading="isLoadingCreateTask"
                     @click="handleCreateTask(taskGroup.id)"
                     ><span class="">Thêm công việc</span></UButton
                   >
@@ -312,7 +514,7 @@ const unactiveCreateTask = () => {
           >
             <div class="flex flex-col">
               <label class="mb-1 text-sm font-bold text-textColor-subtitle"
-                >Tên nhóm công việc {{ taskGroupColor }}
+                >Tên nhóm công việc
               </label>
               <UTextarea
                 class="bg-bgColor-primary"
@@ -341,6 +543,7 @@ const unactiveCreateTask = () => {
               <UButton
                 variantType="primary"
                 class="flex-1"
+                :isLoading="isLoadingCreateTaskGroup"
                 @click="handleCreateTaskGroup"
                 ><span class="">Thêm nhóm công việc</span></UButton
               >
@@ -355,6 +558,42 @@ const unactiveCreateTask = () => {
         </div>
       </div>
     </div>
+    <ConfirmPopup
+      v-if="showArchiveTaskGroup != ''"
+      id="confirm_archive_taskgroup"
+      title="Lưu trữ nhóm công việc?"
+      confirmMessage="Lưu trữ"
+      :isLoadingConfirm="isLoadingAction"
+      @confirm="handleArchiveTaskGroup(showArchiveTaskGroup)"
+      @cancel="
+        () => {
+          showArchiveTaskGroup = '';
+          showOptionTaskGroup = '';
+        }
+      "
+    >
+      <div class="w-full py-2">
+        <span class="text-textColor-secondary mr-1"
+          >Bạn có thể tìm và khôi phục lại các nhóm công việc đã lưu trữ ở trang
+          chi tiết dự án -> cài đặt -> các mục đã lưu trữ
+        </span>
+      </div>
+    </ConfirmPopup>
+    <ConfirmPopup
+      v-if="showDeleteTaskGroup != ''"
+      id="confirm_delete_taskgroup"
+      title="Xóa nhóm công việc?"
+      confirmMessage="Xóa"
+      desc="Tất cả mọi công việc và hành động liên quan sẽ bị xóa. Không thể hoàn tác."
+      :isLoadingConfirm="isLoadingAction"
+      @confirm="handleDeleteTaskGroup(showDeleteTaskGroup)"
+      @cancel="
+        () => {
+          showDeleteTaskGroup = '';
+          showOptionTaskGroup = '';
+        }
+      "
+    ></ConfirmPopup>
   </div>
 </template>
 

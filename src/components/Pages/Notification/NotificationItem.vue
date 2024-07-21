@@ -81,12 +81,12 @@ const handleDeny = async () => {
           <div
             class="w-8 h-6 bg-cover bg-center aspect-video mr-2"
             :style="{
-              backgroundImage: `url(${notification.project?.background})`,
+              backgroundImage: `url(${notification.datas.project?.background})`,
             }"
           ></div>
           <span
             class="text-sm font-semibold text-textColor-primary text-dots mr-2"
-            >{{ notification.project?.name }}</span
+            >{{ notification.datas.project?.name }}</span
           >
         </div>
         <Popper

@@ -28,6 +28,11 @@ const routes: Readonly<RouteRecordRaw[]> = [
         component: () => import("@/views/Project/Views/kanban.vue"),
       },
       {
+        path: "sumary",
+        name: "Sumary",
+        component: () => import("@/views/Project/Views/sumary.vue"),
+      },
+      {
         path: "list",
         name: "List",
         component: () => import("@/views/Project/Views/list.vue"),

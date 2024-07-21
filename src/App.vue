@@ -32,6 +32,7 @@ onBeforeUnmount(() => {
   <KeepAlive>
     <component :is="route.meta.layout || 'div'">
       <RouterView />
+      <!-- <RouterView name="modal"></RouterView> -->
     </component>
   </KeepAlive>
 </template>

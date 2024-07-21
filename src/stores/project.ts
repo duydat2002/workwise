@@ -5,8 +5,11 @@ import { defineStore } from "pinia";
 interface IState {
   projects: IProject[];
   project: IProject | null;
+  task: ITask | null;
   activities: IActivity[];
+  showProjectInfo: boolean;
   showProjectLabel: boolean;
+  showTaskLabel: boolean;
   showCreateProject: boolean;
 }
 
@@ -14,8 +17,11 @@ export const useProjectStore = defineStore("project", {
   state: (): IState => ({
     projects: [],
     project: null,
+    task: null,
     activities: [],
-    showProjectLabel: false,
+    showProjectInfo: true,
+    showProjectLabel: true,
+    showTaskLabel: true,
     showCreateProject: false,
   }),
   actions: {
@@ -41,6 +47,12 @@ export const useProjectStore = defineStore("project", {
       const index = this.projects.findIndex((p) => p.id == projectId);
       if (index != -1) {
         this.projects.splice(index, 1);
+        if (this.project?.id == projectId) {
+          this.project = null;
+        }
+        if (this.task?.project.id == projectId) {
+          this.task = null;
+        }
       }
     },
 
@@ -68,45 +80,52 @@ export const useProjectStore = defineStore("project", {
       }
     },
     deleteTaskGroupStore(projectId: string, taskGroupId: string) {
+      console.log(projectId, taskGroupId);
       const project = this.projects.find((p) => p.id == projectId);
       if (project) {
         const index = project.taskGroups.findIndex((g) => g.id == taskGroupId);
         if (index != -1) {
           project.taskGroups.splice(index, 1);
+          if (this.task?.taskGroup.id == taskGroupId) {
+            this.task = null;
+          }
         }
       }
     },
 
     addTaskStore(task: ITask) {
-      const project = this.projects.find((p) => p.id == task.projectId);
+      const project = this.projects.find((p) => p.id == task.project.id);
       if (project) {
         const taskGroup = project.taskGroups.find(
-          (g) => g.id == task.taskGroupId
+          (g) => g.id == task.taskGroup.id
         );
         if (taskGroup) {
           taskGroup.tasks.push(task);
         }
       }
     },
-    reorderTaskStore(projectId: string, taskGroupId: string, tasks: ITask[]) {
-      const project = this.projects.find((p) => p.id == projectId);
-      if (project) {
-        const taskGroup = project.taskGroups.find((g) => g.id == taskGroupId);
-        if (taskGroup) {
-          taskGroup.tasks = tasks;
-        }
-      }
+    reorderTaskStore(
+      fromTaskGroup: ITaskGroup | null | undefined,
+      toTaskGroup: ITaskGroup
+    ) {
+      if (fromTaskGroup) this.updateTaskGroupStore(fromTaskGroup);
+      this.updateTaskGroupStore(toTaskGroup);
     },
     updateTaskStore(task: ITask) {
-      const project = this.projects.find((p) => p.id == task.projectId);
+      const project = this.projects.find((p) => p.id == task.project.id);
       if (project) {
         const taskGroup = project.taskGroups.find(
-          (g) => g.id == task.taskGroupId
+          (g) => g.id == task.taskGroup.id
         );
         if (taskGroup) {
           const taskObj = taskGroup.tasks.find((t) => t.id == task.id);
           if (taskObj) {
             Object.assign(taskObj, task);
+
+            if (this.task?.id == taskObj.id) {
+              console.log("cập nhật task");
+              this.task = taskObj;
+            }
           }
         }
       }
@@ -119,6 +138,9 @@ export const useProjectStore = defineStore("project", {
           const index = taskGroup.tasks.findIndex((t) => t.id == taskId);
           if (index != -1) {
             taskGroup.tasks.splice(index, 1);
+            if (this.task?.id == taskId) {
+              this.task = null;
+            }
           }
         }
       }

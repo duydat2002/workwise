@@ -7,19 +7,29 @@ import { ref } from "vue";
 import UButton from "@/components/UI/UButton.vue";
 import { LABEL_COLORS } from "@/constants";
 import { storeToRefs } from "pinia";
-import { useUserStore } from "@/stores";
+import { useProjectStore, useUserStore } from "@/stores";
 import {
   createUserProjectLabel,
   deleteUserProjectLabel,
   updateUserProjectLabel,
 } from "@/services/user";
+import {
+  createCreatedTaskLabel,
+  deleteCreatedTaskLabel,
+  updateCreatedTaskLabel,
+} from "@/services/project";
 
 const emit = defineEmits(["close", "back"]);
-const props = defineProps<{
-  label?: ILabel;
-}>();
+const props = withDefaults(
+  defineProps<{
+    label?: ILabel;
+    labelFor: "Project" | "Task";
+  }>(),
+  {}
+);
 
 const { user } = storeToRefs(useUserStore());
+const { project } = storeToRefs(useProjectStore());
 const name = ref<string>(props.label?.name || "");
 const colorSelected = ref<string>(props.label ? props.label!.color : "#7ee2b8");
 const nameError = ref<string>();
@@ -45,16 +55,31 @@ const validate = () => {
 const handleCreateLabel = async () => {
   if (validate()) {
     isLoading.value = true;
-    const data = await createUserProjectLabel(
-      name.value.trim(),
-      colorSelected.value
-    );
 
-    if (data.success) {
-      user.value!.createdProjectLabels.push(data.result!.label);
-      backToList();
-    } else {
-      nameError.value = "Nhãn đã tồn tại.";
+    if (props.labelFor == "Project") {
+      const data = await createUserProjectLabel(
+        name.value.trim(),
+        colorSelected.value
+      );
+
+      if (data.success) {
+        user.value!.createdProjectLabels.push(data.result!.label);
+        backToList();
+      } else {
+        nameError.value = "Nhãn đã tồn tại.";
+      }
+    } else if (project.value) {
+      const data = await createCreatedTaskLabel(
+        project.value.id,
+        name.value.trim(),
+        colorSelected.value
+      );
+
+      if (data.success) {
+        backToList();
+      } else {
+        nameError.value = "Nhãn đã tồn tại.";
+      }
     }
     isLoading.value = false;
   }
@@ -63,21 +88,38 @@ const handleCreateLabel = async () => {
 const handleUpdateLabel = async () => {
   if (validate() && props.label) {
     isLoading.value = true;
-    const data = await updateUserProjectLabel(
-      props.label.id,
-      name.value.trim(),
-      colorSelected.value
-    );
 
-    if (data.success) {
-      const labelIndex = user.value!.createdProjectLabels.findIndex(
-        (l) => l.id == data.result!.label.id
+    if (props.labelFor == "Project") {
+      const data = await updateUserProjectLabel(
+        props.label.id,
+        name.value.trim(),
+        colorSelected.value
       );
-      user.value!.createdProjectLabels[labelIndex] = data.result!.label;
-      backToList();
-    } else {
-      nameError.value = "Nhãn đã tồn tại.";
+
+      if (data.success) {
+        const labelIndex = user.value!.createdProjectLabels.findIndex(
+          (l) => l.id == data.result!.label.id
+        );
+        user.value!.createdProjectLabels[labelIndex] = data.result!.label;
+        backToList();
+      } else {
+        nameError.value = "Nhãn đã tồn tại.";
+      }
+    } else if (project.value) {
+      const data = await updateCreatedTaskLabel(
+        project.value.id,
+        props.label.id,
+        name.value.trim(),
+        colorSelected.value
+      );
+
+      if (data.success) {
+        backToList();
+      } else {
+        nameError.value = "Nhãn đã tồn tại.";
+      }
     }
+
     isLoading.value = false;
   }
 };
@@ -85,13 +127,21 @@ const handleUpdateLabel = async () => {
 const handleDeleteLabel = async () => {
   if (props.label) {
     isLoadingDelete.value = true;
-    const data = await deleteUserProjectLabel(props.label.id);
-    if (data.success) {
-      user.value!.createdProjectLabels =
-        user.value!.createdProjectLabels.filter((l) => l.id != props.label!.id);
+
+    if (props.labelFor == "Project") {
+      const data = await deleteUserProjectLabel(props.label.id);
+      if (data.success) {
+        user.value!.createdProjectLabels =
+          user.value!.createdProjectLabels.filter(
+            (l) => l.id != props.label!.id
+          );
+        backToList();
+      }
+    } else if (project.value) {
+      await deleteCreatedTaskLabel(project.value.id, props.label.id);
       backToList();
-    } else {
     }
+
     isLoadingDelete.value = false;
   }
 };

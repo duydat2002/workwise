@@ -317,7 +317,8 @@ onBeforeUnmount(() => {
               </div>
               <LabelPopup
                 v-if="activeLabelPopup"
-                v-model:labels="labels"
+                :labels="user!.createdProjectLabels"
+                v-model:labelSelected="labels"
                 @close="
                   () => {
                     activeLabelPopup = false;

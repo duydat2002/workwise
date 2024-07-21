@@ -3,7 +3,7 @@ import SearchIcon from "@icons/search.svg";
 import UInput from "@/components/UI/UInput.vue";
 import UTagInput from "@/components/UI/UTagInput.vue";
 import UButton from "@/components/UI/UButton.vue";
-import { ref, watchEffect } from "vue";
+import { onMounted, ref, watchEffect } from "vue";
 import { storeToRefs } from "pinia";
 import { useProjectStore, useUserStore } from "@/stores";
 import ProjectItem from "@/components/Pages/Project/ProjectItem.vue";
@@ -107,6 +107,10 @@ watchEffect(() => {
     const tagMatch = p.labels.some((l) => filterTagIds.includes(l.id));
     return nameMatch && tagMatch;
   });
+});
+
+onMounted(() => {
+  handleChooseSort({ key: "dueSoon", value: "Sắp tới hạn" });
 });
 </script>
 

@@ -6,11 +6,13 @@ withDefaults(
     isPopup?: boolean;
     isShow?: boolean;
     overlayBackground?: string;
+    margin?: string;
   }>(),
   {
     isPopup: false,
     isShow: true,
     overlayBackground: "#0000004d",
+    margin: "m-5",
   }
 );
 
@@ -29,13 +31,9 @@ const handleClickOutsideModal = () => {
       :style="{ background: overlayBackground }"
       v-click-inside="handleClickOutsideModal"
     >
-      <div
-        class="modal-container m-5 flex flex-center w-screen min-[500px]:w-auto"
-      >
+      <div class="modal-container flex flex-center w-screen" :class="[margin]">
         <Transition name="modal" appear>
-          <div class="slot" v-if="$slots.default">
-            <slot />
-          </div>
+          <slot />
         </Transition>
       </div>
     </div>
