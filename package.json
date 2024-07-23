@@ -15,6 +15,7 @@
     "axios": "^1.7.2",
     "date-fns": "^3.6.0",
     "firebase": "^10.12.2",
+    "lodash": "^4.17.21",
     "pinia": "^2.1.7",
     "pinia-plugin-persistedstate": "^3.2.1",
     "socket.io-client": "^4.7.5",
@@ -28,6 +29,7 @@
     "vue3-touch-events": "^4.1.8"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.7",
     "@vitejs/plugin-vue": "^5.0.5",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",

@@ -50,7 +50,7 @@ export function initializeSocket(pinia: Pinia) {
   );
 
   socket.on("taskgroup:updated", (taskGroup: ITaskGroup) => {
-    console.log("taskgroup:updated");
+    console.log("taskgroup:updated", taskGroup);
     projectStore.updateTaskGroupStore(taskGroup);
   });
 

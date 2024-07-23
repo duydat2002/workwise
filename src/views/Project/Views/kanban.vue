@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import SearchIcon from "@icons/search.svg";
-import FilterIcon from "@icons/filter.svg";
-import BarIcon from "@icons/bar.svg";
-import UInput from "@/components/UI/UInput.vue";
 import MoreIcon from "@icons/more.svg";
 import BucketIcon from "@icons/bucket.svg";
 import PowerIcon from "@icons/power.svg";
@@ -31,13 +27,13 @@ import TaskItem from "@/components/Pages/Task/TaskItem.vue";
 import Popper from "vue3-popper";
 import USelect from "@/components/UI/USelect.vue";
 import { watch } from "vue";
+import Fillters from "@/components/Pages/Project/Filters.vue";
 
 const { isDark } = storeToRefs(useThemeStore());
 const { project, showProjectInfo } = storeToRefs(useProjectStore());
 
 const DEFAULT_COLOR = "#93c5fd";
 const projectTemp = ref<IProject | null>(null);
-const search = ref("");
 const taskName = ref("");
 const taskNameErr = ref<string>();
 const taskGroupName = ref("");
@@ -149,7 +145,7 @@ const activeCreateTaskGroup = () => {
 };
 
 const handleReorderTaskGroup = async () => {
-  const orders = project.value!.taskGroups.map((g) => g.id);
+  const orders = projectTemp.value!.taskGroups.map((g) => g.id);
   const data = await reorderTaskGroup(project.value!.id, orders);
 
   if (data.success) {
@@ -217,6 +213,10 @@ const handleDeleteTaskGroup = async (taskGroupId: string) => {
   isLoadingAction.value = false;
 };
 
+const handleFilter = (temp: IProject) => {
+  projectTemp.value = temp;
+};
+
 watch(
   () => project.value,
   () => {
@@ -225,44 +225,11 @@ watch(
   },
   { deep: true, immediate: true }
 );
-
-watch(search, () => {
-  projectTemp.value = {
-    ...project.value!,
-    taskGroups: project.value!.taskGroups.map((g) => ({
-      ...g,
-      tasks: g.tasks.filter((t) =>
-        t.name.toLowerCase().includes(search.value.toLowerCase())
-      ),
-    })),
-  };
-});
 </script>
 
 <template>
   <div v-if="projectTemp" class="flex flex-col h-full">
-    <div class="flex flex-wrap justify-between px-5 gap-3 pb-3">
-      <div class="">
-        <UInput
-          class="w-[250px]"
-          name="search_project"
-          v-model:propValue="search"
-          placeholder="Tìm kiếm công việc"
-        >
-          <template #left>
-            <SearchIcon class="w-4 fill-textColor-secondary" />
-          </template>
-        </UInput>
-      </div>
-      <div class="flex flex-wrap not-lastchild:mr-2">
-        <div
-          class="relative flex items-center px-2 py-1 rounded-md hover:bg-hover cursor-pointer"
-        >
-          <FilterIcon class="w-4 fill-textColor-primary mr-1" />
-          <span class="text-sm font-semibold text-textColor-primary">Lọc</span>
-        </div>
-      </div>
-    </div>
+    <Fillters @filter="handleFilter" />
     <div class="relative flex-1 h-full">
       <div
         class="absolute top-0 left-0 w-full h-full flex items-start px-5 pb-3 overflow-x-scroll"
@@ -283,22 +250,30 @@ watch(search, () => {
             class="h-full"
           >
             <div
-              class="flex-shrink-0 flex flex-col max-h-full w-[250px] rounded-lg bg-bgColor-secondary overflow-visible"
+              class="flex-shrink-0 flex flex-col max-h-full w-[270px] rounded-lg bg-bgColor-secondary overflow-visible"
             >
               <div
                 class="header flex items-center p-1 rounded-tl-lg rounded-tr-lg"
                 :style="{ background: taskGroup.color }"
+                :title="taskGroup.name"
               >
                 <input
                   type="text"
-                  class="flex-1 w-full px-2 py-[4px] text-sm font-semibold text-white rounded border border-solid border-transparent focus:border-primary cursor-pointer focus:cursor-auto"
+                  class="flex-1 w-full px-2 py-[4px] text-sm font-semibold text-white rounded border border-solid border-transparent focus:border-primary cursor-pointer focus:cursor-auto overflow-hidden text-ellipsis"
                   :value="taskGroup.name"
                   @change="changeTaskGroupName($event, taskGroup)"
                 />
+                <div
+                  class="w-5 h-5 rounded-full flex flex-center bg-hover mr-[2px]"
+                >
+                  <span class="text-xs text-white">{{
+                    taskGroup.tasks.filter((t) => !t.isHidden).length
+                  }}</span>
+                </div>
                 <div class="relative">
                   <Popper hover offsetDistance="8" content="Chọn màu">
                     <div
-                      class="flex-shrink-0 flex flex-center w-8 h-8 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
+                      class="flex-shrink-0 flex flex-center w-7 h-7 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
                     >
                       <BucketIcon class="w-4 fill-white" />
                       <div
@@ -329,7 +304,7 @@ watch(search, () => {
                 >
                   <Popper hover offsetDistance="8" content="Tự động">
                     <div
-                      class="relative flex-shrink-0 flex flex-center w-8 h-8 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
+                      class="relative flex-shrink-0 flex flex-center w-7 h-7 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
                       @click.stop="
                         () => {
                           showPowerTaskGroup = taskGroup.id;
@@ -383,7 +358,7 @@ watch(search, () => {
                 >
                   <Popper hover offsetDistance="8" content="Xem thêm">
                     <div
-                      class="flex-shrink-0 flex flex-center w-8 h-8 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
+                      class="flex-shrink-0 flex flex-center w-7 h-7 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
                       @click.stop="
                         () => {
                           showOptionTaskGroup = taskGroup.id;
@@ -432,7 +407,7 @@ watch(search, () => {
                 class="flex-[1_1_auto] overflow-x-hidden overflow-y-auto scroll-vert"
               >
                 <VueDraggable
-                  class="h-full px-2 py-2 not-lastchild:mb-2"
+                  class="h-full px-2 py-2"
                   v-model="taskGroup.tasks"
                   :animation="150"
                   chosenClass="chosen"

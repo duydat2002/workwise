@@ -1,4 +1,3 @@
-divdiv
 <script setup lang="ts">
 import XIcon from "@icons/x.svg";
 import MoreIcon from "@icons/more.svg";

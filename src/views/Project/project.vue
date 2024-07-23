@@ -13,6 +13,7 @@ import TimelineIcon from "@icons/timeline.svg";
 import ApprovedIcon from "@icons/approved.svg";
 import AttachIcon from "@icons/attach.svg";
 import ActivityIcon from "@icons/history.svg";
+import InboxIcon from "@icons/inbox.svg";
 import ChartIcon from "@icons/pie-chart.svg";
 import DragIcon from "@icons/drag.svg";
 import WaitIcon from "@icons/wait.svg";
@@ -24,7 +25,7 @@ import UnarchiveIcon from "@icons/unarchive.svg";
 import DeleteIcon from "@icons/delete.svg";
 import NotFoundIcon from "@icons/not-found.svg";
 import Avatar from "@/components/Common/Avatar.vue";
-import { nextTick, shallowRef, watch } from "vue";
+import { computed, nextTick, shallowRef, watch } from "vue";
 import { onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import { useProjectStore, useUserStore } from "@/stores";
@@ -43,6 +44,8 @@ import {
 } from "@/services/project";
 import { toast } from "vue3-toastify";
 import TaskDetail from "@/components/Pages/Task/TaskDetail.vue";
+import ArchivesSidebar from "@/components/Pages/ArchivesSidebar/ArchivesSidebar.vue";
+import Popper from "vue3-popper";
 
 const router = useRouter();
 const route = useRoute();
@@ -71,6 +74,23 @@ const showUpdateProject = ref(false);
 const showProjectOption = ref(false);
 const showArchiveConfirm = ref(false);
 const showDeleteConfirm = ref(false);
+
+const process = computed(() => {
+  const tasks =
+    project.value?.taskGroups
+      .flatMap((g) => g.tasks)
+      .filter((t) => !t.isArchived) ?? [];
+  const taskDone = tasks.filter((t) => t.status == "completed");
+
+  let processCount = 0;
+  if (taskDone.length != 0) {
+    processCount = Math.round((taskDone.length / tasks.length) * 100);
+  }
+  return {
+    value: processCount,
+    detail: `Công việc đã hoàn thành/ tổng số công việc: ${taskDone.length}/${tasks.length}`,
+  };
+});
 
 const handleArchiveProject = async () => {
   isLoadingAction.value = true;
@@ -315,7 +335,7 @@ onBeforeRouteUpdate(async (to, from) => {
                       }
                     "
                   >
-                    <ActivityIcon class="w-4 fill-textColor-primary mr-2" />
+                    <InboxIcon class="w-4 fill-textColor-primary mr-2" />
                     <span class="text-sm text-textColor-primary"
                       >Các mục đã lưu trữ</span
                     >
@@ -439,10 +459,21 @@ onBeforeRouteUpdate(async (to, from) => {
                       : "--/--, --:--"
                   }}</span>
                 </div>
-                <div class="flex flex-col">
-                  <span class="text-sm text-black font-medium">Tiến trình</span>
-                  <span class="text-base text-black font-semibold">75%</span>
-                </div>
+                <Popper
+                  hover
+                  :placement="'bottom'"
+                  offsetDistance="4"
+                  :content="process.detail"
+                >
+                  <div class="flex flex-col">
+                    <span class="text-sm text-black font-medium"
+                      >Tiến trình</span
+                    >
+                    <span class="block text-base text-black font-semibold"
+                      >{{ process.value }}%</span
+                    >
+                  </div>
+                </Popper>
               </div>
             </div>
           </div>
@@ -584,6 +615,16 @@ onBeforeRouteUpdate(async (to, from) => {
     <transition name="slideRight">
       <ActivitiesSidebar
         v-if="sidebarRightTabs == 'activities'"
+        @close="
+          () => {
+            sidebarRightTabs = undefined;
+          }
+        "
+      />
+    </transition>
+    <transition name="slideRight">
+      <ArchivesSidebar
+        v-if="sidebarRightTabs == 'archives'"
         @close="
           () => {
             sidebarRightTabs = undefined;

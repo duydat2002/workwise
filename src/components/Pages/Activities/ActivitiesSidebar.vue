@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import Avatar from "@/components/Common/Avatar.vue";
 import SidebarRight from "@/components/Layout/SidebarRight.vue";
-import { formatDate } from "@/helpers";
 import { useProjectStore } from "@/stores";
 import { storeToRefs } from "pinia";
 import { onMounted } from "vue";
@@ -27,6 +25,12 @@ onMounted(async () => {
 
 <template>
   <SidebarRight title="Lịch sử hoạt động" @close="handleClose">
-    <ActivityItem v-for="activity in activities" :key="activity.id" :activity />
+    <div class="flex flex-col my-3">
+      <ActivityItem
+        v-for="activity in activities"
+        :key="activity.id"
+        :activity
+      />
+    </div>
   </SidebarRight>
 </template>

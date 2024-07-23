@@ -27,4 +27,5 @@ export interface ITask {
   comments: IComment[];
   createdAt: string;
   updatedAt: string;
+  isHidden?: boolean;
 }

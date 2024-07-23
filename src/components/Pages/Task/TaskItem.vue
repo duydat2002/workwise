@@ -80,14 +80,9 @@ const hanldeClickTask = () => {
 <template>
   <div
     class="relative group w-full flex flex-col rounded-md bg-bgColor-primary border border-borderColor cursor-pointer shadow-md"
+    :class="task.isHidden ? 'h-0 overflow-hidden border-none ' : 'mb-2'"
     @click="hanldeClickTask"
   >
-    <!-- <div class="flex items-center px-3 py-[6px] bg-green-200">
-      <div class="w-6 h-6 rounded-full flex flex-center bg-green-400 mr-2">
-        <CheckIcon class="w-3 fill-white" />
-      </div>
-      <span class="text-green-700">Đã hoàn thành</span>
-    </div> -->
     <div class="flex flex-col px-3 py-2">
       <div class="flex items-center gap-1 mb-1">
         <template v-for="label in task.labels" :key="label.id">
@@ -122,6 +117,9 @@ const hanldeClickTask = () => {
         "
         >{{ task.name }}</span
       >
+      <!-- <span class="text-xs font-semibold bg-hover px-1 py-[1px] rounded">
+        {{ task.id }}
+      </span> -->
       <div v-if="showTaskGroup" class="mb-1">
         <span class="text-xs font-semibold bg-hover px-1 py-[1px] rounded">
           {{ task.taskGroup.name }}
@@ -197,7 +195,13 @@ const hanldeClickTask = () => {
         </div>
         <div class="flex items-center">
           <div v-if="task.priority != 'none'" class="">
-            <component :is="priority.icon" class="w-4" />
+            <Popper
+              hover
+              offsetDistance="8"
+              :content="`Độ ưu tiên: ${priority.name}`"
+            >
+              <component :is="priority.icon" class="w-4" />
+            </Popper>
           </div>
           <div
             v-if="task.assignee"
