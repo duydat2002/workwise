@@ -7,13 +7,14 @@ import UButton from "@/components/UI/UButton.vue";
 import Avatar from "@/components/Common/Avatar.vue";
 import MemberItem from "@/components/Pages/Project/MemberItem.vue";
 import UTagInput from "@/components/UI/UTagInput.vue";
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { IMember, IOption } from "@/types";
 import { storeToRefs } from "pinia";
 import { useProjectStore, useUserStore } from "@/stores";
 import { debounce } from "@/helpers";
 import { findUsersByNameOrEmail } from "@/services/user";
 import { inviteProjectMember } from "@/services/project";
+import { cloneDeep } from "lodash";
 
 const emit = defineEmits(["close"]);
 
@@ -32,14 +33,40 @@ const tabMembers = ref<"accepted" | "pending">("accepted");
 const isLoadingSearch = ref(false);
 const isLoadingInvite = ref(false);
 
+const hasPermission = computed(() => {
+  return (
+    project.value &&
+    !project.value.isArchived &&
+    project.value.members.some(
+      (m) => m.role == "admin" && m.user.id == user.value?.id
+    )
+  );
+});
+
 const membersComp = computed(() => {
+  const membersTemp = cloneDeep(project.value?.members) ?? [];
   const membersAccepted: IMember[] = [];
   const membersNotAccepted: IMember[] = [];
 
-  project.value!.members.forEach((m) => {
-    if (m.status == "accepted") membersAccepted.push(m);
-    else membersNotAccepted.push(m);
-  });
+  project.value?.members
+    .sort((a, b) => {
+      if (a.user.id == user.value!.id) return -1;
+      if (b.user.id == user.value!.id) return 1;
+
+      if (a.status !== b.status) {
+        return a.status === "accepted" ? -1 : 1;
+      }
+
+      if (a.status === "accepted" && b.status === "accepted") {
+        return a.role === "admin" ? -1 : 1;
+      }
+
+      return 0;
+    })
+    .forEach((m) => {
+      if (m.status == "accepted") membersAccepted.push(m);
+      else membersNotAccepted.push(m);
+    });
 
   return {
     membersAccepted,
@@ -188,7 +215,7 @@ watch(search, async () => {
                 class="flex-shrink-0"
                 variantType="primary"
                 :isLoading="isLoadingInvite"
-                :disabled="userInvites.length == 0"
+                :disabled="userInvites.length == 0 && !hasPermission"
                 @click="handleInvite"
                 ><span class="">Gửi lời mời</span></UButton
               >

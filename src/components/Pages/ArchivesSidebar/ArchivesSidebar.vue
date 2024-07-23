@@ -4,7 +4,7 @@ import RecoveryIcon from "@icons/recovery.svg";
 import DeleteIcon from "@icons/delete.svg";
 import SidebarRight from "@/components/Layout/SidebarRight.vue";
 import UInput from "@/components/UI/UInput.vue";
-import { useProjectStore } from "@/stores";
+import { useProjectStore, useUserStore } from "@/stores";
 import { storeToRefs } from "pinia";
 import { computed, ref } from "vue";
 import UButton from "@/components/UI/UButton.vue";
@@ -17,12 +17,24 @@ import ArchiveTaskGroupItem from "./ArchiveTaskGroupItem.vue";
 
 const emit = defineEmits(["close"]);
 
+const { user } = storeToRefs(useUserStore());
 const { project } = storeToRefs(useProjectStore());
+
 const search = ref("");
 const tab = ref<"taskgroup" | "task">("taskgroup");
 const isLoadingAction = ref("");
 const showDeleteTaskGroup = ref("");
 const showDeleteTask = ref("");
+
+const hasPermission = computed(() => {
+  return (
+    project.value &&
+    !project.value.isArchived &&
+    project.value.members.some(
+      (m) => m.role == "admin" && m.user.id == user.value?.id
+    )
+  );
+});
 
 const taskGroups = computed(() => {
   return project.value?.taskGroups.filter(
@@ -94,7 +106,7 @@ const handleClose = () => {
 </script>
 
 <template>
-  <SidebarRight title="Các mục đã lưu trữ" @close="handleClose">
+  <SidebarRight v-if="project" title="Các mục đã lưu trữ" @close="handleClose">
     <div class="border-b-2 border-borderColor mb-2">
       <div class="-mb-[2px] flex items-center not-lastchild:mr-2">
         <div
@@ -151,7 +163,10 @@ const handleClose = () => {
             class="flex flex-col pb-2 border-b border-borderColor"
           >
             <ArchiveTaskGroupItem :taskGroup />
-            <div class="flex items-center justify-end mt-2">
+            <div
+              v-if="hasPermission"
+              class="flex items-center justify-end mt-2"
+            >
               <UButton
                 class="mr-2"
                 variantType="secondary"
@@ -192,7 +207,10 @@ const handleClose = () => {
             class="flex flex-col pb-2 border-b border-borderColor"
           >
             <TaskItem :task />
-            <div class="flex items-center justify-end mt-2">
+            <div
+              v-if="hasPermission"
+              class="flex items-center justify-end mt-2"
+            >
               <UButton
                 class="mr-2"
                 variantType="secondary"

@@ -4,8 +4,12 @@ import MoreIcon from "@icons/more.svg";
 import ListIcon from "@icons/list.svg";
 import PlusIcon from "@icons/plus.svg";
 import SearchIcon from "@icons/search.svg";
+import InfoIcon from "@icons/info-circle.svg";
 import DownIcon from "@icons/down.svg";
 import UploadIcon from "@icons/upload.svg";
+import ArchiveIcon from "@icons/archive.svg";
+import UnarchiveIcon from "@icons/unarchive.svg";
+import DeleteIcon from "@icons/delete.svg";
 import PriorityLowestIcon from "@icons/priority-lowest.svg";
 import PriorityLowIcon from "@icons/priority-low.svg";
 import PriorityMediumIcon from "@icons/priority-medium.svg";
@@ -18,9 +22,12 @@ import { useProjectStore, useThemeStore, useUserStore } from "@/stores";
 import { computed, shallowRef, watch } from "vue";
 import { ref } from "vue";
 import {
+  archiveTask,
   assignTask,
   changeStatusTask,
+  deleteTask,
   getTaskById,
+  unarchiveTask,
   updateTask,
 } from "@/services/task";
 import UInput from "@/components/UI/UInput.vue";
@@ -31,6 +38,8 @@ import LabelPopup from "@/components/Popup/LabelPopup/LabelPopup.vue";
 import Avatar from "@/components/Common/Avatar.vue";
 import VueDatePicker from "@vuepic/vue-datepicker";
 import { formatDate } from "@/helpers";
+import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
+import { toast } from "vue3-toastify";
 
 const route = useRoute();
 const router = useRouter();
@@ -57,6 +66,16 @@ const priorities = shallowRef([
 const showStatusDropdown = ref(false);
 const showAssigneeDropdown = ref(false);
 const showPriorityDropdown = ref(false);
+const showTaskOption = ref(false);
+const showArchiveConfirm = ref(false);
+const showDeleteConfirm = ref(false);
+const isLoadingAction = ref(false);
+
+const isAdmin = computed(() => {
+  return project.value?.members.some(
+    (m) => m.role == "admin" && m.user.id == user.value?.id
+  );
+});
 
 const members = computed(() => {
   return (
@@ -66,6 +85,17 @@ const members = computed(() => {
           m.user.email.includes(searchAssignee.value.trim())) &&
         m.status == "accepted"
     ) ?? []
+  );
+});
+
+const hasPermission = computed(() => {
+  return (
+    project.value &&
+    !project.value.isArchived &&
+    !task.value?.isArchived &&
+    project.value.members.some(
+      (m) => m.role == "admin" && m.user.id == user.value?.id
+    )
   );
 });
 
@@ -133,6 +163,42 @@ const handleUpdateLabel = async (labels: ILabel[]) => {
   );
 };
 
+const handleArchiveTask = async () => {
+  isLoadingAction.value = true;
+  const data = await archiveTask(task.value!.id);
+
+  if (data.success) {
+    toast.success("Đã lưu trữ công việc.");
+  }
+
+  showTaskOption.value = false;
+  isLoadingAction.value = false;
+};
+
+const handleUnarchiveTask = async () => {
+  isLoadingAction.value = true;
+  const data = await unarchiveTask(task.value!.id);
+
+  if (data.success) {
+    toast.success("Đã khôi phục công việc.");
+  }
+
+  showTaskOption.value = false;
+  isLoadingAction.value = false;
+};
+
+const handleDeleteTask = async () => {
+  isLoadingAction.value = true;
+  const data = await deleteTask(task.value!.id);
+
+  if (data.success) {
+    toast.success("Đã xóa công việc.");
+  }
+
+  showTaskOption.value = false;
+  isLoadingAction.value = false;
+};
+
 const closeModal = () => {
   task.value = null;
   if (route.meta.isFromProject) {
@@ -197,13 +263,34 @@ watch(
   <Modal @click-outside="closeModal" margin="my-5 mx-10">
     <div class="flex flex-center w-full">
       <div
-        class="flex flex-col h-[calc(100vh-40px)] w-full max-w-[1000px] bg-bgColor-primary py-3 rounded-lg"
+        class="flex flex-col h-[calc(100vh-40px)] w-full max-w-[1000px] bg-bgColor-primary pb-3 rounded-lg"
       >
         <div v-if="isLoadingTask" class="flex-1 h-full flex flex-center">
           <LoadingIcon class="w-6 fill-textColor-secondary animate-spin" />
         </div>
-        <template v-else-if="taskTemp && task">
-          <div class="px-4 flex items-center justify-between">
+        <template v-else-if="taskTemp && task && project">
+          <div
+            v-if="task.isArchived"
+            class="px-3 py-2 flex flex-center bg-primary-extraLight rounded-tl-lg rounded-tr-lg"
+          >
+            <InfoIcon class="w-5 fill-primary-light" />
+            <span class="mx-2"
+              >Công việc này đã được lưu trữ. Khôi phục công việc để thực hiện
+              thay đổi.</span
+            >
+            <template v-if="isAdmin">
+              <span
+                v-if="!isLoadingAction"
+                class="text-link hover:underline active:underline cursor-pointer"
+                @click="handleUnarchiveTask"
+                >Khôi phục công việc</span
+              >
+              <span v-else class="text-textColor-secondary"
+                >Đang khôi phục công việc...</span
+              >
+            </template>
+          </div>
+          <div class="px-4 mt-3 flex items-center justify-between">
             <div class="flex flex-center">
               <div
                 class="w-8 h-6 bg-cover bg-center aspect-video mr-2"
@@ -223,10 +310,111 @@ watch(
             </div>
             <div class="flex">
               <div
-                class="mr-2 flex flex-center h-8 w-8 rounded-md hover:bg-hover active:bg-hover cursor-pointer"
-                title="Thêm"
+                class="relative"
+                v-click-outside.short="{
+                  handle: () => {
+                    showTaskOption = false;
+                  },
+                  excludes: ['#confirm_archive_task', '#confirm_delete_task'],
+                }"
               >
-                <MoreIcon class="w-4 fill-textColor-secondary" />
+                <div
+                  class="flex flex-center h-8 w-8 rounded-md hover:bg-hover active:bg-hover cursor-pointer"
+                  @click.stop="
+                    () => {
+                      console.log('object');
+                      showTaskOption = !showTaskOption;
+                    }
+                  "
+                >
+                  <MoreIcon class="w-4 fill-textColor-primary" />
+                </div>
+                <div
+                  v-if="showTaskOption"
+                  class="absolute mt-1 top-full right-0 w-max bg-bgColor-primary overflow-hidden rounded-lg shadow z-10"
+                >
+                  <div class="flex flex-col">
+                    <template v-if="isAdmin">
+                      <div
+                        v-if="!task.isArchived"
+                        class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                        @click="
+                          () => {
+                            showArchiveConfirm = true;
+                          }
+                        "
+                      >
+                        <ArchiveIcon class="w-4 fill-textColor-primary mr-2" />
+                        <span class="text-sm text-textColor-primary"
+                          >Lưu trữ công việc</span
+                        >
+                      </div>
+                      <div
+                        v-else
+                        class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                        @click="handleUnarchiveTask"
+                      >
+                        <UnarchiveIcon
+                          class="w-4 fill-textColor-primary mr-2"
+                        />
+                        <span class="text-sm text-textColor-primary"
+                          >Khôi phục công việc</span
+                        >
+                      </div>
+                    </template>
+                    <div
+                      v-if="isAdmin"
+                      class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                      @click="
+                        () => {
+                          showDeleteConfirm = true;
+                        }
+                      "
+                    >
+                      <DeleteIcon class="w-4 fill-error mr-2" />
+                      <span class="text-sm text-error">Xóa công việc</span>
+                    </div>
+                  </div>
+                  <ConfirmPopup
+                    v-if="showArchiveConfirm"
+                    id="confirm_archive_task"
+                    title="Lưu trữ công việc?"
+                    confirmMessage="Lưu trữ"
+                    :isLoadingConfirm="isLoadingAction"
+                    @confirm="handleArchiveTask"
+                    @cancel="
+                      () => {
+                        showArchiveConfirm = false;
+                        showTaskOption = false;
+                      }
+                    "
+                  >
+                    <div class="w-full py-2">
+                      <span class="text-textColor-secondary mr-1"
+                        >Bạn có thể tìm và khôi phục lại các công việc đã lưu
+                        trữ.
+                        <br />
+                        Xem các công việc đã lưu trữ ở trang chi tiết dự án ->
+                        cài đặt -> các mục đã lưu trữ
+                      </span>
+                    </div>
+                  </ConfirmPopup>
+                  <ConfirmPopup
+                    v-if="showDeleteConfirm"
+                    id="confirm_delete_task"
+                    title="Xóa công việc?"
+                    confirmMessage="Xóa"
+                    desc="Tất cả bình luận và hành động sẽ bị xóa. Không thể hoàn tác."
+                    :isLoadingConfirm="isLoadingAction"
+                    @confirm="handleDeleteTask"
+                    @cancel="
+                      () => {
+                        showDeleteConfirm = false;
+                        showTaskOption = false;
+                      }
+                    "
+                  ></ConfirmPopup>
+                </div>
               </div>
               <div
                 class="flex flex-center h-8 w-8 rounded-md hover:bg-hover active:bg-hover cursor-pointer"
@@ -249,6 +437,7 @@ watch(
                   fontSize="text-base font-semibold"
                   :hasBorder="false"
                   hasButtons
+                  :disabled="!hasPermission"
                   @confirm="handleChangeName"
                   @cancel="() => {taskTemp!.name = task!.name}"
                 />
@@ -266,6 +455,7 @@ watch(
                     >{{ label.name }}</span
                   >
                   <span
+                    v-if="hasPermission"
                     class="add-label px-3 py-2 bg-bgColor-secondary hover:bg-hover rounded-md cursor-pointer"
                     title="Thêm nhãn"
                     @click="
@@ -300,6 +490,7 @@ watch(
                   :minHeigth="60"
                   :maxHeigth="120"
                   hasButtons
+                  :disabled="!hasPermission"
                   @confirm="handleChangeDesc"
                   @cancel="() => {taskTemp!.description = task!.description}"
                 />
@@ -321,6 +512,7 @@ watch(
                       >Tải tệp hoặc tải lên tại đây</span
                     >
                     <input
+                      v-if="hasPermission"
                       type="file"
                       name="attachment"
                       class="absolute top-0 left-0 right-0 bottom-0 opacity-0 cursor-pointer"
@@ -371,6 +563,7 @@ watch(
                       ]"
                       @click="
                         () => {
+                          if (!project!.isArchived && !task?.isArchived)
                           showStatusDropdown = true;
                         }
                       "
@@ -438,7 +631,7 @@ watch(
                             class="flex items-center px-2 py-1 bg-bgColor-secondary rounded hover:bg-hover active:bg-hover cursor-pointer"
                             @click="
                               () => {
-                                showAssigneeDropdown = true;
+                                if (hasPermission) showAssigneeDropdown = true;
                               }
                             "
                           >
@@ -530,7 +723,7 @@ watch(
                             class="flex items-center px-2 py-[6px] bg-bgColor-secondary rounded hover:bg-hover active:bg-hover cursor-pointer"
                             @click="
                               () => {
-                                showPriorityDropdown = true;
+                                if (hasPermission) showPriorityDropdown = true;
                               }
                             "
                           >
@@ -582,6 +775,7 @@ watch(
                           format="dd/MM/yyyy"
                           :dark="theme == 'dark'"
                           position="right"
+                          :disabled="!hasPermission"
                         ></VueDatePicker>
                       </div>
                     </div>
@@ -598,6 +792,7 @@ watch(
                           placeholder="mm/dd/yyyy"
                           format="dd/MM/yyyy"
                           :dark="theme == 'dark'"
+                          :disabled="!hasPermission"
                           position="right"
                         ></VueDatePicker>
                       </div>

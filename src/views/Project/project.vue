@@ -75,6 +75,22 @@ const showProjectOption = ref(false);
 const showArchiveConfirm = ref(false);
 const showDeleteConfirm = ref(false);
 
+const isAdmin = computed(() => {
+  return project.value?.members.some(
+    (m) => m.role == "admin" && m.user.id == user.value?.id
+  );
+});
+
+const hasPermission = computed(() => {
+  return (
+    project.value &&
+    !project.value.isArchived &&
+    project.value.members.some(
+      (m) => m.role == "admin" && m.user.id == user.value?.id
+    )
+  );
+});
+
 const process = computed(() => {
   const tasks =
     project.value?.taskGroups
@@ -90,6 +106,25 @@ const process = computed(() => {
     value: processCount,
     detail: `Công việc đã hoàn thành/ tổng số công việc: ${taskDone.length}/${tasks.length}`,
   };
+});
+
+const members = computed(() => {
+  return (
+    project.value?.members.sort((a, b) => {
+      if (a.user.id == user.value!.id) return -1;
+      if (b.user.id == user.value!.id) return 1;
+
+      if (a.status !== b.status) {
+        return a.status === "accepted" ? -1 : 1;
+      }
+
+      if (a.status === "accepted" && b.status === "accepted") {
+        return a.role === "admin" ? -1 : 1;
+      }
+
+      return 0;
+    }) ?? []
+  );
 });
 
 const handleArchiveProject = async () => {
@@ -214,15 +249,17 @@ onBeforeRouteUpdate(async (to, from) => {
           >Dự án này đã được lưu trữ. Khôi phục dự án để thực hiện thay
           đổi.</span
         >
-        <span
-          v-if="!isLoadingAction"
-          class="text-link hover:underline active:underline cursor-pointer"
-          @click="handleUnarchiveProject"
-          >Khôi phục dự án</span
-        >
-        <span v-else class="text-textColor-secondary"
-          >Đang khôi phục dự án...</span
-        >
+        <template v-if="isAdmin">
+          <span
+            v-if="!isLoadingAction"
+            class="text-link hover:underline active:underline cursor-pointer"
+            @click="handleUnarchiveProject"
+            >Khôi phục dự án</span
+          >
+          <span v-else class="text-textColor-secondary"
+            >Đang khôi phục dự án...</span
+          >
+        </template>
       </div>
       <div class="relative group/desc mb-3">
         <div class="px-5 py-2 flex flex-wrap items-center justify-between">
@@ -234,10 +271,10 @@ onBeforeRouteUpdate(async (to, from) => {
             <div class="flex mr-2">
               <div class="flex mr-3">
                 <div
-                  v-for="(member, i) in project.members"
+                  v-for="(member, i) in members"
                   :key="member.user.id"
                   class="relative -mr-1 cursor-pointer"
-                  :style="{ zIndex: project.members.length - i }"
+                  :style="{ zIndex: members.length - i }"
                   :title="`${member.user.fullname} (${member.user.email}) ${
                     member.status == 'pending'
                       ? '- đang chờ'
@@ -276,6 +313,7 @@ onBeforeRouteUpdate(async (to, from) => {
             </div>
 
             <div
+              v-if="hasPermission"
               class="mr-1 flex flex-center h-8 w-8 rounded-md hover:bg-hover active:bg-hover cursor-pointer"
               @click="
                 () => {
@@ -340,31 +378,34 @@ onBeforeRouteUpdate(async (to, from) => {
                       >Các mục đã lưu trữ</span
                     >
                   </div>
-                  <div
-                    v-if="!project.isArchived"
-                    class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
-                    @click="
-                      () => {
-                        showArchiveConfirm = true;
-                      }
-                    "
-                  >
-                    <ArchiveIcon class="w-4 fill-textColor-primary mr-2" />
-                    <span class="text-sm text-textColor-primary"
-                      >Lưu trữ dự án</span
+                  <template v-if="isAdmin">
+                    <div
+                      v-if="!project.isArchived"
+                      class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                      @click="
+                        () => {
+                          showArchiveConfirm = true;
+                        }
+                      "
                     >
-                  </div>
-                  <div
-                    v-else
-                    class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
-                    @click="handleUnarchiveProject"
-                  >
-                    <UnarchiveIcon class="w-4 fill-textColor-primary mr-2" />
-                    <span class="text-sm text-textColor-primary"
-                      >Khôi phục dự án</span
+                      <ArchiveIcon class="w-4 fill-textColor-primary mr-2" />
+                      <span class="text-sm text-textColor-primary"
+                        >Lưu trữ dự án</span
+                      >
+                    </div>
+                    <div
+                      v-else
+                      class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                      @click="handleUnarchiveProject"
                     >
-                  </div>
+                      <UnarchiveIcon class="w-4 fill-textColor-primary mr-2" />
+                      <span class="text-sm text-textColor-primary"
+                        >Khôi phục dự án</span
+                      >
+                    </div>
+                  </template>
                   <div
+                    v-if="isAdmin"
                     class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
                     @click="
                       () => {

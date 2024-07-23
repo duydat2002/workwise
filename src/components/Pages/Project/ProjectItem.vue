@@ -6,7 +6,7 @@ import { IProject } from "@/types";
 import { storeToRefs } from "pinia";
 import Popper from "vue3-popper";
 import { formatDate } from "@/helpers";
-import { watchEffect } from "vue";
+import { computed, watchEffect } from "vue";
 import { ref } from "vue";
 
 const props = defineProps<{
@@ -17,6 +17,12 @@ const { showProjectLabel } = storeToRefs(useProjectStore());
 const taskCount = ref(0);
 const taskDoneCount = ref(0);
 const process = ref(0);
+
+const outOfDate = computed(() => {
+  if (props.project.dueDate)
+    return new Date() > new Date(props.project.dueDate);
+  else return false;
+});
 
 watchEffect(() => {
   const tasks = props.project.taskGroups.flatMap((g) => g.tasks);
@@ -101,10 +107,22 @@ const toggleShowLabel = () => {
         ></div>
       </div>
       <div class="mt-3 flex items-center justify-between">
-        <Popper hover offsetDistance="4" content="Hạn chót">
-          <div class="flex items-center">
-            <ClockIcon class="w-4 fill-textColor-secondary mr-1" />
-            <span class="text-xs text-textColor-secondary">{{
+        <Popper
+          hover
+          offsetDistance="4"
+          :content="outOfDate ? 'Công việc đã quá hạn' : 'Công việc còn hạn'"
+        >
+          <div
+            v-if="project.dueDate"
+            class="px-1 py-[2px] flex items-center rounded"
+            :class="
+              outOfDate
+                ? 'bg-red-200 text-red-500 fill-red-500'
+                : 'fill-textColor-primary text-textColor-secondary'
+            "
+          >
+            <ClockIcon class="w-3 mr-1" />
+            <span class="text-xs">{{
               project.dueDate
                 ? formatDate(project.dueDate, "dd/MM/yyyy")
                 : "--/--/----"

@@ -11,7 +11,7 @@ import { SortableEvent, VueDraggable } from "vue-draggable-plus";
 import UTextarea from "@/components/UI/UTextarea.vue";
 import UButton from "@/components/UI/UButton.vue";
 import { storeToRefs } from "pinia";
-import { useProjectStore, useThemeStore } from "@/stores";
+import { useProjectStore, useThemeStore, useUserStore } from "@/stores";
 import {
   archiveTaskGroup,
   createTaskGroups,
@@ -28,8 +28,10 @@ import Popper from "vue3-popper";
 import USelect from "@/components/UI/USelect.vue";
 import { watch } from "vue";
 import Fillters from "@/components/Pages/Project/Filters.vue";
+import { computed } from "vue";
 
 const { isDark } = storeToRefs(useThemeStore());
+const { user } = storeToRefs(useUserStore());
 const { project, showProjectInfo } = storeToRefs(useProjectStore());
 
 const DEFAULT_COLOR = "#93c5fd";
@@ -56,6 +58,16 @@ const autoOptions = ref<IOption[]>([
   { key: "inprogress", value: "Đang thực hiện" },
   { key: "todo", value: "Cần thực hiện" },
 ]);
+
+const hasPermission = computed(() => {
+  return (
+    project.value &&
+    !project.value.isArchived &&
+    project.value.members.some(
+      (m) => m.role == "admin" && m.user.id == user.value?.id
+    )
+  );
+});
 
 const validateCreateTaskGroup = () => {
   taskGroupNameErr.value = undefined;
@@ -228,7 +240,7 @@ watch(
 </script>
 
 <template>
-  <div v-if="projectTemp" class="flex flex-col h-full">
+  <div v-if="projectTemp && project" class="flex flex-col h-full">
     <Fillters @filter="handleFilter" />
     <div class="relative flex-1 h-full">
       <div
@@ -237,6 +249,7 @@ watch(
         <VueDraggable
           class="flex h-full not-lastchild:mr-2"
           :animation="150"
+          :disabled="!hasPermission"
           v-model="projectTemp!.taskGroups"
           handle=".header"
           chosenClass="chosen"
@@ -255,13 +268,14 @@ watch(
               <div
                 class="header flex items-center p-1 rounded-tl-lg rounded-tr-lg"
                 :style="{ background: taskGroup.color }"
-                :title="taskGroup.name"
               >
                 <input
                   type="text"
                   class="flex-1 w-full px-2 py-[4px] text-sm font-semibold text-white rounded border border-solid border-transparent focus:border-primary cursor-pointer focus:cursor-auto overflow-hidden text-ellipsis"
                   :value="taskGroup.name"
+                  :disabled="!hasPermission"
                   @change="changeTaskGroupName($event, taskGroup)"
+                  :title="taskGroup.name"
                 />
                 <div
                   class="w-5 h-5 rounded-full flex flex-center bg-hover mr-[2px]"
@@ -280,6 +294,7 @@ watch(
                         class="absolute top-0 left-0 right-0 bottom-0 z-10 opacity-0 overflow-hidden"
                       >
                         <ColorPicker
+                          v-if="hasPermission"
                           format="hex"
                           shape="square"
                           disable-alpha
@@ -315,7 +330,7 @@ watch(
                     </div>
                   </Popper>
                   <div
-                    v-if="showPowerTaskGroup == taskGroup.id"
+                    v-if="showPowerTaskGroup == taskGroup.id && hasPermission"
                     class="taskgroup_power absolute mt-1 top-full left-1/2 -translate-x-1/2 min-w-full w-max max-w-[300px] bg-bgColor-primary rounded-lg shadow z-10"
                   >
                     <div class="flex flex-col px-3 py-2">
@@ -369,7 +384,7 @@ watch(
                     </div>
                   </Popper>
                   <div
-                    v-if="showOptionTaskGroup == taskGroup.id"
+                    v-if="showOptionTaskGroup == taskGroup.id && hasPermission"
                     class="taskgroup_options absolute mt-1 top-full right-0 w-max bg-bgColor-primary overflow-hidden rounded-lg shadow z-10"
                   >
                     <div class="flex flex-col">
@@ -410,6 +425,7 @@ watch(
                   class="h-full px-2 py-2"
                   v-model="taskGroup.tasks"
                   :animation="150"
+                  :disabled="!hasPermission"
                   chosenClass="chosen"
                   dragClass="drag"
                   ghostClass="ghost"
@@ -435,7 +451,7 @@ watch(
                   </div>
                 </VueDraggable>
               </div>
-              <div class="px-3 mb-1">
+              <div v-if="hasPermission" class="px-3 mb-1">
                 <div
                   v-if="!showCreateTask || showCreateTask != taskGroup.id"
                   class="group py-2 w-full flex items-center cursor-pointer"
@@ -465,10 +481,11 @@ watch(
                   </div>
                 </div>
               </div>
+              <div v-else class="mb-1"></div>
             </div>
           </div>
         </VueDraggable>
-        <div class="relative flex-shrink-0 w-[250px] ml-2">
+        <div v-if="hasPermission" class="relative flex-shrink-0 w-[250px] ml-2">
           <div
             v-if="!showCreateTaskGroup"
             class="flex-shrink-0 px-3 py-[10px] flex items-center rounded-lg bg-bgColor-secondary hover:bg-hover active:bg-hover cursor-pointer"
