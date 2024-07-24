@@ -28,7 +28,7 @@ import Avatar from "@/components/Common/Avatar.vue";
 import { computed, nextTick, shallowRef, watch } from "vue";
 import { onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
-import { useProjectStore, useUserStore } from "@/stores";
+import { useActivityStore, useProjectStore, useUserStore } from "@/stores";
 import { formatDate } from "@/helpers";
 import { ref } from "vue";
 import { VueDraggable } from "vue-draggable-plus";
@@ -51,9 +51,9 @@ const router = useRouter();
 const route = useRoute();
 
 const { user } = storeToRefs(useUserStore());
-const { projects, project, activities, showProjectInfo } = storeToRefs(
-  useProjectStore()
-);
+const { projects, project, showProjectInfo } = storeToRefs(useProjectStore());
+
+const { projectActivities, taskActivities } = storeToRefs(useActivityStore());
 
 const isLoadingProject = ref(false);
 const isLoadingAction = ref(false);
@@ -190,7 +190,6 @@ const getProject = () => {
     projects.value.find((p) => p.id == route.params.projectId) || null;
 
   if (project.value) {
-    activities.value = [];
     project.value.members.sort((a, b) => {
       if (a.user.id == user.value!.id) return -1;
       if (b.user.id == user.value!.id) return 1;
@@ -229,8 +228,23 @@ watch(
   { immediate: true }
 );
 
+watch(
+  () => route.params.projectId,
+  () => {
+    if (projectActivities.value[0]?.project?.id != project.value?.id) {
+      projectActivities.value = [];
+      taskActivities.value = [];
+    }
+  },
+  { immediate: true }
+);
+
 onBeforeRouteUpdate(async (to, from) => {
-  if (to.params.projectId != from.params.projectId) getProject();
+  if (to.params.projectId != from.params.projectId) {
+    projectActivities.value = [];
+    taskActivities.value = [];
+    getProject();
+  }
 });
 </script>
 

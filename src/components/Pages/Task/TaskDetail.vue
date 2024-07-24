@@ -579,7 +579,7 @@ watch(
                 </div>
                 <div class="flex-1 mt-3">
                   <TaskComments v-if="showSelected == 'comments'" :task />
-                  <TaskActivities v-else />
+                  <TaskActivities v-else :task :sortNewest/>
                 </div>
               </div>
             </div>

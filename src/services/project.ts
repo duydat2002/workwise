@@ -129,8 +129,20 @@ export async function deleteProjectMember(projectId: string, member: string) {
 }
 
 // Project activities
-export async function getProjectActivities(projectId: string) {
+export async function getProjectActivities(
+  projectId: string,
+  page: number,
+  pageSize: number,
+  sortNewest: boolean = true
+) {
   return await api.get<any, IServerData<{ activities: IActivity[] }>>(
-    prefix + projectId + "/activities"
+    prefix + projectId + "/activities",
+    {
+      params: {
+        page,
+        pageSize,
+        sortNewest,
+      },
+    }
   );
 }

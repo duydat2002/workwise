@@ -1,5 +1,5 @@
 import api from "@/plugins/axios";
-import { IServerData, ITask } from "@/types";
+import { IActivity, IServerData, ITask } from "@/types";
 
 const prefix = "/tasks/";
 
@@ -67,4 +67,23 @@ export async function unarchiveTask(taskId: string) {
 
 export async function deleteTask(taskId: string) {
   return await api.delete<any, IServerData>(prefix + taskId);
+}
+
+// Task activities
+export async function getTaskActivities(
+  taskId: string,
+  page: number,
+  pageSize: number,
+  sortNewest: boolean = true
+) {
+  return await api.get<any, IServerData<{ activities: IActivity[] }>>(
+    prefix + taskId + "/activities",
+    {
+      params: {
+        page,
+        pageSize,
+        sortNewest,
+      },
+    }
+  );
 }

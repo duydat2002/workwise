@@ -5,10 +5,6 @@ interface IInfo {
   name: string;
 }
 
-interface IInfoColor extends IInfo {
-  color: string;
-}
-
 export type IActivityType =
   | "update_project"
   | "archive_project"

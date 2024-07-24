@@ -29,13 +29,14 @@ import USelect from "@/components/UI/USelect.vue";
 import { watch } from "vue";
 import Fillters from "@/components/Pages/Project/Filters.vue";
 import { computed } from "vue";
+import { cloneDeep } from "lodash";
 
 const { isDark } = storeToRefs(useThemeStore());
 const { user } = storeToRefs(useUserStore());
 const { project, showProjectInfo } = storeToRefs(useProjectStore());
 
 const DEFAULT_COLOR = "#93c5fd";
-const projectTemp = ref<IProject | null>(null);
+const projectTemp = ref<IProject | null>(cloneDeep(project.value));
 const taskName = ref("");
 const taskNameErr = ref<string>();
 const taskGroupName = ref("");
@@ -233,14 +234,15 @@ watch(
   () => project.value,
   () => {
     console.log("project updated");
-    projectTemp.value = Object.assign({}, project.value);
+    projectTemp.value = cloneDeep(project.value);
   },
-  { deep: true, immediate: true }
+  { deep: true }
 );
 </script>
 
 <template>
-  <div v-if="projectTemp && project" class="flex flex-col h-full">
+  <div v-if="!project">cac</div>
+  <div v-else class="flex flex-col h-full">
     <Fillters @filter="handleFilter" />
     <div class="relative flex-1 h-full">
       <div
