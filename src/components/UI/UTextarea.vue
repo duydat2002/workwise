@@ -3,7 +3,7 @@ import ExclamationIcon from "@icons/exclamation-mark.svg";
 import XIcon from "@icons/x.svg";
 import CheckIcon from "@icons/check.svg";
 
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
 
 const emit = defineEmits([
   "update:value",
@@ -22,13 +22,13 @@ const props = withDefaults(
     placeholder?: string;
     errorMessage?: string;
     disabled?: boolean;
-    minHeigth?: number;
+    minHeight?: number;
     maxHeigth?: number;
     textareaClass?: string;
     hasButtons?: boolean;
   }>(),
   {
-    minHeigth: 36,
+    minHeight: 36,
     maxHeigth: 80,
     hasButtons: false,
   }
@@ -44,12 +44,6 @@ const inputValue = computed({
     emit("update:value", value);
   },
 });
-
-const handleInput = () => {
-  textareaRef.value!.style.height = props.minHeigth + "px";
-  textareaRef.value!.style.height =
-    Math.min(textareaRef.value!.scrollHeight, props.maxHeigth) + "px";
-};
 
 const handleEnter = () => {
   emit("enter");
@@ -84,9 +78,17 @@ const handleConfirm = () => {
   emit("confirm");
 };
 
+watch(inputValue, () => {
+  nextTick(() => {
+    textareaRef.value!.style.height = props.minHeight + "px";
+    textareaRef.value!.style.height =
+      Math.min(textareaRef.value!.scrollHeight, props.maxHeigth) + "px";
+  });
+});
+
 onMounted(() => {
   nextTick(() => {
-    textareaRef.value!.style.height = props.minHeigth + "px";
+    textareaRef.value!.style.height = props.minHeight + "px";
   });
 });
 </script>
@@ -108,7 +110,6 @@ onMounted(() => {
           :placeholder="placeholder"
           v-model="inputValue"
           :disabled="disabled"
-          @input="handleInput"
           @keydown.enter.exact.prevent="handleEnter"
           @focus="handleFocus"
         />

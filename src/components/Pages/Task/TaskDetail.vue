@@ -15,7 +15,11 @@ import PriorityLowIcon from "@icons/priority-low.svg";
 import PriorityMediumIcon from "@icons/priority-medium.svg";
 import PriorityHighIcon from "@icons/priority-high.svg";
 import LoadingIcon from "@icons/loading.svg";
+import AscIcon from "@icons/asc.svg";
+import DescIcon from "@icons/desc.svg";
 import Modal from "@/components/Modal/Modal.vue";
+import TaskComments from "./TaskComments.vue";
+import TaskActivities from "./TaskActivities.vue";
 import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import { useProjectStore, useThemeStore, useUserStore } from "@/stores";
@@ -40,6 +44,7 @@ import VueDatePicker from "@vuepic/vue-datepicker";
 import { formatDate } from "@/helpers";
 import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
 import { toast } from "vue3-toastify";
+import { compareDesc } from "date-fns";
 
 const route = useRoute();
 const router = useRouter();
@@ -52,10 +57,11 @@ const taskTemp = ref<ITask | null>(null);
 const searchAssignee = ref("");
 const isLoadingTask = ref(false);
 const activeLabelPopup = ref(false);
-const showSelected = ref<"activities" | "comments">("activities");
+const sortNewest = ref(true);
+const showSelected = ref<"activities" | "comments">("comments");
 const showOptions = ref<IOption[]>([
-  { key: "activities", value: "Lịch sử hoạt động" },
   { key: "comments", value: "Bình luận" },
+  { key: "activities", value: "Lịch sử hoạt động" },
 ]);
 const priorities = shallowRef([
   { key: "high", name: "Cao", icon: PriorityHighIcon },
@@ -236,9 +242,21 @@ watch(
   () => {
     console.log("task updated");
     taskTemp.value = Object.assign({}, task.value);
+    // sortComments(taskTemp.value.comments, "newest");
   },
   { deep: true }
 );
+
+watch(sortNewest, () => {
+  if (sortNewest.value)
+    return taskTemp.value?.comments.sort((a, b) =>
+      compareDesc(a.createdAt, b.createdAt)
+    );
+  else
+    return taskTemp.value?.comments.sort((a, b) =>
+      compareDesc(b.createdAt, a.createdAt)
+    );
+});
 
 watch(
   () => taskTemp.value?.startDate,
@@ -487,7 +505,7 @@ watch(
                 <UTextarea
                   v-model:value="taskTemp.description!"
                   placeholder="Công việc này chưa có mô tả, hãy thêm mô tả cho công việc..."
-                  :minHeigth="60"
+                  :minHeight="60"
                   :maxHeigth="120"
                   hasButtons
                   :disabled="!hasPermission"
@@ -521,22 +539,48 @@ watch(
                 </div>
               </div>
               <div class="flex flex-col">
+                <label class="mb-2 text-sm font-bold text-textColor-subtitle"
+                  >Hoạt động
+                </label>
                 <div class="flex items-center justify-between">
-                  <label class="mb-1 text-sm font-bold text-textColor-subtitle"
-                    >Hoạt động
-                  </label>
                   <div class="flex items-center">
-                    <span class="text-textColor-secondary mr-2">Hiển thị</span>
+                    <span class="text-textColor-secondary mr-2">Hiển thị:</span>
                     <USelect
                       class="min-h-6 !w-auto"
                       v-model:selected="showSelected"
                       :options="showOptions"
-                      padding="px-1 py-[1px]"
+                      padding="px-1 py-[2px]"
                       placement="top-full min-w-full w-max right-0 pt-1"
                     />
                   </div>
+                  <div
+                    class=""
+                    @click="
+                      () => {
+                        sortNewest = !sortNewest;
+                      }
+                    "
+                  >
+                    <div
+                      v-if="sortNewest"
+                      class="flex items-center px-2 py-2 bg-bgColor-secondary hover:bg-hover active:bg-hover rounded cursor-pointer"
+                    >
+                      <span class="text-textColor-primary">Mới nhất</span>
+                      <AscIcon class="w-4 fill-textColor-primary ml-1" />
+                    </div>
+                    <div
+                      v-else
+                      class="flex items-center px-2 py-2 bg-bgColor-secondary hover:bg-hover active:bg-hover rounded cursor-pointer"
+                    >
+                      <span class="text-textColor-primary">Muộn nhất</span>
+                      <DescIcon class="w-4 fill-textColor-primary ml-1" />
+                    </div>
+                  </div>
                 </div>
-                <div class="flex-1">cac</div>
+                <div class="flex-1 mt-3">
+                  <TaskComments v-if="showSelected == 'comments'" :task />
+                  <TaskActivities v-else />
+                </div>
               </div>
             </div>
             <div

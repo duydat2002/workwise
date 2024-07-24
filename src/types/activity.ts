@@ -38,7 +38,6 @@ export interface IActivity {
   id: string;
   user: IUserInfo;
   project: IInfo;
-  taskGroup?: IInfoColor;
   task?: IInfo;
   datas: any;
   type: IActivityType;

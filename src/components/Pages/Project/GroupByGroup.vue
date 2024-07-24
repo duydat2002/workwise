@@ -399,7 +399,7 @@ const handleDeleteTaskGroup = async (taskGroupId: string) => {
             v-model:value="taskGroupName"
             name="taskgroup_name"
             placeholder="Nhập tên..."
-            :minHeigth="32"
+            :minHeight="32"
             :errorMessage="taskGroupNameErr"
           ></UTextarea>
         </div>
