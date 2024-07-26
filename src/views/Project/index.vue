@@ -96,10 +96,9 @@ const handleChooseLabel = (option: IOption) => {
   }
 };
 
-watchEffect(() => {
+const filterProjects = () => {
   const filterTagIds = labelsSelected.value.map((t) => t.key);
-  const projectsTemp = projects.value;
-  showProjects.value = projectsTemp.filter((p) => {
+  showProjects.value = projects.value.filter((p) => {
     const nameMatch = p.name.toLowerCase().includes(search.value.toLowerCase());
 
     if (filterTagIds.length == 0) return nameMatch;
@@ -107,6 +106,10 @@ watchEffect(() => {
     const tagMatch = p.labels.some((l) => filterTagIds.includes(l.id));
     return nameMatch && tagMatch;
   });
+};
+
+watchEffect(() => {
+  filterProjects();
 });
 
 onMounted(() => {

@@ -1,5 +1,5 @@
 import { getProjects } from "@/services/project";
-import { IActivity, IProject, ITask, ITaskGroup } from "@/types";
+import { IActivity, IProject, ITask, ITaskGroup, IUser } from "@/types";
 import { defineStore } from "pinia";
 
 interface IState {
@@ -32,6 +32,20 @@ export const useProjectStore = defineStore("project", {
         this.projects = [];
       }
     },
+
+    updateUserProjectStore(user: IUser) {
+      let projectObjs = this.projects.filter((p) =>
+        p.members.some((m) => m.user.id == user.id)
+      );
+      projectObjs.forEach((p) => {
+        const userMember = p.members.find((m) => m.user.id == user.id);
+
+        if (userMember) {
+          Object.assign(userMember.user, user);
+        }
+      });
+    },
+
     addProjectStore(project: IProject) {
       this.projects.push(project);
     },

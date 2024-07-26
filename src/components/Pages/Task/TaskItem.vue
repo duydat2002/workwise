@@ -145,8 +145,8 @@ const hanldeClickTask = () => {
           }}
         </span>
       </div>
-      <div class="flex items-center justify-between">
-        <div class="flex items-center">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center">
           <Popper
             hover
             offsetDistance="8"
@@ -193,7 +193,7 @@ const hanldeClickTask = () => {
             </div>
           </Popper>
         </div>
-        <div class="flex items-center">
+        <div class="flex items-center justify-end flex-1">
           <div v-if="task.priority != 'none'" class="">
             <Popper
               hover

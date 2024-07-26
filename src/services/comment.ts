@@ -17,8 +17,6 @@ export async function updateComment(commentId: string, content: string) {
   return await api.patch<any, IServerData>(prefix + commentId, { content });
 }
 
-export async function deleteComment(taskId: string, commentId: string) {
-  return await api.delete<any, IServerData>(prefix + commentId, {
-    params: { taskId },
-  });
+export async function deleteComment(commentId: string) {
+  return await api.delete<any, IServerData>(prefix + commentId);
 }

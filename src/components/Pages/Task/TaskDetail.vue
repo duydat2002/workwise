@@ -6,7 +6,7 @@ import PlusIcon from "@icons/plus.svg";
 import SearchIcon from "@icons/search.svg";
 import InfoIcon from "@icons/info-circle.svg";
 import DownIcon from "@icons/down.svg";
-import UploadIcon from "@icons/upload.svg";
+import UserTickIcon from "@icons/user-tick.svg";
 import ArchiveIcon from "@icons/archive.svg";
 import UnarchiveIcon from "@icons/unarchive.svg";
 import DeleteIcon from "@icons/delete.svg";
@@ -45,6 +45,11 @@ import { formatDate } from "@/helpers";
 import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
 import { toast } from "vue3-toastify";
 import { compareDesc } from "date-fns";
+import { addTaskAttachment } from "@/services/attachment";
+import { cloneDeep } from "lodash";
+import TaskAttachments from "./TaskAttachments.vue";
+import UButton from "@/components/UI/UButton.vue";
+import ApprovalModal from "@/components/Modal/ApprovalModal.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -53,6 +58,7 @@ const { user } = storeToRefs(useUserStore());
 const { theme } = storeToRefs(useThemeStore());
 const { project, task } = storeToRefs(useProjectStore());
 
+const inputAttachmentRef = ref<HTMLInputElement>();
 const taskTemp = ref<ITask | null>(null);
 const searchAssignee = ref("");
 const isLoadingTask = ref(false);
@@ -75,6 +81,7 @@ const showPriorityDropdown = ref(false);
 const showTaskOption = ref(false);
 const showArchiveConfirm = ref(false);
 const showDeleteConfirm = ref(false);
+const showApprovalModal = ref(false);
 const isLoadingAction = ref(false);
 
 const isAdmin = computed(() => {
@@ -169,6 +176,34 @@ const handleUpdateLabel = async (labels: ILabel[]) => {
   );
 };
 
+const getInputAttachments = async (event: Event) => {
+  const files = (event.target as HTMLInputElement).files!;
+
+  let check = false;
+  if (files && files.length > 0) {
+    const formData = new FormData();
+
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("Kích thước tài liệu vượt quá 10MB!");
+      } else {
+        formData.append("files", file, file.name);
+        check = true;
+      }
+    }
+
+    if (check) {
+      const data = await addTaskAttachment(task.value!.id, formData);
+
+      if (data.success) {
+        toast.success("Tải lên tài liệu thành công.");
+      } else {
+        toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
+      }
+    }
+  }
+};
+
 const handleArchiveTask = async () => {
   isLoadingAction.value = true;
   const data = await archiveTask(task.value!.id);
@@ -222,11 +257,18 @@ watch(
   async () => {
     if (route.query.taskSelected) {
       isLoadingTask.value = true;
+
+      // const abc = project.value?.taskGroups
+      //   .flatMap((g) => g.tasks)
+      //   .find((t) => t.id == route.query.taskSelected?.toString());
+      // task.value = abc ?? null;
+      // taskTemp.value = cloneDeep(task.value);
+
       const data = await getTaskById(route.query.taskSelected.toString());
 
       if (data.success) {
         task.value = data.result!.task;
-        taskTemp.value = Object.assign({}, task.value);
+        taskTemp.value = cloneDeep(task.value);
       } else {
         task.value = null;
       }
@@ -514,29 +556,7 @@ watch(
                 />
               </div>
               <div class="flex flex-col">
-                <label class="mb-1 text-sm font-bold text-textColor-subtitle"
-                  >Tài liệu đính kèm
-                </label>
-                <div
-                  class="relative p-4 flex flex-col border rounded-md border-dashed border-borderColor"
-                >
-                  <div class=""></div>
-                  <div class="group p-2 flex w-full flex-center cursor-pointer">
-                    <UploadIcon
-                      class="group-hover:fill-primary w-4 fill-textColor-primary mr-2"
-                    />
-                    <span
-                      class="text-textColor-primary group-hover:text-primary"
-                      >Tải tệp hoặc tải lên tại đây</span
-                    >
-                    <input
-                      v-if="hasPermission"
-                      type="file"
-                      name="attachment"
-                      class="absolute top-0 left-0 right-0 bottom-0 opacity-0 cursor-pointer"
-                    />
-                  </div>
-                </div>
+                <TaskAttachments :task :hasPermission />
               </div>
               <div class="flex flex-col">
                 <label class="mb-2 text-sm font-bold text-textColor-subtitle"
@@ -579,7 +599,7 @@ watch(
                 </div>
                 <div class="flex-1 mt-3">
                   <TaskComments v-if="showSelected == 'comments'" :task />
-                  <TaskActivities v-else :task :sortNewest/>
+                  <TaskActivities v-else :task :sortNewest />
                 </div>
               </div>
             </div>
@@ -587,7 +607,7 @@ watch(
               class="h-full w-[380px] px-4 overflow-x-hidden overflow-y-auto scroll-vert"
             >
               <div class="flex flex-col">
-                <div class="flex">
+                <div class="flex gap-2">
                   <div
                     class="relative"
                     v-click-outside.short="
@@ -649,6 +669,17 @@ watch(
                       </div>
                     </div>
                   </div>
+                  <UButton
+                    variantType="secondary"
+                    @click="
+                      () => {
+                        showApprovalModal = true;
+                      }
+                    "
+                  >
+                    <UserTickIcon class="w-4 fill-textColor-primary" />
+                    <span class="">Phê duyệt</span>
+                  </UButton>
                 </div>
                 <div
                   class="flex flex-col mt-4 rounded border border-borderColor p-3"
@@ -888,4 +919,12 @@ watch(
       </div>
     </div>
   </Modal>
+  <ApprovalModal
+    v-if="showApprovalModal"
+    @close="
+      () => {
+        showApprovalModal = false;
+      }
+    "
+  />
 </template>

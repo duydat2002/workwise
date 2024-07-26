@@ -33,7 +33,7 @@ const handleUpdateComment = async () => {
 const handleDeleteComment = async () => {
   isLoading.value = true;
 
-  await deleteComment(props.comment.task.id, props.comment.id);
+  await deleteComment(props.comment.id);
 
   isLoading.value = false;
 };

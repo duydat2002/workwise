@@ -29,9 +29,12 @@ const handleClickOutsideModal = () => {
       :class="isPopup ? 'z-50' : 'z-40'"
       :id="id"
       :style="{ background: overlayBackground }"
-      v-click-inside="handleClickOutsideModal"
     >
-      <div class="modal-container flex flex-center w-screen" :class="[margin]">
+      <div
+        class="modal-container flex flex-center w-screen"
+        :class="[margin]"
+        v-click-inside="handleClickOutsideModal"
+      >
         <Transition name="modal" appear>
           <slot />
         </Transition>

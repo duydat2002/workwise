@@ -1,5 +1,5 @@
 import { useProjectStore, useUserStore } from "@/stores";
-import { INotification, IProject, ITask, ITaskGroup } from "@/types";
+import { INotification, IProject, ITask, ITaskGroup, IUser } from "@/types";
 import { Pinia } from "pinia";
 import { io } from "socket.io-client";
 
@@ -15,6 +15,12 @@ export function initializeSocket(pinia: Pinia) {
 
   socket.on("disconnect", () => {
     console.log("disconnect");
+  });
+
+  // User
+  socket.on("user:updated", (user: IUser) => {
+    console.log("user:updated");
+    projectStore.updateUserProjectStore(user);
   });
 
   // Project

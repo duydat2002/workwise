@@ -90,7 +90,7 @@ watch(
 
 <template>
   <div
-    class="absolute p-3 w-[300px] max-h-[600px] bg-bgColor-primary shadow rounded-lg z-10"
+    class="absolute p-3 w-[300px] max-h-[600px] bg-bgColor-primary shadow rounded-lg z-50"
     :class="[placement]"
     v-click-outside.short="{ handle: closePopup, excludes: ['.add-label'] }"
   >
