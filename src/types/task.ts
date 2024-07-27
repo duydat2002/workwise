@@ -1,4 +1,3 @@
-import { IActivity } from "./activity";
 import { IApproval } from "./approval";
 import { IAttachment } from "./attachment";
 import { IComment } from "./comment";

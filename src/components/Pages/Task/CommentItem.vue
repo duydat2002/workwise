@@ -61,9 +61,9 @@ const handleCloseDelete = () => {
     <Avatar class="w-8 h-8 mr-2" :avatarUrl="comment.author.avatar" />
     <div class="flex-1 flex flex-col">
       <div class="flex items-center">
-        <span class="font-semibold text-textColor-primary mr-2"
-          >Phạm Duy Đạt</span
-        >
+        <span class="font-semibold text-textColor-primary mr-2">{{
+          comment.author.fullname
+        }}</span>
         <Popper
           hover
           placement="top"

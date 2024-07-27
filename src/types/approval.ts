@@ -7,7 +7,7 @@ export interface IApproval {
   reviewedBy: IUserInfo;
   description?: string;
   approvedAt?: string;
-  feekback?: string;
+  feedback?: string;
   status: "pending" | "approved" | "rejected";
   attachments: IAttachment[];
   createdAt: string;

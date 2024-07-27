@@ -6,6 +6,7 @@ import { useUserStore } from "@/stores";
 import { IOption } from "@/types";
 import { storeToRefs } from "pinia";
 import { ref } from "vue";
+import Popper from "vue3-popper";
 
 const { user } = storeToRefs(useUserStore());
 
@@ -25,7 +26,15 @@ const cac = () => {
 <template>
   <div>Index</div>
   <button @click="cac">Logout</button>
-  <p>{{ user?.email }}</p>
+  <Popper>
+    <div>{{ user?.email }}</div>
+
+    <template #content>
+      <div class="fixed">
+        <div class="w-[200px] h-[200px] bg-white shadow">cac</div>
+      </div>
+    </template>
+  </Popper>
 
   <USelect v-model:selected="selected" :options></USelect>
   <br />

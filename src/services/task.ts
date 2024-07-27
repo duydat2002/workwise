@@ -3,6 +3,12 @@ import { IActivity, IServerData, ITask } from "@/types";
 
 const prefix = "/tasks/";
 
+export async function getTasksByProjectId(projectId: string) {
+  return await api.get<any, IServerData<{ tasks: ITask[] }>>(
+    prefix + "get-by-project/" + projectId
+  );
+}
+
 export async function getTaskById(taskId: string) {
   return await api.get<any, IServerData<{ task: ITask }>>(prefix + taskId);
 }
