@@ -694,7 +694,7 @@ onBeforeRouteUpdate(async (to, from) => {
     <div class="flex flex-col items-center">
       <NotFoundIcon class="w-20" />
       <span class="text-2xl font-semibold text-textColor-primary"
-        >Không tìn thấy dự án</span
+        >Không tìm thấy dự án</span
       >
       <span class="my-6 text-base text-textColor-secondary"
         >Dự án này có thể đã bị xóa hoặc bạn không có quyền xem</span

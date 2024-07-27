@@ -59,7 +59,7 @@ const getValue = () => {
           class="flex items-center px-2 py-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
           @click="handleChooseAssignee()"
         >
-          <Avatar class="w-6 mr-2" />
+          <Avatar class="w-6 mr-2 flex-shrink-0" />
           <span class="text-dots font-medium"> Không chỉ định </span>
         </div>
         <div
@@ -68,7 +68,10 @@ const getValue = () => {
           class="flex items-center px-2 py-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
           @click="handleChooseAssignee(member)"
         >
-          <Avatar class="w-6 mr-2" :avatarUrl="member.user.avatar" />
+          <Avatar
+            class="w-6 mr-2 flex-shrink-0"
+            :avatarUrl="member.user.avatar"
+          />
           <div class="flex flex-col">
             <span class="text-sm text-textColor-primary font-medium text-dots"
               >{{ member.user.fullname

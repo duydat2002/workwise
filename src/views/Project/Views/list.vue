@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
-import { AgGridVue } from "ag-grid-vue3";
-import { GridReadyEvent, GridApi } from "ag-grid-community";
-import { ref } from "vue";
-import { getTasksByProjectId } from "@/services/task";
-import { ITask } from "@/types";
 import TStatusCell from "@/components/Pages/Project/List/TStatusCell.vue";
 import TDateEditCell from "@/components/Pages/Project/List/TDateEditCell.vue";
 import TStatusEditCell from "@/components/Pages/Project/List/TStatusEditCell.vue";
@@ -18,20 +13,28 @@ import TLabelCell from "@/components/Pages/Project/List/TLabelCell.vue";
 import TLabelEditCell from "@/components/Pages/Project/List/TLabelEditCell.vue";
 import TAssigneeCell from "@/components/Pages/Project/List/TAssigneeCell.vue";
 import TAssigneeEditCell from "@/components/Pages/Project/List/TAssigneeEditCell.vue";
+import SettingIcon from "@icons/settings.svg";
+import DragIcon from "@icons/drag.svg";
+import CheckIcon from "@icons/check.svg";
+import { AgGridVue } from "ag-grid-vue3";
+import {
+  GridReadyEvent,
+  GridApi,
+  GridOptions,
+  CellValueChangedEvent,
+} from "ag-grid-community";
+import { ref, watch } from "vue";
+import { IProject, ITask } from "@/types";
 import { ColDef } from "ag-grid-community";
 import { formatDate } from "@/helpers";
 import { storeToRefs } from "pinia";
 import { useProjectStore } from "@/stores";
-import { toast } from "vue3-toastify";
-
-const defaultColDef = {
-  // editable: true,
-  sortable: true,
-  resizable: true,
-  suppressAutoSize: false,
-  singleClickEdit: true,
-  enableCellChangeFlash: true,
-};
+import { cloneDeep } from "lodash";
+import Fillters from "@/components/Pages/Project/Filters.vue";
+import TaskNotFound from "@/components/Pages/Task/TaskNotFound.vue";
+import { VueDraggable } from "vue-draggable-plus";
+import { updateTaskGroup } from "@/services/taskGroup";
+import { changeStatusTask, updateTask } from "@/services/task";
 
 const dateComparator = (
   valueA: any,
@@ -50,18 +53,22 @@ const dateComparator = (
   return dateB - dateA;
 };
 
-const priorityOrder = ["none", "low", "medium", "high"];
+const defaultColDef = {
+  editable: true,
+  sortable: true,
+  resizable: true,
+  suppressAutoSize: false,
+  singleClickEdit: true,
+  enableCellChangeFlash: true,
+  suppressHeaderMenuButton: false,
+  hide: false,
+};
 
-const { project } = storeToRefs(useProjectStore());
-
-const gridApi = ref<GridApi | null>(null);
-const rowData = ref<ITask[]>([]);
-const colDefs = ref<ColDef[]>([
+const defaultColDefs: ColDef[] = [
   {
     headerName: "Tên công việc",
     field: "name",
     width: 200,
-    editable: true,
     cellRenderer: TNameCell,
     cellRendererParams: {
       hasLine: true,
@@ -78,7 +85,6 @@ const colDefs = ref<ColDef[]>([
     field: "taskGroup",
     width: 150,
     valueGetter: (p: any) => p.data.taskGroup.name,
-    editable: true,
     cellEditor: TTaskGroupEditCell,
     cellEditorPopup: true,
   },
@@ -86,7 +92,6 @@ const colDefs = ref<ColDef[]>([
     headerName: "Trạng thái",
     field: "status",
     width: 150,
-    editable: true,
     cellRenderer: TStatusCell,
     cellEditor: TStatusEditCell,
     cellEditorPopup: true,
@@ -95,7 +100,6 @@ const colDefs = ref<ColDef[]>([
     headerName: "Ngày đến hạn",
     field: "dueDate",
     width: 150,
-    editable: true,
     comparator: dateComparator,
     valueFormatter: (p: any) => {
       if (p.value) return formatDate(p.value, "dd/MM/yyyy");
@@ -111,7 +115,6 @@ const colDefs = ref<ColDef[]>([
     field: "labels",
     width: 200,
     sortable: false,
-    editable: true,
     valueFormatter: (p) => p.value,
     valueParser: (p) => p.newValue,
     cellRenderer: TLabelCell,
@@ -124,7 +127,6 @@ const colDefs = ref<ColDef[]>([
     width: 150,
     valueFormatter: (p) => p.value,
     valueParser: (p) => p.newValue,
-    editable: true,
     cellRenderer: TAssigneeCell,
     cellEditor: TAssigneeEditCell,
     cellEditorPopup: true,
@@ -133,7 +135,6 @@ const colDefs = ref<ColDef[]>([
     headerName: "Độ ưu tiên",
     field: "priority",
     width: 150,
-    editable: true,
     cellRenderer: TPriorityCell,
     cellEditor: TPriorityEditCell,
     cellEditorPopup: true,
@@ -147,7 +148,6 @@ const colDefs = ref<ColDef[]>([
     headerName: "Ngày bắt đầu",
     field: "startDate",
     width: 150,
-    editable: true,
     comparator: dateComparator,
     valueFormatter: (p: any) => {
       if (p.value) return formatDate(p.value, "dd/MM/yyyy");
@@ -162,7 +162,6 @@ const colDefs = ref<ColDef[]>([
     headerName: "Ngày hoàn thành",
     field: "finishDate",
     width: 150,
-    editable: true,
     comparator: dateComparator,
     valueFormatter: (p: any) => {
       if (p.value) return formatDate(p.value, "dd/MM/yyyy");
@@ -177,40 +176,166 @@ const colDefs = ref<ColDef[]>([
     headerName: "Mô tả",
     field: "description",
     width: 150,
-    editable: true,
     cellEditor: TNameEditCell,
     cellEditorParams: {
       placeholder: "Nhập mô tả công việc...",
     },
     cellEditorPopup: true,
   },
-]);
+];
+
+const priorityOrder = ["none", "low", "medium", "high"];
+
+const { project } = storeToRefs(useProjectStore());
+
+const gridOptions = ref<GridOptions>({
+  suppressRowHoverHighlight: true,
+  noRowsOverlayComponent: TaskNotFound,
+});
+
+const showDisplaySetting = ref(false);
+const projectTemp = ref<IProject | null>(cloneDeep(project.value));
+const gridApi = ref<GridApi | null>(null);
+const rowData = ref<ITask[]>([]);
+const colDefs = ref<ColDef[]>(cloneDeep(defaultColDefs));
 
 const onGridReady = async (params: GridReadyEvent) => {
   gridApi.value = params.api;
+};
 
-  const data = await getTasksByProjectId(project.value?.id ?? "1");
+const setDefaultCols = () => {
+  colDefs.value = cloneDeep(defaultColDefs);
+};
 
-  if (data.success) {
-    rowData.value = data.result!.tasks;
+const onCellValueChanged = async (event: CellValueChangedEvent<ITask>) => {
+  console.log("cac", event);
+  const task = event.data;
+
+  if (event.column.getColId() == "status") {
+    const data = await changeStatusTask(task.id, task.status);
+    if (data.success) {
+    } else {
+    }
   } else {
-    rowData.value = [];
-    toast.error("Đã có lỗi xảy ra! Hãy thử lại sau.");
+    const data = await updateTask(task);
+    if (data.success) {
+    } else {
+    }
   }
 };
+
+const handleFilter = (temp: IProject) => {
+  projectTemp.value = temp;
+  const tasks = projectTemp.value?.taskGroups
+    .flatMap((g) => g.tasks)
+    .filter((t) => !t.isHidden);
+  rowData.value = tasks ?? [];
+};
+
+watch(
+  () => project.value,
+  () => {
+    projectTemp.value = cloneDeep(project.value);
+    const tasks = projectTemp.value?.taskGroups.flatMap((g) => g.tasks);
+    rowData.value = tasks ?? [];
+  },
+  { deep: true, immediate: true }
+);
 </script>
 
 <template>
-  <div class="w-full h-full flex p-5">
-    <div class="w-full h-full flex-1">
+  <div class="w-full h-full flex flex-col">
+    <Fillters @filter="handleFilter">
+      <div
+        class="relative h-full"
+        v-click-outside.short="
+          () => {
+            showDisplaySetting = false;
+          }
+        "
+      >
+        <div
+          class="flex items-center h-full px-2 py-1 rounded-md bg-bgColor-secondary hover:bg-hover cursor-pointer"
+          @click="
+            () => {
+              showDisplaySetting = !showDisplaySetting;
+            }
+          "
+        >
+          <SettingIcon class="w-3 fill-textColor-primary mr-1" />
+          <span class="text-sm font-semibold text-textColor-primary"
+            >Hiển thị</span
+          >
+        </div>
+        <div
+          v-if="showDisplaySetting"
+          class="absolute top-full right-0 min-w-full w-max pt-1 z-10"
+        >
+          <div
+            class="flex flex-col py-2 w-[320px] bg-bgColor-primary rounded-md shadow overflow-visible z-10"
+          >
+            <div
+              class="flex items-center justify-between border-b border-borderColor px-3 pb-2 mb-2"
+            >
+              <span class="text-sm text-textColor-primary font-semibold"
+                >Tùy chỉnh hiển thị cột
+              </span>
+              <span
+                class="text-xs text-textColor-secondary hover:text-primary active:text-primary hover:underline cursor-pointer"
+                @click="setDefaultCols"
+                >Đặt lại mặc định</span
+              >
+            </div>
+            <div class="flex flex-col max-h-[200px] not-lastchild:mb-3 mb-2">
+              <VueDraggable
+                class="flex flex-col w-full pb-1 overflow-y-scroll scroll-vert"
+                :animation="150"
+                v-model="colDefs"
+                chosenClass="chosen"
+                dragClass="drag"
+                ghostClass="ghost"
+              >
+                <div class="flex-shrink-0" v-for="(col, i) in colDefs" :key="i">
+                  <div
+                    class="flex items-center cursor-pointer hover:bg-primary-extraLight px-3 py-1"
+                    :class="{
+                      active: !col.hide,
+                    }"
+                    @click="
+                      () => {
+                        col.hide = !col.hide;
+                      }
+                    "
+                  >
+                    <div
+                      class="w-4 h-4 flex flex-center rounded-sm border border-textColor-secondary"
+                      :class="!col.hide ? 'bg-blue-400' : 'bg-bgColor-primary'"
+                    >
+                      <CheckIcon v-if="!col.hide" class="w-3 fill-white" />
+                    </div>
+                    <span
+                      class="flex-1 text-sm font-medium text-textColor-primary px-3 py-1"
+                      >{{ col.headerName }}</span
+                    >
+                    <DragIcon class="w-4 fill-textColor-secondary" />
+                  </div>
+                </div>
+              </VueDraggable>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Fillters>
+    <div class="w-full h-full flex-1 px-5">
       <ag-grid-vue
+        class="ag-theme-quartz"
+        style="height: 100%; width: 100%"
         :rowData="rowData"
         :columnDefs="colDefs"
         :defaultColDef
-        style="height: 100%; width: 100%"
-        class="ag-theme-quartz"
-        :suppressRowHoverHighlight="true"
+        :gridOptions
         @grid-ready="onGridReady"
+        @cell-value-changed="onCellValueChanged"
       >
       </ag-grid-vue>
     </div>
