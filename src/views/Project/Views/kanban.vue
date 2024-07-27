@@ -234,7 +234,7 @@ watch(
   () => project.value,
   () => {
     console.log("project updated");
-    projectTemp.value = cloneDeep(project.value);
+    // projectTemp.value = cloneDeep(project.value);
   },
   { deep: true }
 );

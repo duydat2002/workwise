@@ -46,6 +46,7 @@ import { toast } from "vue3-toastify";
 import TaskDetail from "@/components/Pages/Task/TaskDetail.vue";
 import ArchivesSidebar from "@/components/Pages/ArchivesSidebar/ArchivesSidebar.vue";
 import Popper from "vue3-popper";
+import { cloneDeep } from "lodash";
 
 const router = useRouter();
 const route = useRoute();
@@ -109,8 +110,9 @@ const process = computed(() => {
 });
 
 const members = computed(() => {
+  const projectTemp = cloneDeep(project.value);
   return (
-    project.value?.members.sort((a, b) => {
+    projectTemp?.members.sort((a, b) => {
       if (a.user.id == user.value!.id) return -1;
       if (b.user.id == user.value!.id) return 1;
 
