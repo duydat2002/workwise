@@ -38,12 +38,12 @@ const content = computed(() => {
 });
 
 const handleAccept = async () => {
-  const project = props.notification.datas.project;
+  const project = props.notification.project;
 
   switch (props.notification.action) {
     case "invite_to_project":
       await acceptInviteProject(
-        project._id,
+        project!.id,
         props.notification.sender.id,
         props.notification.id
       );
@@ -54,12 +54,12 @@ const handleAccept = async () => {
 };
 
 const handleDeny = async () => {
-  const project = props.notification.datas.project;
+  const project = props.notification.project;
 
   switch (props.notification.action) {
     case "invite_to_project":
       await unacceptInviteProject(
-        project._id,
+        project!.id,
         props.notification.sender.id,
         props.notification.id
       );
@@ -72,6 +72,7 @@ const handleDeny = async () => {
 
 <template>
   <div
+    v-if="notification"
     class="px-4 py-2 mb-1"
     :class="[isRead ? 'bg-transparent' : 'bg-bgColor-secondary']"
   >
@@ -81,12 +82,17 @@ const handleDeny = async () => {
           <div
             class="w-8 h-6 bg-cover bg-center aspect-video mr-2"
             :style="{
-              backgroundImage: `url(${notification.datas.project?.background})`,
+              backgroundImage: `url(${
+                notification.project?.background ??
+                notification.datas.project?.background
+              })`,
             }"
           ></div>
           <span
             class="text-sm font-semibold text-textColor-primary text-dots mr-2"
-            >{{ notification.datas.project?.name }}</span
+            >{{
+              notification.project?.name ?? notification.datas.project?.name
+            }}</span
           >
         </div>
         <Popper
@@ -120,9 +126,7 @@ const handleDeny = async () => {
             class="text-sm text-textColor-primary py-1"
             v-html="content"
           ></span>
-          <span class="text-xs text-textColor-secondary">{{
-            formatDate(notification.createdAt)
-          }}</span>
+          <span class="text-xs text-textColor-secondary">{{}}</span>
           <div v-if="isShowButtons" class="flex mt-1">
             <UButton
               class="mr-2"

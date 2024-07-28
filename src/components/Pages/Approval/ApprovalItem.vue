@@ -11,21 +11,47 @@ import QuestionIcon from "@icons/question.svg";
 import Avatar from "@/components/Common/Avatar.vue";
 import Popper from "vue3-popper";
 import { ref } from "vue";
-import { IApproval } from "@/types";
+import { IApproval, IAttachment } from "@/types";
 import { formatDate } from "@/helpers";
+import AttachmentPreview from "../Task/AttachmentPreview.vue";
+import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
+import { deleteTaskApproval } from "@/services/approval";
+import { toast } from "vue3-toastify";
+import { storeToRefs } from "pinia";
+import { useApprovalStore } from "@/stores";
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(["close", "edit"]);
 
 const props = defineProps<{
   approval: IApproval;
 }>();
 
-const isApprovaled = ref(true);
+const { approvals } = storeToRefs(useApprovalStore());
+
+const previewAttachment = ref<IAttachment>();
+const isShowPreview = ref(false);
 const showDetail = ref(false);
+const showDeleteApproval = ref(false);
+const isLoadingDelete = ref(false);
+
+const handleDeleteApproval = async () => {
+  const data = await deleteTaskApproval(props.approval.id);
+
+  if (data.success) {
+    toast.success("Xóa phê duyệt thành công.");
+    approvals.value = approvals.value.filter((a) => a.id != props.approval.id);
+  } else {
+    toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
+  }
+};
+
+const handleEdit = () => {
+  emit("edit", props.approval);
+};
 </script>
 
 <template>
-  <div class="flex flex-col">
+  <div class="flex flex-col mb-2">
     <div
       class="flex items-center p-2 rounded-md bg-bgColor-secondary hover:bg-primary-extraLight cursor-pointer"
       @click="
@@ -77,7 +103,7 @@ const showDetail = ref(false);
         </Popper>
       </div>
       <div class="flex flex-1 px-2 gap-2">
-        <div v-if="isApprovaled" class="flex items-center justify-between">
+        <div class="flex items-center justify-between">
           <span class="text-xs text-textColor-secondary mr-1"
             >Người phê duyệt:</span
           >
@@ -89,7 +115,7 @@ const showDetail = ref(false);
             <Avatar class="w-6 h-6" :avatarUrl="approval.reviewedBy.avatar" />
           </Popper>
         </div>
-        <div v-if="isApprovaled" class="flex items-center justify-between">
+        <div class="flex items-center justify-between">
           <span class="text-xs text-textColor-secondary mr-1">Người tạo:</span>
           <Popper
             hover
@@ -122,12 +148,24 @@ const showDetail = ref(false);
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <div class="w-6 h-6 flex flex-center cursor-pointer">
-          <EditIcon class="w-4 fill-textColor-primary" />
-        </div>
-        <div class="w-6 h-6 flex flex-center cursor-pointer">
-          <DeleteIcon class="w-5 fill-textColor-primary" />
-        </div>
+        <template v-if="approval.status == 'pending'">
+          <div
+            class="w-6 h-6 flex flex-center cursor-pointer"
+            @click="handleEdit"
+          >
+            <EditIcon class="w-4 fill-textColor-primary hover:fill-primary" />
+          </div>
+          <div
+            class="w-6 h-6 flex flex-center cursor-pointer"
+            @click.stop="
+              () => {
+                showDeleteApproval = true;
+              }
+            "
+          >
+            <DeleteIcon class="w-5 fill-textColor-primary hover:fill-error" />
+          </div>
+        </template>
         <div class="w-6 h-6 flex flex-center cursor-pointer">
           <RightIcon
             class="w-5 fill-textColor-primary transition-all"
@@ -159,11 +197,17 @@ const showDetail = ref(false);
           <span class="text-xs text-textColor-secondary mr-1"
             >Đã phê duyệt:</span
           >
-          <span class="text-sm font-medium uppercase text-error">Từ chối</span>
+          <span
+            class="text-sm font-medium uppercase"
+            :class="[
+              approval.status == 'approved' ? 'text-green-500' : 'text-error',
+            ]"
+            >{{ approval.status == "approved" ? "Đồng ý" : "Từ chối" }}</span
+          >
         </div>
-        <div class="flex flex-col mt-1">
+        <div v-if="approval.feedback != ''" class="flex flex-col mt-1">
           <span class="text-xs text-textColor-secondary">Phản hồi</span>
-          <span class="text-textColor-primary">Đây là phản hồi</span>
+          <span class="text-textColor-primary">{{ approval.feedback }}</span>
         </div>
       </div>
     </div>
@@ -187,17 +231,51 @@ const showDetail = ref(false);
         <span class="pb-1 text-xs text-textColor-secondary"
           >Đã tạo phê duyệt</span
         >
-        <div class="flex flex-col mt-1">
+        <div v-if="approval.description" class="flex flex-col mt-1">
           <span class="text-xs text-textColor-secondary">Mô tả</span>
           <span class="text-textColor-primary">{{ approval.description }}</span>
         </div>
-        <div class="flex flex-col mt-1">
+        <div v-if="approval.attachments.length > 0" class="flex flex-col mt-1">
           <span class="text-xs text-textColor-secondary">Tài liệu</span>
-          <span class="text-primary underline cursor-pointer"
-            >Đây là link tài liệu</span
+          <span
+            v-for="attachment in approval.attachments"
+            :key="attachment.id"
+            class="text-textColor-primary hover:text-primary underline cursor-pointer"
+            @click="
+              () => {
+                previewAttachment = attachment;
+                isShowPreview = true;
+              }
+            "
+            >{{ attachment.name }}</span
           >
         </div>
       </div>
     </div>
   </div>
+  <ConfirmPopup
+    v-if="showDeleteApproval"
+    id="confirm_delete_approval"
+    title="Xóa phê duyệt?"
+    confirmMessage="Xóa"
+    desc="Tất cả mọi tài liệu, hành động liên quan sẽ bị xóa. Không thể hoàn tác."
+    :isLoadingConfirm="isLoadingDelete"
+    @confirm="handleDeleteApproval"
+    @cancel="
+      () => {
+        showDeleteApproval = false;
+      }
+    "
+  ></ConfirmPopup>
+  <AttachmentPreview
+    v-if="isShowPreview"
+    :attachments="approval.attachments"
+    :previewAttachment
+    @close="
+      () => {
+        isShowPreview = false;
+        previewAttachment = undefined;
+      }
+    "
+  />
 </template>

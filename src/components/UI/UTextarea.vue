@@ -22,14 +22,15 @@ const props = withDefaults(
     placeholder?: string;
     errorMessage?: string;
     disabled?: boolean;
+    height?: number;
     minHeight?: number;
-    maxHeigth?: number;
+    maxHeight?: number;
     textareaClass?: string;
     hasButtons?: boolean;
   }>(),
   {
     minHeight: 36,
-    maxHeigth: 80,
+    maxHeight: 80,
     hasButtons: false,
   }
 );
@@ -45,6 +46,10 @@ const inputValue = computed({
   },
 });
 
+const focusTextarea = async () => {
+  textareaRef.value!.focus();
+};
+
 const handleEnter = () => {
   emit("enter");
 };
@@ -52,6 +57,7 @@ const handleEnter = () => {
 const handleFocus = () => {
   isFocus.value = true;
   showButtons.value = true;
+
   emit("focus");
 };
 
@@ -80,17 +86,23 @@ const handleConfirm = () => {
 
 watch(inputValue, () => {
   nextTick(() => {
-    textareaRef.value!.style.height = props.minHeight + "px";
-    textareaRef.value!.style.height =
-      Math.min(textareaRef.value!.scrollHeight, props.maxHeigth) + "px";
+    if (props.height) {
+      textareaRef.value!.style.height = props.height + "px";
+    } else {
+      textareaRef.value!.style.height = props.minHeight + "px";
+      textareaRef.value!.style.height =
+        Math.min(textareaRef.value!.scrollHeight, props.maxHeight) + "px";
+    }
   });
 });
 
 onMounted(() => {
   nextTick(() => {
-    textareaRef.value!.style.height = props.minHeight + "px";
+    textareaRef.value!.style.height = props.height + "px";
   });
 });
+
+defineExpose({ focusTextarea });
 </script>
 
 <template>

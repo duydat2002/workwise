@@ -22,15 +22,17 @@ export async function createTaskApproval(taskId: string, data: FormData) {
   );
 }
 
-export async function updateTaskApproval(
-  approvalId: string,
-  reviewedBy: string,
-  description: string
-) {
-  return await api.patch<any, IServerData>(prefix + approvalId, {
-    reviewedBy,
-    description,
-  });
+export async function updateTaskApproval(approvalId: string, data: FormData) {
+  return await api.patch<any, IServerData<{ approval: IApproval }>>(
+    prefix + approvalId,
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        "Content-Encoding": "gzip, deflate, br",
+      },
+    }
+  );
 }
 
 export async function acceptTaskAproval(approvalId: string, feedback: string) {

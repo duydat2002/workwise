@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import XIcon from "@icons/x.svg";
+import CheckIcon from "@icons/check.svg";
+import QuestionIcon from "@icons/question.svg";
 import MoreIcon from "@icons/more.svg";
 import ListIcon from "@icons/list.svg";
 import PlusIcon from "@icons/plus.svg";
@@ -45,11 +47,11 @@ import { formatDate } from "@/helpers";
 import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
 import { toast } from "vue3-toastify";
 import { compareDesc } from "date-fns";
-import { addTaskAttachment } from "@/services/attachment";
 import { cloneDeep } from "lodash";
 import TaskAttachments from "./TaskAttachments.vue";
 import UButton from "@/components/UI/UButton.vue";
 import ApprovalModal from "@/components/Modal/ApprovalModal.vue";
+import TaskApproval from "./TaskApproval.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -58,7 +60,6 @@ const { user } = storeToRefs(useUserStore());
 const { theme } = storeToRefs(useThemeStore());
 const { project, task } = storeToRefs(useProjectStore());
 
-const inputAttachmentRef = ref<HTMLInputElement>();
 const taskTemp = ref<ITask | null>(null);
 const searchAssignee = ref("");
 const isLoadingTask = ref(false);
@@ -123,6 +124,19 @@ const prioritySelected = computed(() => {
   );
 });
 
+const newApproval = computed(() => {
+  if (task.value?.approvals && task.value?.approvals.length > 0) {
+    const approval = task.value.approvals[0];
+
+    if (
+      approval.status == "pending" &&
+      (approval.reviewedBy as unknown as string) == user.value?.id
+    )
+      return task.value.approvals[0];
+  }
+  return null;
+});
+
 const handleChangeName = async () => {
   if (taskTemp.value?.name != task.value?.name)
     await updateTask({
@@ -178,34 +192,6 @@ const handleUpdateLabel = async (labels: ILabel[]) => {
     } as ITask,
     JSON.stringify(labels.map((l) => l.id))
   );
-};
-
-const getInputAttachments = async (event: Event) => {
-  const files = (event.target as HTMLInputElement).files!;
-
-  let check = false;
-  if (files && files.length > 0) {
-    const formData = new FormData();
-
-    for (const file of files) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error("Kích thước tài liệu vượt quá 10MB!");
-      } else {
-        formData.append("files", file, file.name);
-        check = true;
-      }
-    }
-
-    if (check) {
-      const data = await addTaskAttachment(task.value!.id, formData);
-
-      if (data.success) {
-        toast.success("Tải lên tài liệu thành công.");
-      } else {
-        toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
-      }
-    }
-  }
 };
 
 const handleArchiveTask = async () => {
@@ -493,6 +479,7 @@ watch(
             <div
               class="flex-1 flex flex-col not-lastchild:mb-3 px-4 overflow-y-auto scroll-vert border-r border-borderColor"
             >
+              <TaskApproval v-if="newApproval" :approval="newApproval" />
               <div class="-ml-2">
                 <UInput
                   v-model:propValue="taskTemp.name"
@@ -552,7 +539,7 @@ watch(
                   v-model:value="taskTemp.description!"
                   placeholder="Công việc này chưa có mô tả, hãy thêm mô tả cho công việc..."
                   :minHeight="60"
-                  :maxHeigth="120"
+                  :maxHeight="120"
                   hasButtons
                   :disabled="!hasPermission"
                   @confirm="handleChangeDesc"

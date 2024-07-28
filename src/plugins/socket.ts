@@ -80,7 +80,7 @@ export function initializeSocket(pinia: Pinia) {
   );
 
   socket.on("task:updated", (task: ITask) => {
-    console.log("task:updated");
+    console.log("task:updated", task);
     projectStore.updateTaskStore(task);
   });
 

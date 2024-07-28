@@ -5,23 +5,31 @@ import SearchIcon from "@icons/search.svg";
 import { computed, ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useApprovalStore, useProjectStore } from "@/stores";
-import { IMember } from "@/types";
+import { IApproval, IAttachment, IMember, IUserInfo } from "@/types";
 import { toast } from "vue3-toastify";
 import UButton from "@/components/UI/UButton.vue";
 import UTextarea from "@/components/UI/UTextarea.vue";
 import Avatar from "@/components/Common/Avatar.vue";
 import UInput from "@/components/UI/UInput.vue";
-import { createTaskApproval } from "@/services/approval";
+import { createTaskApproval, updateTaskApproval } from "@/services/approval";
 
 const emit = defineEmits(["back"]);
 
-const { approvals } = storeToRefs(useApprovalStore());
+const props = defineProps<{
+  approval: IApproval;
+}>();
+
+const { approvals: approvalsStore } = storeToRefs(useApprovalStore());
 const { project, task } = storeToRefs(useProjectStore());
 
 const attachments = ref<File[]>([]);
+const approvalAttachments = ref<IAttachment[]>(
+  props.approval.attachments || []
+);
+const removedAttachments = ref<string[]>([]);
 const searchReviewer = ref("");
-const reviewUser = ref<IMember>();
-const description = ref("");
+const reviewUser = ref<IUserInfo | null>(props.approval.reviewedBy);
+const description = ref(props.approval.description || "");
 const showReviewUserDropdown = ref(false);
 const isLoading = ref(false);
 
@@ -40,13 +48,18 @@ const members = computed(() => {
   );
 });
 
-const handleCreateApproval = async () => {
+const handleUpdateApproval = async () => {
   if (reviewUser.value) {
     isLoading.value = true;
     const formData = new FormData();
 
-    formData.append("reviewedBy", reviewUser.value.user.id);
+    formData.append("reviewedBy", reviewUser.value.id);
     formData.append("description", description.value);
+    if (removedAttachments.value.length > 0)
+      formData.append(
+        "removedAttachments",
+        JSON.stringify(removedAttachments.value)
+      );
 
     attachments.value.forEach((file) => {
       const newFile = new File([file], encodeURIComponent(file.name), {
@@ -55,10 +68,12 @@ const handleCreateApproval = async () => {
       formData.append("files", newFile);
     });
 
-    const data = await createTaskApproval(task.value!.id, formData);
+    const data = await updateTaskApproval(props.approval.id, formData);
     if (data.success) {
-      toast.success("Tạo phê duyệt thành công.");
-      approvals.value.unshift(data.result!.approval);
+      toast.success("Sửa phê duyệt thành công.");
+      const approvalTemp =
+        approvalsStore.value.find((a) => a.id == props.approval.id) || {};
+      Object.assign(approvalTemp, data.result!.approval);
       emit("back");
     } else {
       toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
@@ -71,12 +86,19 @@ const handleCreateApproval = async () => {
 };
 
 const handleChooseReviewer = async (member?: IMember) => {
-  reviewUser.value = member;
+  reviewUser.value = member?.user || null;
   showReviewUserDropdown.value = false;
 };
 
 const removeAttachment = (file: File, i: number) => {
   attachments.value.splice(i, 1);
+};
+
+const removeApprovalAttachment = (attachment: IAttachment) => {
+  approvalAttachments.value = approvalAttachments.value.filter(
+    (a) => a.id != attachment.id
+  );
+  removedAttachments.value.push(attachment.id);
 };
 
 const getInputAttachments = async (event: Event) => {
@@ -124,10 +146,10 @@ const handleBack = () => {
             >
               <Avatar
                 class="w-6 h-6 mr-2 flex-shrink-0"
-                :avatarUrl="reviewUser?.user.avatar"
+                :avatarUrl="reviewUser?.avatar"
               />
               <span class="text-dots">{{
-                reviewUser?.user.fullname ?? "Chọn người phê duyệt"
+                reviewUser?.fullname ?? "Chọn người phê duyệt"
               }}</span>
             </div>
             <div
@@ -209,6 +231,20 @@ const handleBack = () => {
                 class="w-3 fill-textColor-primary hover:fill-error cursor-pointer"
               />
             </div>
+            <div
+              v-for="attachment in approvalAttachments"
+              :key="attachment.id"
+              class="flex py-1 items-center justify-between"
+            >
+              <span
+                class="mr-2 text-sm font-medium text-primary-light text-dots"
+                >{{ attachment.name }}</span
+              >
+              <XIcon
+                @click="removeApprovalAttachment(attachment)"
+                class="w-3 fill-textColor-primary hover:fill-error cursor-pointer"
+              />
+            </div>
           </div>
           <div
             class="relative self-start group py-2 flex items-center cursor-pointer"
@@ -238,9 +274,9 @@ const handleBack = () => {
       >
       <UButton
         variantType="primary"
-        @click="handleCreateApproval"
+        @click="handleUpdateApproval"
         :isLoading="isLoading"
-        ><span class="">Tạo phê duyệt</span></UButton
+        ><span class="">Cập nhật</span></UButton
       >
     </div>
   </div>

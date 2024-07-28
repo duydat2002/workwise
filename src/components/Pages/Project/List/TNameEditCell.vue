@@ -32,7 +32,7 @@ const cancel = () => {
       v-model:value="nameTemp"
       :placeholder
       :minHeight="60"
-      :maxHeigth="120"
+      :maxHeight="120"
       hasButtons
       @confirm="setName"
       @cancel="cancel"
