@@ -48,7 +48,7 @@ const membersComp = computed(() => {
   const membersAccepted: IMember[] = [];
   const membersNotAccepted: IMember[] = [];
 
-  project.value?.members
+  membersTemp
     .sort((a, b) => {
       if (a.user.id == user.value!.id) return -1;
       if (b.user.id == user.value!.id) return 1;

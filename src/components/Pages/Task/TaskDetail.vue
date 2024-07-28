@@ -94,8 +94,12 @@ const members = computed(() => {
   return (
     project.value?.members.filter(
       (m) =>
-        (m.user.fullname.includes(searchAssignee.value.trim()) ||
-          m.user.email.includes(searchAssignee.value.trim())) &&
+        (m.user.fullname
+          .toLowerCase()
+          .includes(searchAssignee.value.trim().toLowerCase()) ||
+          m.user.email
+            .toLowerCase()
+            .includes(searchAssignee.value.trim().toLowerCase())) &&
         m.status == "accepted"
     ) ?? []
   );

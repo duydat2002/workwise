@@ -192,7 +192,8 @@ const getProject = () => {
     projects.value.find((p) => p.id == route.params.projectId) || null;
 
   if (project.value) {
-    project.value.members.sort((a, b) => {
+    const projectTemp = cloneDeep(project.value);
+    projectTemp.members.sort((a, b) => {
       if (a.user.id == user.value!.id) return -1;
       if (b.user.id == user.value!.id) return 1;
 
