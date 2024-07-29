@@ -77,6 +77,7 @@ onBeforeMount(async () => {
 <template>
   <div class="flex flex-col">
     <ActivityItem
+      class="py-2"
       v-for="activity in taskActivities"
       :key="activity.id"
       :activity

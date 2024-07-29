@@ -38,7 +38,7 @@ export function initializeSocket(pinia: Pinia) {
   socket.on("project:deleted", (projectId: string) => {
     console.log("project:deleted");
     projectStore.deleteProjectStore(projectId);
-    socket.emit("project:leave", projectId);
+    // socket.emit("project:leave", projectId);
   });
 
   // Task Group

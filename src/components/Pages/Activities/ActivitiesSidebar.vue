@@ -74,6 +74,7 @@ onBeforeMount(async () => {
   <SidebarRight title="Lịch sử hoạt động" @close="handleClose">
     <div class="flex flex-col my-3">
       <ActivityItem
+        class="px-4 py-2"
         v-for="activity in projectActivities"
         :key="activity.id"
         :activity

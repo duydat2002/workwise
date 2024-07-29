@@ -35,7 +35,8 @@ const members = computed(() => {
           m.user.email
             .toLowerCase()
             .includes(searchReviewer.value.trim().toLowerCase())) &&
-        m.status == "accepted"
+        m.status == "accepted" &&
+        m.role == "admin"
     ) ?? []
   );
 });

@@ -51,9 +51,10 @@ import { cloneDeep } from "lodash";
 const router = useRouter();
 const route = useRoute();
 
+const { deleteProjectStore } = useProjectStore();
+
 const { user } = storeToRefs(useUserStore());
 const { projects, project, showProjectInfo } = storeToRefs(useProjectStore());
-
 const { projectActivities, taskActivities } = storeToRefs(useActivityStore());
 
 const isLoadingProject = ref(true);
@@ -163,9 +164,9 @@ const handleDeleteProject = async () => {
   const data = await deleteProject(project.value!.id);
 
   if (data.success) {
-    toast.success("Xóa dự án thành công!");
     showProjectOption.value = false;
     router.push({ name: "Projects" });
+    deleteProjectStore(project.value!.id);
   }
 
   isLoadingAction.value = false;

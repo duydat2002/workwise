@@ -51,6 +51,7 @@ import UButton from "@/components/UI/UButton.vue";
 import ApprovalModal from "@/components/Modal/ApprovalModal.vue";
 import TaskApproval from "./TaskApproval.vue";
 import TaskNotFound from "./TaskNotFound.vue";
+import Popper from "vue3-popper";
 
 const route = useRoute();
 const router = useRouter();
@@ -127,11 +128,11 @@ const newApproval = computed(() => {
   if (task.value?.approvals && task.value?.approvals.length > 0) {
     const approval = task.value.approvals[0];
 
-    if (
-      approval.status == "pending" &&
-      (approval.reviewedBy as unknown as string) == user.value?.id
-    )
-      return task.value.approvals[0];
+    // if (
+    //   approval.status == "pending" &&
+    //   (approval.reviewedBy as unknown as string) == user.value?.id
+    // )
+    if (approval.status == "pending") return task.value.approvals[0];
   }
   return null;
 });
@@ -223,7 +224,10 @@ const handleDeleteTask = async () => {
 
   if (data.success) {
     toast.success("Đã xóa công việc.");
-    router.push({ name: "Project", params: { projectId: project.value?.id } });
+    router.push({
+      name: "Project",
+      params: { projectId: project.value?.id ?? 3 },
+    });
   }
 
   showTaskOption.value = false;
@@ -603,31 +607,37 @@ watch(
                       }
                     "
                   >
-                    <div
-                      class="flex items-center px-[10px] py-[6px] hover:opacity-80 active:opacity-80 rounded cursor-pointer"
-                      :class="[
-                        taskTemp.status == 'todo'
-                          ? 'bg-bgColor-secondary text-textColor-primary'
-                          : taskTemp.status == 'inprogress'
-                          ? 'bg-primary text-white'
-                          : 'bg-green-500 text-white',
-                      ]"
-                      @click="
+                    <Popper
+                      :disabled="!newApproval"
+                      content="Công việc đang chờ phê duyệt"
+                    >
+                      <div
+                        class="flex items-center px-[10px] py-[6px] hover:opacity-80 active:opacity-80 rounded"
+                        :class="[
+                          taskTemp.status == 'todo'
+                            ? 'bg-bgColor-secondary text-textColor-primary'
+                            : taskTemp.status == 'inprogress'
+                            ? 'bg-primary text-white'
+                            : 'bg-green-500 text-white',
+                          newApproval ? 'cursor-not-allowed' : 'cursor-pointer',
+                        ]"
+                        @click="
                         () => {
-                          if (!project!.isArchived && !task?.isArchived)
+                          if (!project!.isArchived && !task?.isArchived && !newApproval)
                           showStatusDropdown = true;
                         }
                       "
-                    >
-                      <span class="text-sm font-semibold mr-2">{{
-                        taskTemp.status == "todo"
-                          ? "Cần thực hiện"
-                          : taskTemp.status == "inprogress"
-                          ? "Đang thực hiện"
-                          : "Đã hoàn thành"
-                      }}</span>
-                      <DownIcon class="w-4 fill-current" />
-                    </div>
+                      >
+                        <span class="text-sm font-semibold mr-2">{{
+                          taskTemp.status == "todo"
+                            ? "Cần thực hiện"
+                            : taskTemp.status == "inprogress"
+                            ? "Đang thực hiện"
+                            : "Đã hoàn thành"
+                        }}</span>
+                        <DownIcon class="w-4 fill-current" />
+                      </div>
+                    </Popper>
                     <div
                       v-if="showStatusDropdown"
                       class="absolute top-full left-0 min-w-full w-max pt-1 z-10"

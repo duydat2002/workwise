@@ -3,13 +3,13 @@ import SearchIcon from "@icons/search.svg";
 import UInput from "@/components/UI/UInput.vue";
 import UTagInput from "@/components/UI/UTagInput.vue";
 import UButton from "@/components/UI/UButton.vue";
-import { onMounted, ref, watchEffect } from "vue";
+import { onMounted, ref, watch, watchEffect } from "vue";
 import { storeToRefs } from "pinia";
 import { useProjectStore, useUserStore } from "@/stores";
 import ProjectItem from "@/components/Pages/Project/ProjectItem.vue";
 import { IOption, IProject } from "@/types";
 import USelect from "@/components/UI/USelect.vue";
-import { useRoute } from "vue-router";
+import { onBeforeRouteUpdate, useRoute } from "vue-router";
 
 const route = useRoute();
 
@@ -37,6 +37,7 @@ const labelOptions = ref<IOption[]>(
     return { key: l.id, value: l.name, data: l };
   }) || []
 );
+const isArchivedPage = ref(false);
 
 const handleClickCreateProject = () => {
   showCreateProject.value = true;
@@ -102,18 +103,17 @@ const handleChooseLabel = (option: IOption) => {
 };
 
 const filterProjects = () => {
-  const isArchived = route.meta.isArchived ?? false;
   const filterTagIds = labelsSelected.value.map((t) => t.key);
   showProjects.value = projects.value.filter((p) => {
     const nameMatch = p.name.toLowerCase().includes(search.value.toLowerCase());
 
     if (filterTagIds.length == 0)
-      return nameMatch && p.isArchived == isArchived;
+      return nameMatch && p.isArchived == isArchivedPage.value;
 
     const tagMatch = p.labels.some((l) => filterTagIds.includes(l.id));
 
     console.log("object", p.isArchived);
-    return nameMatch && tagMatch && p.isArchived == isArchived;
+    return nameMatch && tagMatch && p.isArchived == isArchivedPage.value;
   });
 };
 
@@ -121,9 +121,20 @@ watchEffect(() => {
   filterProjects();
 });
 
+watch(
+  () => route.name,
+  () => {
+    isArchivedPage.value = (route.meta.isArchived as boolean) ?? false;
+  }
+);
+
 onMounted(() => {
-  const isArchived = route.meta.isArchived ?? false;
-  showProjects.value = projects.value.filter((p) => p.isArchived == isArchived);
+  console.log("hmm");
+
+  isArchivedPage.value = (route.meta.isArchived as boolean) ?? false;
+  showProjects.value = projects.value.filter(
+    (p) => p.isArchived == isArchivedPage.value
+  );
   handleChooseSort({ key: "dueSoon", value: "Sắp tới hạn" });
 });
 </script>
@@ -131,16 +142,16 @@ onMounted(() => {
 <template>
   <div class="px-6 pb-6 flex flex-col h-full">
     <div class="pt-6 mb-4 flex items-center justify-between">
-      <span class="text-xl font-medium text-textColor-primary"
-        >Tất cả dự án</span
-      >
-      <div class="flex items-center">
+      <span class="text-xl font-medium text-textColor-primary h-8">{{
+        isArchivedPage ? "Dự án đã lưu trữ" : "Tất cả dự án"
+      }}</span>
+      <div v-if="!isArchivedPage" class="flex items-center">
         <UButton variantType="primary" @click="handleClickCreateProject"
           ><span class="font-semibold">Tạo dự án mới</span></UButton
         >
       </div>
     </div>
-    <div class="flex flex-wrap items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-1">
       <div class="flex flex-col pr-10 mt-1">
         <label class="mb-1 text-xs font-bold text-textColor-subtitle"
           >Tìm kiếm</label

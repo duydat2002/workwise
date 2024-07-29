@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import MenuIcon from "@icons/menu.svg";
-import ChartIcon from "@icons/pie-chart.svg";
+import DeleteIcon from "@icons/delete.svg";
 import PlusIcon from "@icons/plus.svg";
 import ProjectIcon from "@icons/project.svg";
 import TaskIcon from "@icons/task.svg";
@@ -143,7 +143,7 @@ watch(
             <RouterLink
               v-for="project in projectsMostRecent"
               :key="project.id"
-              :to="{ name: 'Project', params: { projectId: project.id } }"
+              :to="{ name: 'Project', params: { projectId: project.id ?? 1 } }"
               class="flex px-4 py-2 items-center hover:bg-primary-extraLight rounded-md cursor-pointer transition-colors"
             >
               <div
@@ -157,9 +157,15 @@ watch(
           </div>
           <RouterLink
             :to="{ name: 'ProjectsArchived' }"
-            class="px-4 py-2 w-full hover:bg-hover rounded-md cursor-pointer"
+            class="flex items-center min-w-max mb-2 py-2 px-4 hover:bg-hover rounded-md cursor-pointer transition-colors exact-link:bg-[#5577FF]"
           >
-            <span class="text-textColor-primary">Dự án đã lưu trữ</span>
+            <DeleteIcon
+              class="w-5 fill-textColor-secondary parent-[.exact-link-active]:fill-white"
+            />
+            <span
+              class="ml-2 font-medium text-textColor-secondary parent-[.exact-link-active]:text-white"
+              >Dự án đã lưu trữ</span
+            >
           </RouterLink>
         </div>
         <div class="w-full mt-2 border-t border-borderColor">
@@ -178,7 +184,7 @@ watch(
               :key="task.id"
               :to="{
                 name: 'Project',
-                params: { projectId: task.project.id },
+                params: { projectId: task.project.id ?? 2 },
                 query: { taskSelected: task.id },
               }"
               class="flex px-4 py-2 items-center hover:bg-hover rounded-md cursor-pointer transition-colors"

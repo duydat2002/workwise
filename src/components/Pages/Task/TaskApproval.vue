@@ -10,10 +10,14 @@ import { acceptTaskAproval, rejectTaskAproval } from "@/services/approval";
 import Popper from "vue3-popper";
 import UTextarea from "@/components/UI/UTextarea.vue";
 import { toast } from "vue3-toastify";
+import { storeToRefs } from "pinia";
+import { useUserStore } from "@/stores";
 
 const props = defineProps<{
   approval: IApproval;
 }>();
+
+const { user } = storeToRefs(useUserStore());
 
 const feedbackRef = ref<InstanceType<typeof UTextarea>>();
 const previewAttachment = ref<IAttachment>();
@@ -103,7 +107,10 @@ const focusFeedBack = () => {
           >{{ attachment.name }}</span
         >
       </div>
-      <div class="flex items-center mt-2">
+      <div
+        v-if="approval.reviewedBy.id == user?.id"
+        class="flex items-center mt-2"
+      >
         <Popper :disabled="!isShowFeedback">
           <UButton class="mr-2" variantType="primary" @click="focusFeedBack"
             ><span class="">Đồng ý</span></UButton
