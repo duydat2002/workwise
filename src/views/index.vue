@@ -1,48 +1,27 @@
 <script setup lang="ts">
-import USelect from "@/components/UI/USelect.vue";
-import UTagInput from "@/components/UI/UTagInput.vue";
-import { auth } from "@/plugins/firebase";
-import { useUserStore } from "@/stores";
-import { IOption } from "@/types";
-import { storeToRefs } from "pinia";
 import { ref } from "vue";
-import Popper from "vue3-popper";
-
-const { user } = storeToRefs(useUserStore());
-
-const options = ref<IOption[]>([
-  { key: "a", value: "a" },
-  { key: "b", value: "b" },
-  { key: "c", value: "class" },
-]);
-const selected = ref<string>(options.value[0].key);
-const selecteds = ref<IOption[]>([options.value[0]]);
-
-const cac = () => {
-  console.log(auth.currentUser);
-};
 </script>
 
 <template>
-  <div>Index</div>
-  <button @click="cac">Logout</button>
-  <Popper>
-    <div>{{ user?.email }}</div>
-
-    <template #content>
-      <div class="fixed">
-        <div class="w-[200px] h-[200px] bg-white shadow">cac</div>
+  <div class="flex gap-2">
+    <div class="flex flex-col w-3/5 h-[200px]">
+      <div class="flex flex-col">
+        <div class="flex items-center justify-between">
+          <span class="text-base font-semibold text-textColor-primary"
+            >Tổng số công việc</span
+          >
+          <span class="">Xem tất cả</span>
+        </div>
+        <div class="flex gap-2">
+          <div class="w-1/3 flex bg-bgColor-secondary rounded-lg">
+            <div class="flex flex-col">
+              <span class="">Cần thực hiện</span>
+              <span class="">80</span>
+            </div>
+          </div>
+        </div>
       </div>
-    </template>
-  </Popper>
-
-  <USelect v-model:selected="selected" :options></USelect>
-  <br />
-  <br />
-  <br />
-  <!-- <UTagInput name="cac" v-model:selecteds="selecteds" :options>
-    <template v-slot:default="{ item }">
-      <span>{{ item.value }}</span>
-    </template>
-  </UTagInput> -->
+    </div>
+    <div class="flex flex-col w-2/5 h-[200px]"></div>
+  </div>
 </template>

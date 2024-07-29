@@ -35,7 +35,7 @@ const tabs = shallowRef([
   {
     name: "Công việc",
     icon: TaskIcon,
-    link: { name: "Signin" },
+    link: { name: "Tasks" },
   },
 ]);
 

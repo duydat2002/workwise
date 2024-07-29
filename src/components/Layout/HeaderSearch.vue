@@ -46,6 +46,7 @@ const hanldeClickSearchIcon = () => {
           name="search"
           class="flex-1 w-full h-full text-textColor-primary"
           placeholder="Tìm kiếm"
+          autocomplete="off"
           v-model="search"
           @focus="
             () => {

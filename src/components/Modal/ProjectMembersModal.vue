@@ -137,7 +137,7 @@ watch(search, async () => {
 
 <template>
   <Modal @click-outside="closeModal">
-    <div class="p-5">
+    <div class="m-5">
       <div
         class="flex flex-col w-screen max-w-[600px] bg-bgColor-primary py-4 rounded-lg"
       >

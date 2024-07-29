@@ -13,6 +13,7 @@ import TLabelCell from "@/components/Pages/Project/List/TLabelCell.vue";
 import TLabelEditCell from "@/components/Pages/Project/List/TLabelEditCell.vue";
 import TAssigneeCell from "@/components/Pages/Project/List/TAssigneeCell.vue";
 import TAssigneeEditCell from "@/components/Pages/Project/List/TAssigneeEditCell.vue";
+import TProjectCell from "@/components/Pages/Project/List/TProjectCell.vue";
 import SettingIcon from "@icons/settings.svg";
 import DragIcon from "@icons/drag.svg";
 import CheckIcon from "@icons/check.svg";
@@ -30,10 +31,12 @@ import { formatDate } from "@/helpers";
 import { storeToRefs } from "pinia";
 import { useProjectStore } from "@/stores";
 import { cloneDeep } from "lodash";
-import Fillters from "@/components/Pages/Project/Filters.vue";
 import TaskNotFound from "@/components/Pages/Task/TaskNotFound.vue";
 import { VueDraggable } from "vue-draggable-plus";
 import { changeStatusTask, updateTask } from "@/services/task";
+import FiltersProjects from "@/components/Pages/Project/FiltersProjects.vue";
+import TaskDetail from "@/components/Pages/Task/TaskDetail.vue";
+import { useRoute } from "vue-router";
 
 const dateComparator = (
   valueA: any,
@@ -78,6 +81,15 @@ const defaultColDefs: ColDef[] = [
     },
     cellEditorPopup: true,
     singleClickEdit: false,
+  },
+  {
+    headerName: "Dự án",
+    field: "project",
+    width: 150,
+    editable: false,
+    valueFormatter: (p) => p.value,
+    valueParser: (p) => p.newValue,
+    cellRenderer: TProjectCell,
   },
   {
     headerName: "Nhóm công việc",
@@ -185,7 +197,9 @@ const defaultColDefs: ColDef[] = [
 
 const priorityOrder = ["none", "low", "medium", "high"];
 
-const { project } = storeToRefs(useProjectStore());
+const route = useRoute();
+
+const { projects } = storeToRefs(useProjectStore());
 
 const gridOptions = ref<GridOptions>({
   suppressRowHoverHighlight: true,
@@ -193,7 +207,7 @@ const gridOptions = ref<GridOptions>({
 });
 
 const showDisplaySetting = ref(false);
-const projectTemp = ref<IProject | null>(cloneDeep(project.value));
+const projectsTemp = ref<IProject[]>();
 const gridApi = ref<GridApi | null>(null);
 const rowData = ref<ITask[]>([]);
 const colDefs = ref<ColDef[]>(cloneDeep(defaultColDefs));
@@ -222,19 +236,23 @@ const onCellValueChanged = async (event: CellValueChangedEvent<ITask>) => {
   }
 };
 
-const handleFilter = (temp: IProject) => {
-  projectTemp.value = temp;
-  const tasks = projectTemp.value?.taskGroups
+const handleFilter = (temp: IProject[]) => {
+  projectsTemp.value = temp;
+  const tasks = projectsTemp.value
+    ?.flatMap((p) => p.taskGroups)
     .flatMap((g) => g.tasks)
     .filter((t) => !t.isHidden);
   rowData.value = tasks ?? [];
 };
 
 watch(
-  () => project.value,
+  () => projects.value,
   () => {
-    projectTemp.value = cloneDeep(project.value);
-    const tasks = projectTemp.value?.taskGroups.flatMap((g) => g.tasks);
+    projectsTemp.value = cloneDeep(projects.value);
+    const tasks = projectsTemp.value
+      ?.flatMap((p) => p.taskGroups)
+      .flatMap((g) => g.tasks)
+      .filter((t) => !t.isArchived);
     rowData.value = tasks ?? [];
   },
   { deep: true, immediate: true }
@@ -242,8 +260,8 @@ watch(
 </script>
 
 <template>
-  <div class="w-full h-full flex flex-col">
-    <Fillters @filter="handleFilter">
+  <div class="w-full h-full flex flex-col pt-4">
+    <FiltersProjects :projects @filter="handleFilter">
       <div
         class="relative h-full"
         v-click-outside.short="
@@ -323,7 +341,7 @@ watch(
           </div>
         </div>
       </div>
-    </Fillters>
+    </FiltersProjects>
     <div class="w-full h-full flex-1 px-5">
       <ag-grid-vue
         class="ag-theme-quartz"
@@ -338,6 +356,7 @@ watch(
       </ag-grid-vue>
     </div>
   </div>
+  <TaskDetail v-if="route.query.taskSelected" />
 </template>
 
 <style scoped>

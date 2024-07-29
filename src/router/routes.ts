@@ -27,6 +27,16 @@ const routes: Readonly<RouteRecordRaw[]> = [
     },
   },
   {
+    path: "/tasks",
+    name: "Tasks",
+    component: () => import("@/views/tasks.vue"),
+    meta: {
+      title: "Công việc • WorkWise",
+      layout: AppLayout,
+      requiresAuth: true,
+    },
+  },
+  {
     path: "/projects/:projectId",
     name: "Project",
     redirect: { name: "Kanban" },

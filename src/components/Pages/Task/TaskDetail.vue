@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import XIcon from "@icons/x.svg";
-import CheckIcon from "@icons/check.svg";
-import QuestionIcon from "@icons/question.svg";
 import MoreIcon from "@icons/more.svg";
 import ListIcon from "@icons/list.svg";
 import PlusIcon from "@icons/plus.svg";
@@ -52,6 +50,7 @@ import TaskAttachments from "./TaskAttachments.vue";
 import UButton from "@/components/UI/UButton.vue";
 import ApprovalModal from "@/components/Modal/ApprovalModal.vue";
 import TaskApproval from "./TaskApproval.vue";
+import TaskNotFound from "./TaskNotFound.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -224,6 +223,7 @@ const handleDeleteTask = async () => {
 
   if (data.success) {
     toast.success("Đã xóa công việc.");
+    router.push({ name: "Project", params: { projectId: project.value?.id } });
   }
 
   showTaskOption.value = false;
@@ -232,14 +232,10 @@ const handleDeleteTask = async () => {
 
 const closeModal = () => {
   task.value = null;
-  if (route.meta.isFromProject) {
-    router.back();
-  } else {
-    router.push({
-      name: "Project",
-      params: { projectId: project.value!.id },
-    });
-  }
+  router.push({
+    path: route.hash,
+    query: {},
+  });
 };
 
 watch(
@@ -310,8 +306,8 @@ watch(
 </script>
 
 <template>
-  <Modal @click-outside="closeModal" margin="my-5 mx-10">
-    <div class="flex flex-center w-full">
+  <Modal @click-outside="closeModal">
+    <div class="flex flex-center w-full my-5 mx-10">
       <div
         class="flex flex-col h-[calc(100vh-40px)] w-full max-w-[1000px] bg-bgColor-primary pb-3 rounded-lg"
       >
@@ -906,7 +902,9 @@ watch(
             </div>
           </div>
         </template>
-        <div v-else class="">Khoogn có task</div>
+        <div v-else class="flex w-full h-full flex-center">
+          <TaskNotFound />
+        </div>
       </div>
     </div>
   </Modal>
