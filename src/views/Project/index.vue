@@ -9,11 +9,16 @@ import { useProjectStore, useUserStore } from "@/stores";
 import ProjectItem from "@/components/Pages/Project/ProjectItem.vue";
 import { IOption, IProject } from "@/types";
 import USelect from "@/components/UI/USelect.vue";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
 
 const { user } = storeToRefs(useUserStore());
 const { projects, showCreateProject } = storeToRefs(useProjectStore());
 
-const showProjects = ref<IProject[]>(projects.value);
+const showProjects = ref<IProject[]>([]);
+const yourProjects = ref<IProject[]>([]);
+const teamProjects = ref<IProject[]>([]);
 const search = ref("");
 const sortSelected = ref<string>("dueSoon");
 const sortOptions = ref<IOption[]>([
@@ -97,14 +102,18 @@ const handleChooseLabel = (option: IOption) => {
 };
 
 const filterProjects = () => {
+  const isArchived = route.meta.isArchived ?? false;
   const filterTagIds = labelsSelected.value.map((t) => t.key);
   showProjects.value = projects.value.filter((p) => {
     const nameMatch = p.name.toLowerCase().includes(search.value.toLowerCase());
 
-    if (filterTagIds.length == 0) return nameMatch;
+    if (filterTagIds.length == 0)
+      return nameMatch && p.isArchived == isArchived;
 
     const tagMatch = p.labels.some((l) => filterTagIds.includes(l.id));
-    return nameMatch && tagMatch;
+
+    console.log("object", p.isArchived);
+    return nameMatch && tagMatch && p.isArchived == isArchived;
   });
 };
 
@@ -113,6 +122,8 @@ watchEffect(() => {
 });
 
 onMounted(() => {
+  const isArchived = route.meta.isArchived ?? false;
+  showProjects.value = projects.value.filter((p) => p.isArchived == isArchived);
   handleChooseSort({ key: "dueSoon", value: "Sắp tới hạn" });
 });
 </script>
@@ -195,7 +206,11 @@ onMounted(() => {
       </div>
     </div>
     <div class="flex-1 flex flex-wrap mt-5 -mx-2 bg-bgColor-secondary">
-      <div v-for="project in showProjects" :key="project.id" class="w-1/4 p-2">
+      <div
+        v-for="project in showProjects"
+        :key="project.id"
+        class="w-1/4 max-[1000px]:w-1/3 max-[768px]:w-1/2 max-[500px]:w-full p-2"
+      >
         <ProjectItem :project />
       </div>
     </div>

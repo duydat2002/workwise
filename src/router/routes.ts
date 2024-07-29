@@ -16,6 +16,17 @@ const routes: Readonly<RouteRecordRaw[]> = [
     meta: { title: "Dự án • WorkWise", layout: AppLayout, requiresAuth: true },
   },
   {
+    path: "/projects/archived",
+    name: "ProjectsArchived",
+    component: () => import("@/views/Project/index.vue"),
+    meta: {
+      title: "Dự án • WorkWise",
+      layout: AppLayout,
+      requiresAuth: true,
+      isArchived: true,
+    },
+  },
+  {
     path: "/projects/:projectId",
     name: "Project",
     redirect: { name: "Kanban" },

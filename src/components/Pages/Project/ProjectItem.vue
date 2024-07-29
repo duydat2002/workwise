@@ -82,7 +82,7 @@ const toggleShowLabel = () => {
         <template v-if="showProjectLabel"> blank </template>
       </div>
     </div>
-    <div class="mt-3">
+    <div class="mt-1">
       <div class="flex items-center justify-between">
         <span class="text-sm font-medium text-textColor-primary"
           >Tiến trình</span

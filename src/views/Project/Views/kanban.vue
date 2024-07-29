@@ -36,7 +36,7 @@ const { user } = storeToRefs(useUserStore());
 const { project, showProjectInfo } = storeToRefs(useProjectStore());
 
 const DEFAULT_COLOR = "#93c5fd";
-const projectTemp = ref<IProject | null>(cloneDeep(project.value));
+const projectTemp = ref<IProject | null>();
 const taskName = ref("");
 const taskNameErr = ref<string>();
 const taskGroupName = ref("");
@@ -48,6 +48,7 @@ const showOptionTaskGroup = ref<string>("");
 const showPowerTaskGroup = ref<string>("");
 const showArchiveTaskGroup = ref<string>("");
 const showDeleteTaskGroup = ref<string>("");
+const isLoadingPage = ref(true);
 const isLoadingAction = ref(false);
 const isLoadingCreateTaskGroup = ref(false);
 const isLoadingCreateTask = ref(false);
@@ -232,16 +233,16 @@ const handleFilter = (temp: IProject) => {
 
 watch(
   () => project.value,
-  () => {
+  async () => {
     console.log("project updated");
     projectTemp.value = cloneDeep(project.value);
   },
-  { deep: true }
+  { deep: true, immediate: true }
 );
 </script>
 
 <template>
-  <div v-if="!project">cac</div>
+  <div v-if="!projectTemp">loadding</div>
   <div v-else class="flex flex-col h-full">
     <Fillters @filter="handleFilter" />
     <div class="relative flex-1 h-full">

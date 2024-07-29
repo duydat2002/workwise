@@ -56,7 +56,7 @@ const { projects, project, showProjectInfo } = storeToRefs(useProjectStore());
 
 const { projectActivities, taskActivities } = storeToRefs(useActivityStore());
 
-const isLoadingProject = ref(false);
+const isLoadingProject = ref(true);
 const isLoadingAction = ref(false);
 const projectInfoRef = ref<HTMLDivElement>();
 const tabs = shallowRef([
@@ -186,10 +186,9 @@ const changeHeightInfo = () => {
   }
 };
 
-const getProject = () => {
+const getProject = (projectId: string) => {
   isLoadingProject.value = true;
-  project.value =
-    projects.value.find((p) => p.id == route.params.projectId) || null;
+  project.value = projects.value.find((p) => p.id == projectId) || null;
 
   if (project.value) {
     const projectTemp = cloneDeep(project.value);
@@ -218,7 +217,7 @@ const getProject = () => {
 watch(
   projects,
   () => {
-    getProject();
+    getProject(route.params.projectId as string);
   },
   { immediate: true }
 );
@@ -246,7 +245,7 @@ onBeforeRouteUpdate(async (to, from) => {
   if (to.params.projectId != from.params.projectId) {
     projectActivities.value = [];
     taskActivities.value = [];
-    getProject();
+    getProject(to.params.projectId as string);
   }
 });
 </script>
@@ -255,7 +254,7 @@ onBeforeRouteUpdate(async (to, from) => {
   <div v-if="isLoadingProject" class="flex-1 h-full flex flex-center">
     <LoadingIcon class="w-6 fill-textColor-secondary animate-spin" />
   </div>
-  <div v-if="project && !isLoadingProject" class="flex h-full">
+  <div v-else-if="project" class="flex h-full">
     <div class="flex-grow flex flex-col h-full overflow-hidden">
       <div
         v-if="project.isArchived"

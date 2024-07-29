@@ -6,12 +6,20 @@ import ProjectIcon from "@icons/project.svg";
 import TaskIcon from "@icons/task.svg";
 import LeftIcon from "@icons/left.svg";
 import { storeToRefs } from "pinia";
-import { useCommonStore, useProjectStore, useResizeStore } from "@/stores";
-import { shallowRef, watch } from "vue";
+import {
+  useCommonStore,
+  useProjectStore,
+  useResizeStore,
+  useUserStore,
+} from "@/stores";
+import { computed, shallowRef, watch } from "vue";
+import { cloneDeep } from "lodash";
+import { RouterLink } from "vue-router";
 
 const { narrowSidebar } = storeToRefs(useCommonStore());
+const { user } = storeToRefs(useUserStore());
 const { dimensions } = storeToRefs(useResizeStore());
-const { showCreateProject } = storeToRefs(useProjectStore());
+const { projects, showCreateProject } = storeToRefs(useProjectStore());
 
 const tabs = shallowRef([
   {
@@ -30,6 +38,30 @@ const tabs = shallowRef([
     link: { name: "Signin" },
   },
 ]);
+
+const projectsMostRecent = computed(() => {
+  const projectTemp = cloneDeep(projects.value);
+  return projectTemp
+    .filter((p) => !p.isArchived)
+    .sort((p1, p2) => {
+      return (
+        new Date(p1.updatedAt).getTime() - new Date(p2.updatedAt).getTime()
+      );
+    });
+});
+
+const tasksForYou = computed(() => {
+  const projectTemp = cloneDeep(projects.value);
+  return projectTemp
+    .flatMap((p) => p.taskGroups)
+    .flatMap((g) => g.tasks)
+    .filter((t) => !t.isArchived && t.dueDate)
+    .sort((t1, t2) => {
+      if (!t1.dueDate) return 1;
+      if (!t2.dueDate) return -1;
+      return new Date(t1.dueDate).getTime() - new Date(t2.dueDate).getTime();
+    });
+});
 
 const handleToggleSidebar = () => {
   narrowSidebar.value = !narrowSidebar.value;
@@ -105,18 +137,57 @@ watch(
               />
             </div>
           </div>
-          <div class="mt-1 flex flex-col">
+          <div
+            class="mb-1 flex flex-col max-h-[160px] overflow-y-scroll scroll-vert"
+          >
             <RouterLink
-              v-for="i in 5"
-              :key="i"
-              :to="{ name: 'Project', params: { projectId: i } }"
-              class="flex px-4 py-2 items-center hover:bg-hover rounded-md cursor-pointer transition-colors"
+              v-for="project in projectsMostRecent"
+              :key="project.id"
+              :to="{ name: 'Project', params: { projectId: project.id } }"
+              class="flex px-4 py-2 items-center hover:bg-primary-extraLight rounded-md cursor-pointer transition-colors"
             >
               <div
-                class="w-8 h-6 mr-2 border border-borderColor rounded bg-[#f8a3a3]"
+                class="w-8 h-6 bg-cover bg-center aspect-video mr-2"
+                :style="{
+                  backgroundImage: `url(${project.background})`,
+                }"
               ></div>
-              <span class="font-medium text-dots">Tên dự án</span>
+              <span class="font-medium text-dots">{{ project.name }}</span>
             </RouterLink>
+          </div>
+          <RouterLink
+            :to="{ name: 'ProjectsArchived' }"
+            class="px-4 py-2 w-full hover:bg-hover rounded-md cursor-pointer"
+          >
+            <span class="text-textColor-primary">Dự án đã lưu trữ</span>
+          </RouterLink>
+        </div>
+        <div class="w-full mt-2 border-t border-borderColor">
+          <div class="flex px-4 py-2 items-center justify-between">
+            <span
+              class="text-textColor-secondary font-medium uppercase whitespace-nowrap"
+              >Công việc sắp tới hạn</span
+            >
+          </div>
+          <div
+            v-if="tasksForYou.length > 0"
+            class="mb-1 flex flex-col max-h-[160px] overflow-y-scroll scroll-vert"
+          >
+            <RouterLink
+              v-for="task in tasksForYou"
+              :key="task.id"
+              :to="{
+                name: 'Project',
+                params: { projectId: task.project.id },
+                query: { taskSelected: task.id },
+              }"
+              class="flex px-4 py-2 items-center hover:bg-hover rounded-md cursor-pointer transition-colors"
+            >
+              <span class="font-medium text-dots">{{ task.name }}</span>
+            </RouterLink>
+          </div>
+          <div v-else class="px-4 text-textColor-secondary">
+            Không có công việc nào sắp tới hạn.
           </div>
         </div>
       </div>
