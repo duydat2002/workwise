@@ -26,7 +26,7 @@ const userInvites = ref<IOption[]>([]);
 const userSearchs = ref<IOption[]>([]);
 const roleSelected = ref<"admin" | "member">("member");
 const roleOptions = ref<IOption[]>([
-  { key: "admin", value: "Quản trị viên" },
+  { key: "admin", value: "Quản lý" },
   { key: "member", value: "Thành viên" },
 ]);
 const tabMembers = ref<"accepted" | "pending">("accepted");

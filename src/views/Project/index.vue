@@ -108,12 +108,25 @@ const filterProjects = () => {
     const nameMatch = p.name.toLowerCase().includes(search.value.toLowerCase());
 
     if (filterTagIds.length == 0)
-      return nameMatch && p.isArchived == isArchivedPage.value;
+      return (
+        nameMatch &&
+        p.isArchived == isArchivedPage.value &&
+        p.members.some(
+          (m) => m.user.id == user.value?.id && m.status != "pending"
+        )
+      );
 
     const tagMatch = p.labels.some((l) => filterTagIds.includes(l.id));
 
     console.log("object", p.isArchived);
-    return nameMatch && tagMatch && p.isArchived == isArchivedPage.value;
+    return (
+      nameMatch &&
+      tagMatch &&
+      p.isArchived == isArchivedPage.value &&
+      p.members.some(
+        (m) => m.user.id == user.value?.id && m.status != "pending"
+      )
+    );
   });
 };
 
@@ -133,7 +146,11 @@ onMounted(() => {
 
   isArchivedPage.value = (route.meta.isArchived as boolean) ?? false;
   showProjects.value = projects.value.filter(
-    (p) => p.isArchived == isArchivedPage.value
+    (p) =>
+      p.isArchived == isArchivedPage.value &&
+      p.members.some(
+        (m) => m.user.id == user.value?.id && m.status != "pending"
+      )
   );
   handleChooseSort({ key: "dueSoon", value: "Sắp tới hạn" });
 });

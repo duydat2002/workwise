@@ -64,10 +64,10 @@ const tabs = shallowRef([
   { name: "Tổng quan", link: "Sumary", icon: DashboardIcon },
   { name: "Bảng", link: "Kanban", icon: KanbanIcon },
   { name: "Danh sách", link: "List", icon: ListIcon },
-  { name: "Lịch", link: "Calendar", icon: CalendarIcon },
-  { name: "Lịch trình", link: "Timeline", icon: TimelineIcon },
-  { name: "Phê duyệt", link: "Approvals", icon: ApprovedIcon },
-  { name: "Tài liệu", link: "Attachments", icon: AttachIcon },
+  // { name: "Lịch", link: "Calendar", icon: CalendarIcon },
+  // { name: "Lịch trình", link: "Timeline", icon: TimelineIcon },
+  // { name: "Phê duyệt", link: "Approvals", icon: ApprovedIcon },
+  // { name: "Tài liệu", link: "Attachments", icon: AttachIcon },
   { name: "Báo cáo", link: "Statistics", icon: ChartIcon },
 ]);
 const sidebarRightTabs = ref<"activities" | "archives">();
@@ -296,7 +296,7 @@ onBeforeRouteUpdate(async (to, from) => {
                     member.status == 'pending'
                       ? '- đang chờ'
                       : member.role == 'admin'
-                      ? '- quản trị viên'
+                      ? '- quản lý'
                       : ' - thành viên'
                   }`"
                 >

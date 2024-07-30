@@ -23,12 +23,12 @@ const { project } = storeToRefs(useProjectStore());
 const roleOptions = computed(() => {
   if (isUser.value && hasAtLeastOneAdmin.value) {
     return [
-      { key: "admin", value: "Quản trị viên" },
+      { key: "admin", value: "Quản lý" },
       { key: "member", value: "Thành viên", disabled: true },
     ];
   } else {
     return [
-      { key: "admin", value: "Quản trị viên" },
+      { key: "admin", value: "Quản lý" },
       { key: "member", value: "Thành viên" },
     ];
   }

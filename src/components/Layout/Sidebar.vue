@@ -42,7 +42,13 @@ const tabs = shallowRef([
 const projectsMostRecent = computed(() => {
   const projectTemp = cloneDeep(projects.value);
   return projectTemp
-    .filter((p) => !p.isArchived)
+    .filter(
+      (p) =>
+        !p.isArchived &&
+        p.members.some(
+          (m) => m.user.id == user.value?.id && m.status != "pending"
+        )
+    )
     .sort((p1, p2) => {
       return (
         new Date(p1.updatedAt).getTime() - new Date(p2.updatedAt).getTime()
@@ -53,6 +59,13 @@ const projectsMostRecent = computed(() => {
 const tasksForYou = computed(() => {
   const projectTemp = cloneDeep(projects.value);
   return projectTemp
+    .filter(
+      (p) =>
+        !p.isArchived &&
+        p.members.some(
+          (m) => m.user.id == user.value?.id && m.status != "pending"
+        )
+    )
     .flatMap((p) => p.taskGroups)
     .flatMap((g) => g.tasks)
     .filter((t) => !t.isArchived && t.dueDate)

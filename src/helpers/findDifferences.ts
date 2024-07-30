@@ -13,8 +13,7 @@ export function findDifferences(
     for (const key in obj2) {
       if (obj2.hasOwnProperty(key)) {
         if (
-          !isEmptyString(obj1[key]) &&
-          !isEmptyString(obj2[key]) &&
+          (!isEmptyString(obj1[key]) || !isEmptyString(obj2[key])) &&
           obj1[key] != obj2[key]
         ) {
           differences[key] = { obj1: obj1[key], obj2: obj2[key] };
@@ -24,8 +23,7 @@ export function findDifferences(
   } else {
     keysToConsider.forEach((key) => {
       if (
-        !isEmptyString(obj1[key]) &&
-        !isEmptyString(obj2[key]) &&
+        (!isEmptyString(obj1[key]) || !isEmptyString(obj2[key])) &&
         obj1[key] != obj2[key]
       ) {
         differences[key] = { obj1: obj1[key], obj2: obj2[key] };

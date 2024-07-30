@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Avatar from "@/components/Common/Avatar.vue";
 import { findDifferences, formatDate } from "@/helpers";
-import { IActivity } from "@/types";
+import { IActivity, ITask, ITaskGroup } from "@/types";
 import { ref, onMounted } from "vue";
 
 const props = defineProps<{
@@ -98,22 +98,60 @@ onMounted(() => {
       content.value = `đã xóa ${boldRender(member.fullname)} khỏi dự án này.`;
       break;
     case "create_taskgroup":
-      taskGroup = props.activity.taskGroup;
+      taskGroup = props.activity.datas.taskGroup;
       content.value = `đã tạo nhóm công việc ${linkRender(
         "",
         taskGroup?.name
-      )}.`;
+      )}`;
       break;
     case "update_taskgroup":
+      const oldTaskGroup = props.activity.datas.oldTaskGroup as ITaskGroup;
+      const newTaskGroup = props.activity.datas.newTaskGroup as ITaskGroup;
+      content.value = `đã cập nhật nhóm công việc ${linkRender(
+        "",
+        newTaskGroup?.name
+      )}`;
+
+      if (oldTaskGroup && newTaskGroup) {
+        const diff = findDifferences(oldTaskGroup, newTaskGroup, [
+          "name",
+          "color",
+        ]);
+
+        let updatedHtml = "";
+        Object.keys(diff).forEach((d) => {
+          switch (d) {
+            case "name":
+              updatedHtml += `<span class='diff-item'>Tên: từ <span class='bold'>${
+                diff[d].obj1 ?? "'null'"
+              }</span> thành <span class='bold'>${
+                diff[d].obj2 ?? "'null'"
+              }</span></span>`;
+              break;
+            case "color":
+              updatedHtml += `<span class='diff-item flex item-center'>Màu: từ <span class="inline-block w-8 h-4 mx-1" style="background: ${
+                diff[d].obj1 ?? "'#fff'"
+              }"></span>
+              thành <span class="inline-block w-8 h-4 mx-1" style="background: ${
+                diff[d].obj2 ?? "'#fff'"
+              }"></span></span>`;
+              break;
+            default:
+              break;
+          }
+        });
+
+        updated.value = updatedHtml;
+      }
       break;
     case "archive_taskgroup":
-      taskGroup = props.activity.taskGroup;
+      taskGroup = props.activity.datas.taskGroup;
       content.value = `đã lưu trữ nhóm công việc ${boldRender(
         taskGroup?.name
       )}.`;
       break;
     case "unarchive_taskgroup":
-      taskGroup = props.activity.taskGroup;
+      taskGroup = props.activity.datas.taskGroup;
       content.value = `đã khôi phục nhóm công việc ${linkRender(
         "",
         taskGroup?.name
@@ -124,13 +162,17 @@ onMounted(() => {
       content.value = `đã xóa nhóm công việc ${boldRender(taskGroup?.name)}.`;
       break;
     case "create_task":
-      taskGroup = props.activity.taskGroup;
+      taskGroup = props.activity.datas.taskGroup;
       task = props.activity.task;
-      content.value = `đã tạo công việc ${boldRender(
+      content.value = `đã tạo công việc ${linkRender(
+        "",
         task?.name
-      )} vào nhóm công việc ${boldRender(taskGroup?.name)}.`;
+      )} trong nhóm công việc ${boldRender(taskGroup?.name)}.`;
       break;
     case "update_task":
+      const oldTask = props.activity.datas.oldTask as ITask;
+      const newTask = props.activity.datas.newTask as ITask;
+      content.value = `đã cập nhật công việc ${linkRender("", newTask?.name)}`;
       break;
     case "archive_task":
       task = props.activity.task;
@@ -141,9 +183,16 @@ onMounted(() => {
       content.value = `đã khôi phục công việc ${boldRender(task?.name)}.`;
       break;
     case "remove_task":
-      content.value = `đã xóa công việc .`;
+      task = props.activity.datas.task;
+      content.value = `đã xóa công việc ${boldRender(task?.name)}.`;
       break;
     case "assign_task":
+      // task = props.activity.task;
+      // const oldAssignee = props.activity.datas.oldTask;
+      // const newAssignee = props.activity.datas.newTask;
+      // content.value = `đã giao công việc ${boldRender(
+      //   task?.name
+      // )} cho ${boldRender(newAssignee?.fullname)}.`;
       break;
     case "unassign_task":
       break;
@@ -168,7 +217,7 @@ onMounted(() => {
       class="mr-2"
       @click="
         () => {
-          console.log(activity.datas);
+          console.log(activity);
         }
       "
     >

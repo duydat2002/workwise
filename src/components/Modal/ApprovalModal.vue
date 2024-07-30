@@ -94,8 +94,12 @@ onMounted(async () => {
           <div class="">
             <Popper
               hover
-              :disabled="showCreateApproval"
-              content="Phê duyệt trước đó phải được phê duyệt"
+              :disabled="showCreateApproval && task?.status != 'completed'"
+              :content="
+                task?.status == 'completed'
+                  ? 'Công việc đã hoàn thành không thể phê duyệt'
+                  : 'Phê duyệt trước đó phải được phê duyệt'
+              "
             >
               <div
                 class="self-start py-2 px-2 flex items-center"
