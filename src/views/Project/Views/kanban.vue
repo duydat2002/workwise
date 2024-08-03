@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import MoreIcon from "@icons/more.svg";
 import BucketIcon from "@icons/bucket.svg";
-import PowerIcon from "@icons/power.svg";
 import PlusIcon from "@icons/plus.svg";
 import XIcon from "@icons/x.svg";
 import ArchiveIcon from "@icons/archive.svg";
@@ -20,16 +19,16 @@ import {
   updateTaskGroup,
 } from "@/services/taskGroup";
 import { createTask, reorderTask } from "@/services/task";
-import { IOption, IProject, ITaskGroup } from "@/types";
+import { IProject, ITaskGroup } from "@/types";
 import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
 import { toast } from "vue3-toastify";
 import TaskItem from "@/components/Pages/Task/TaskItem.vue";
 import Popper from "vue3-popper";
-import USelect from "@/components/UI/USelect.vue";
 import { watch } from "vue";
 import Fillters from "@/components/Pages/Project/Filters.vue";
 import { computed } from "vue";
 import { cloneDeep } from "lodash";
+import TaskGroupPower from "@/components/Pages/Project/TaskGroupPower.vue";
 
 const { isDark } = storeToRefs(useThemeStore());
 const { user } = storeToRefs(useUserStore());
@@ -45,21 +44,11 @@ const taskGroupColor = ref(DEFAULT_COLOR);
 const showCreateTaskGroup = ref(false);
 const showCreateTask = ref<string>();
 const showOptionTaskGroup = ref<string>("");
-const showPowerTaskGroup = ref<string>("");
 const showArchiveTaskGroup = ref<string>("");
 const showDeleteTaskGroup = ref<string>("");
-const isLoadingPage = ref(true);
 const isLoadingAction = ref(false);
 const isLoadingCreateTaskGroup = ref(false);
 const isLoadingCreateTask = ref(false);
-
-const autoSelected = ref<"none" | "todo" | "inprogress" | "completed">("none");
-const autoOptions = ref<IOption[]>([
-  { key: "none", value: "Không tự động" },
-  { key: "completed", value: "Đã hoàn thành" },
-  { key: "inprogress", value: "Đang thực hiện" },
-  { key: "todo", value: "Cần thực hiện" },
-]);
 
 const hasPermission = computed(() => {
   return (
@@ -234,7 +223,7 @@ const handleFilter = (temp: IProject) => {
 watch(
   () => project.value,
   async () => {
-    console.log("project updated");
+    // console.log("project updated");
     projectTemp.value = cloneDeep(project.value);
   },
   { deep: true, immediate: true }
@@ -311,56 +300,7 @@ watch(
                     </div>
                   </Popper>
                 </div>
-                <div
-                  class="relative"
-                  v-click-outside.short="{
-                    handle: () => {
-                      showPowerTaskGroup = '';
-                    },
-                    excludes: ['.taskgroup_power'],
-                  }"
-                >
-                  <Popper hover offsetDistance="8" content="Tự động">
-                    <div
-                      class="relative flex-shrink-0 flex flex-center w-7 h-7 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
-                      @click.stop="
-                        () => {
-                          showPowerTaskGroup = taskGroup.id;
-                        }
-                      "
-                    >
-                      <PowerIcon class="w-4 fill-white" />
-                    </div>
-                  </Popper>
-                  <div
-                    v-if="showPowerTaskGroup == taskGroup.id && hasPermission"
-                    class="taskgroup_power absolute mt-1 top-full left-1/2 -translate-x-1/2 min-w-full w-max max-w-[300px] bg-bgColor-primary rounded-lg shadow z-10"
-                  >
-                    <div class="flex flex-col px-3 py-2">
-                      <span class="font-semibold text-textColor-primary mb-2"
-                        >Quy trình tự động</span
-                      >
-                      <span class="text-textColor-secondary mb-2"
-                        >Hệ thống tự động chuyển trạng thái công việc khi công
-                        việc được chuyển đến cột này.</span
-                      >
-                      <div class="flex items-center">
-                        <div class="flex items-center">
-                          <span class="text-textColor-primary mr-2"
-                            >Trạng thái tự động</span
-                          >
-                          <USelect
-                            class="!min-h-8 !w-auto"
-                            v-model:selected="autoSelected"
-                            :options="autoOptions"
-                            padding="px-1 py-[1px]"
-                            placement="top-full min-w-full w-max right-0 pt-1"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <TaskGroupPower :taskGroup :hasPermission />
                 <div
                   class="relative"
                   v-click-outside.short="{

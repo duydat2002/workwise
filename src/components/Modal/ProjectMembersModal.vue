@@ -15,6 +15,7 @@ import { debounce } from "@/helpers";
 import { findUsersByNameOrEmail } from "@/services/user";
 import { inviteProjectMember } from "@/services/project";
 import { cloneDeep } from "lodash";
+import { toast } from "vue3-toastify";
 
 const emit = defineEmits(["close"]);
 
@@ -32,6 +33,21 @@ const roleOptions = ref<IOption[]>([
 const tabMembers = ref<"accepted" | "pending">("accepted");
 const isLoadingSearch = ref(false);
 const isLoadingInvite = ref(false);
+
+const hasOneAdmin = computed(() => {
+  const membersTemp = cloneDeep(project.value?.members) ?? [];
+
+  return (
+    membersTemp.filter((m) => m.status == "accepted" && m.role == "admin")
+      .length <= 1
+  );
+});
+
+const hasOneMember = computed(() => {
+  const temp =
+    project.value?.members.filter((m) => m.status == "accepted") ?? [];
+  return temp.length <= 1;
+});
 
 const hasPermission = computed(() => {
   return (
@@ -88,6 +104,9 @@ const handleInvite = async () => {
     if (data.success) {
       userInvites.value = [];
       search.value = "";
+      toast.success(`Đã mời người dùng vào dự án.`);
+    } else {
+      toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
     }
   }
 
@@ -265,7 +284,7 @@ watch(search, async () => {
                 v-for="member in membersComp.membersAccepted"
                 class="flex items-center py-2"
               >
-                <MemberItem :member />
+                <MemberItem :member :hasOneAdmin :hasOneMember />
               </div>
             </template>
             <template v-else>
@@ -274,7 +293,12 @@ watch(search, async () => {
                 v-for="member in membersComp.membersNotAccepted"
                 class="flex items-center py-2"
               >
-                <MemberItem :member isWaitForAccept />
+                <MemberItem
+                  :member
+                  isWaitForAccept
+                  :hasOneAdmin
+                  :hasOneMember
+                />
               </div>
               <div v-else class="py-2">
                 <span class="text-sm text-textColor-secondary"

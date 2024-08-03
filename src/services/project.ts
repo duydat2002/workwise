@@ -15,7 +15,7 @@ export async function getProjectById(projectId: string) {
 
 export async function createProject(data: FormData) {
   return await api.post<any, IServerData<{ project: IProject }>>(
-    prefix + "/create",
+    prefix + "create",
     data,
     {
       headers: {

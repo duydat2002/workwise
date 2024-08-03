@@ -161,7 +161,7 @@ const handleUnarchiveProject = async () => {
 const handleDeleteProject = async () => {
   isLoadingAction.value = true;
 
-  const data = await deleteProject(project.value!.id);
+  const data = await deleteProject(project.value?.id ?? "1");
 
   if (data.success) {
     showProjectOption.value = false;

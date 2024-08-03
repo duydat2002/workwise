@@ -5,20 +5,28 @@ import Avatar from "@/components/Common/Avatar.vue";
 import { useProjectStore, useUserStore } from "@/stores";
 import { IMember } from "@/types";
 import { storeToRefs } from "pinia";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import {
   changeProjectMemberRole,
   deleteProjectMember,
 } from "@/services/project";
 import { leaveProject } from "@/services/user";
+import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
+import Popper from "vue3-popper";
+import { toast } from "vue3-toastify";
 
 const props = defineProps<{
+  hasOneAdmin: boolean;
+  hasOneMember: boolean;
   member: IMember;
   isWaitForAccept?: boolean;
 }>();
 
 const { user } = storeToRefs(useUserStore());
 const { project } = storeToRefs(useProjectStore());
+
+const isLoadingLeave = ref(false);
+const showLeaveConfirm = ref(false);
 
 const roleOptions = computed(() => {
   if (isUser.value && hasAtLeastOneAdmin.value) {
@@ -46,6 +54,34 @@ const hasAtLeastOneAdmin = computed(
     ).length <= 1
 );
 
+const confirmText = computed(() => {
+  if (isUser.value) {
+    return {
+      title: `Rời khỏi dự án?`,
+      desc: `Bạn sẽ bị loại bỏ khỏi dự án và toàn bộ công việc trong dự án này.`,
+      confirm: "Rời",
+    };
+  } else {
+    return {
+      title: `Xóa khỏi dự án?`,
+      desc: `${props.member.user.fullname} sẽ bị loại bỏ khỏi dự án và toàn bộ công việc trong dự án này.`,
+      confirm: "Xóa",
+    };
+  }
+});
+
+const showLeave = computed(() => {
+  if (isUser.value) {
+    if (isAdmin.value) {
+      return !props.hasOneAdmin;
+    } else {
+      return !props.hasOneMember;
+    }
+  } else {
+    return isAdmin.value;
+  }
+});
+
 const handleChangeRole = async () => {
   await changeProjectMemberRole(
     project.value!.id,
@@ -55,11 +91,25 @@ const handleChangeRole = async () => {
 };
 
 const handleLeftProject = async () => {
+  isLoadingLeave.value = true;
+  let data;
+  const memberName = props.member.user.fullname;
   if (isUser.value) {
-    await leaveProject(project.value!.id);
+    data = await leaveProject(project.value!.id);
   } else {
-    await deleteProjectMember(project.value!.id, props.member.user.id);
+    data = await deleteProjectMember(project.value!.id, props.member.user.id);
   }
+
+  if (data?.success) {
+    toast.success(
+      isUser.value
+        ? "Bạn đã rời khỏi dự án."
+        : `Bạn đã xóa ${memberName} khởi dự án.`
+    );
+  } else {
+    toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
+  }
+  isLoadingLeave.value = false;
 };
 </script>
 
@@ -92,11 +142,29 @@ const handleLeftProject = async () => {
     />
   </div>
   <div
-    v-if="isAdmin || isUser"
+    v-if="showLeave"
     class="flex flex-center w-8 h-8 bg-bgColor-secondary rounded-md hover:bg-hover cursor-pointer"
     :title="isUser ? 'Rời khỏi dự án' : 'Xóa khỏi dự án'"
-    @click="handleLeftProject"
+    @click="
+      () => {
+        showLeaveConfirm = true;
+      }
+    "
   >
     <ExitIcon class="w-4 fill-textColor-primary" />
   </div>
+  <ConfirmPopup
+    v-if="showLeaveConfirm"
+    id="confirm_leave_project"
+    :confirmMessage="confirmText.confirm"
+    :title="confirmText.title"
+    :desc="confirmText.desc"
+    :isLoadingConfirm="isLoadingLeave"
+    @confirm="handleLeftProject"
+    @cancel="
+      () => {
+        showLeaveConfirm = false;
+      }
+    "
+  ></ConfirmPopup>
 </template>

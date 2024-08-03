@@ -94,7 +94,7 @@ const handleCreateProject = async () => {
     const data = await createProject(formData);
 
     if (data.success) {
-      addProjectStore(data.result!.project);
+      // addProjectStore(data.result!.project);
       toast.success("Tạo dự án thành công!");
       emit("close");
     } else {

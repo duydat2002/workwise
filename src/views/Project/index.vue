@@ -142,8 +142,6 @@ watch(
 );
 
 onMounted(() => {
-  console.log("hmm");
-
   isArchivedPage.value = (route.meta.isArchived as boolean) ?? false;
   showProjects.value = projects.value.filter(
     (p) =>

@@ -51,7 +51,7 @@ const projectsMostRecent = computed(() => {
     )
     .sort((p1, p2) => {
       return (
-        new Date(p1.updatedAt).getTime() - new Date(p2.updatedAt).getTime()
+        new Date(p2.updatedAt).getTime() - new Date(p1.updatedAt).getTime()
       );
     });
 });
