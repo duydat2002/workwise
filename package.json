@@ -10,10 +10,12 @@
     "devhost": "vite --host"
   },
   "dependencies": {
+    "@types/chart.js": "^2.9.41",
     "@vuepic/vue-datepicker": "^8.8.1",
     "@vueup/vue-quill": "^1.2.0",
     "ag-grid-vue3": "^32.0.2",
     "axios": "^1.7.2",
+    "chart.js": "^4.4.3",
     "date-fns": "^3.6.0",
     "firebase": "^10.12.2",
     "lodash": "^4.17.21",
@@ -22,6 +24,7 @@
     "socket.io-client": "^4.7.5",
     "vite-svg-loader": "^5.1.0",
     "vue": "^3.4.29",
+    "vue-chartjs": "^5.3.1",
     "vue-draggable-plus": "^0.5.0",
     "vue-router": "^4.4.0",
     "vue3-colorpicker": "^2.3.0",

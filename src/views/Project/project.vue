@@ -487,7 +487,7 @@ onBeforeRouteUpdate(async (to, from) => {
           <div
             class="relative h-[200px] bg-cover bg-center bg-no-repeat rounded-xl overflow-hidden"
             :style="{
-              backgroundImage: `url(${project.background})`,
+              backgroundImage: `url(${encodeURI(project.background)})`,
             }"
           >
             <div
@@ -647,7 +647,7 @@ onBeforeRouteUpdate(async (to, from) => {
             </div>
           </VueDraggable>
         </div>
-        <div class="flex-1 pt-4">
+        <div class="flex-1">
           <RouterView></RouterView>
           <!-- <RouterView name="modal"></RouterView> -->
         </div>

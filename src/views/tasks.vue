@@ -29,7 +29,7 @@ import { IProject, ITask } from "@/types";
 import { ColDef } from "ag-grid-community";
 import { formatDate } from "@/helpers";
 import { storeToRefs } from "pinia";
-import { useProjectStore } from "@/stores";
+import { useProjectStore, useUserStore } from "@/stores";
 import { cloneDeep } from "lodash";
 import TaskNotFound from "@/components/Pages/Task/TaskNotFound.vue";
 import { VueDraggable } from "vue-draggable-plus";
@@ -199,6 +199,7 @@ const priorityOrder = ["none", "low", "medium", "high"];
 
 const route = useRoute();
 
+const { user } = storeToRefs(useUserStore());
 const { projects } = storeToRefs(useProjectStore());
 
 const gridOptions = ref<GridOptions>({
@@ -239,7 +240,12 @@ const onCellValueChanged = async (event: CellValueChangedEvent<ITask>) => {
 const handleFilter = (temp: IProject[]) => {
   projectsTemp.value = temp;
   const tasks = projectsTemp.value
-    ?.flatMap((p) => p.taskGroups)
+    ?.filter((p) =>
+      p.members.some(
+        (m) => m.user.id == user.value?.id && m.status != "pending"
+      )
+    )
+    .flatMap((p) => p.taskGroups)
     .flatMap((g) => g.tasks)
     .filter((t) => !t.isHidden);
   rowData.value = tasks ?? [];

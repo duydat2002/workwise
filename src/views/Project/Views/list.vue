@@ -242,7 +242,7 @@ watch(
 </script>
 
 <template>
-  <div class="w-full h-full flex flex-col">
+  <div class="w-full h-full flex flex-col pt-4">
     <Fillters @filter="handleFilter">
       <div
         class="relative h-full"

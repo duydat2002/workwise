@@ -243,7 +243,7 @@ watch(
 
 <template>
   <div v-if="!projectTemp">loadding</div>
-  <div v-else class="flex flex-col h-full">
+  <div v-else class="flex flex-col h-full pt-4">
     <Fillters @filter="handleFilter" />
     <div class="relative flex-1 h-full">
       <div

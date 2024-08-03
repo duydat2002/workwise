@@ -162,7 +162,7 @@ watch(
               <div
                 class="w-8 h-6 bg-cover bg-center aspect-video mr-2"
                 :style="{
-                  backgroundImage: `url(${project.background})`,
+                  backgroundImage: `url(${encodeURI(project.background)})`,
                 }"
               ></div>
               <span class="font-medium text-dots">{{ project.name }}</span>
