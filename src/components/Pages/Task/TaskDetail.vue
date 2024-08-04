@@ -138,11 +138,17 @@ const newApproval = computed(() => {
 });
 
 const handleChangeName = async () => {
-  if (taskTemp.value?.name != task.value?.name)
+  if (
+    taskTemp.value?.name != task.value?.name &&
+    taskTemp.value?.name.trim() != ""
+  ) {
     await updateTask({
       id: taskTemp.value!.id,
       name: taskTemp.value!.name,
     } as ITask);
+  } else {
+    taskTemp.value!.name = task.value!.name;
+  }
 };
 
 const handleChangeDesc = async () => {
@@ -848,6 +854,7 @@ watch(
                           :dark="theme == 'dark'"
                           position="right"
                           :disabled="!hasPermission"
+                          :max-date="taskTemp.dueDate"
                         ></VueDatePicker>
                       </div>
                     </div>
@@ -866,6 +873,7 @@ watch(
                           :dark="theme == 'dark'"
                           :disabled="!hasPermission"
                           position="right"
+                          :min-date="taskTemp.startDate"
                         ></VueDatePicker>
                       </div>
                     </div>

@@ -44,7 +44,7 @@ const autoOptions = ref<IOption[]>([
       </div>
     </Popper>
     <div
-      v-if="showPowerTaskGroup == taskGroup.id && hasPermission"
+      v-if="showPowerTaskGroup == taskGroup.id"
       class="taskgroup_power absolute mt-1 top-full left-1/2 -translate-x-1/2 min-w-full w-max max-w-[300px] bg-bgColor-primary rounded-lg shadow z-10"
     >
       <div class="flex flex-col px-3 py-2">
@@ -58,13 +58,21 @@ const autoOptions = ref<IOption[]>([
         <div class="flex flex-col">
           <div class="flex items-center justify-between">
             <span class="text-textColor-primary mr-2">Trạng thái tự động</span>
-            <USelect
-              class="!min-h-8 !w-auto"
-              v-model:selected="autoSelected"
-              :options="autoOptions"
-              padding="px-1 py-[1px]"
-              placement="top-full min-w-full w-max right-0 pt-1"
-            />
+            <Popper
+              hover
+              :disabled="!!hasPermission"
+              offsetDistance="8"
+              content="Bạn không có quyền chỉnh sửa"
+            >
+              <USelect
+                class="!min-h-8 !w-auto"
+                v-model:selected="autoSelected"
+                :options="autoOptions"
+                :isDisabled="!hasPermission"
+                padding="px-1 py-[1px]"
+                placement="top-full min-w-full w-max right-0 pt-1"
+              />
+            </Popper>
           </div>
         </div>
       </div>

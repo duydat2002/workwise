@@ -270,6 +270,7 @@ onBeforeUnmount(() => {
                       placeholder="mm/dd/yyyy"
                       format="dd/MM/yyyy"
                       :dark="theme == 'dark'"
+                      :max-date="dueDate"
                     ></VueDatePicker>
                   </div>
                 </div>
@@ -287,6 +288,7 @@ onBeforeUnmount(() => {
                       placeholder="mm/dd/yyyy"
                       format="dd/MM/yyyy"
                       :dark="theme == 'dark'"
+                      :min-date="startDate"
                     ></VueDatePicker>
                   </div>
                 </div>

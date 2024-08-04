@@ -1,3 +1,4 @@
+import { IProject } from "./project";
 import { IUserInfo } from "./user";
 
 interface IInfo {
@@ -19,13 +20,18 @@ export type IActivityType =
   | "unarchive_taskgroup"
   | "remove_taskgroup"
   | "create_task"
+  | "move_task"
   | "update_task"
   | "archive_task"
   | "unarchive_task"
   | "remove_task"
   | "assign_task"
   | "unassign_task"
-  | "approval_task"
+  | "create_approval_task"
+  | "update_approval_task"
+  | "accept_approval_task"
+  | "reject_approval_task"
+  | "revoked_approval_task"
   | "comment_task"
   | "add_attachment_task"
   | "remove_attachment_task";
@@ -33,7 +39,7 @@ export type IActivityType =
 export interface IActivity {
   id: string;
   user: IUserInfo;
-  project: IInfo;
+  project: IProject;
   task?: IInfo;
   datas: any;
   type: IActivityType;

@@ -25,7 +25,11 @@ const approvalEdit = ref<IApproval>();
 const isLoadingApprovals = ref(true);
 
 const showCreateApproval = computed(() => {
-  return approvals.value && !approvals.value.some((a) => a.status == "pending");
+  return (
+    task.value?.status != "completed" &&
+    approvals.value &&
+    !approvals.value.some((a) => a.status == "pending")
+  );
 });
 
 const handleClickEdit = (approval: IApproval) => {

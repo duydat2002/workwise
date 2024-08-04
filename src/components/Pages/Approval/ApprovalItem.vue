@@ -18,7 +18,7 @@ import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
 import { deleteTaskApproval } from "@/services/approval";
 import { toast } from "vue3-toastify";
 import { storeToRefs } from "pinia";
-import { useApprovalStore } from "@/stores";
+import { useApprovalStore, useUserStore } from "@/stores";
 
 const emit = defineEmits(["close", "edit"]);
 
@@ -26,6 +26,7 @@ const props = defineProps<{
   approval: IApproval;
 }>();
 
+const { user } = storeToRefs(useUserStore());
 const { approvals } = storeToRefs(useApprovalStore());
 
 const previewAttachment = ref<IAttachment>();
@@ -150,6 +151,7 @@ const handleEdit = () => {
       <div class="flex items-center gap-2">
         <template v-if="approval.status == 'pending'">
           <div
+            v-if="user?.id == approval.requestedBy.id"
             class="w-6 h-6 flex flex-center cursor-pointer"
             @click="handleEdit"
           >

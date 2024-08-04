@@ -160,7 +160,7 @@ const handleReorderTask = async (event: SortableEvent) => {
   const taskId = event.item.dataset.taskid;
   const fromTaskGroupId = event.from.dataset.taskgroupid;
   const toTaskGroupId = event.to.dataset.taskgroupid;
-  const orders = project
+  const orders = projectTemp
     .value!.taskGroups.find((g) => g.id == toTaskGroupId)
     ?.tasks.map((t) => t.id);
 
@@ -277,7 +277,15 @@ watch(
                   }}</span>
                 </div>
                 <div class="relative">
-                  <Popper hover offsetDistance="8" content="Chọn màu">
+                  <Popper
+                    hover
+                    offsetDistance="8"
+                    :content="
+                      hasPermission
+                        ? 'Chọn màu'
+                        : 'Bạn không có quyền chỉnh sửa'
+                    "
+                  >
                     <div
                       class="flex-shrink-0 flex flex-center w-7 h-7 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
                     >
@@ -314,7 +322,15 @@ watch(
                     ],
                   }"
                 >
-                  <Popper hover offsetDistance="8" content="Xem thêm">
+                  <Popper
+                    hover
+                    offsetDistance="8"
+                    :content="
+                      hasPermission
+                        ? 'Xem thêm'
+                        : 'Bạn không có quyền chỉnh sửa'
+                    "
+                  >
                     <div
                       class="flex-shrink-0 flex flex-center w-7 h-7 p-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
                       @click.stop="

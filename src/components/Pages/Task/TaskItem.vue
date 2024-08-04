@@ -3,7 +3,7 @@ import DescIcon from "@icons/list.svg";
 import AttachIcon from "@icons/attach.svg";
 import CommentIcon from "@icons/chat.svg";
 import ClockIcon from "@icons/clock-o.svg";
-import CheckIcon from "@icons/check.svg";
+import UserCheckIcon from "@icons/user-check.svg";
 import PriorityLowestIcon from "@icons/priority-lowest.svg";
 import PriorityLowIcon from "@icons/priority-low.svg";
 import PriorityMediumIcon from "@icons/priority-medium.svg";
@@ -168,6 +168,18 @@ const hanldeClickTask = () => {
           <Popper hover offsetDistance="8" content="Công việc có mô tả">
             <div v-if="task.description" class="h-6 flex flex-center mr-2">
               <DescIcon class="w-3 fill-textColor-primary" />
+            </div>
+          </Popper>
+          <Popper hover offsetDistance="8" content="Công việc chưa phê duyệt">
+            <div
+              v-if="
+                task.approvals.length > 0 &&
+                task.approvals.some((a) => a.status == 'pending')
+              "
+              class="h-6 flex flex-center mr-2"
+            >
+              <UserCheckIcon class="w-4 fill-textColor-primary" />
+              <span class="text-xs text-textColor-secondary">0/1</span>
             </div>
           </Popper>
           <Popper hover offsetDistance="8" content="Bình luận">

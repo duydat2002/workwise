@@ -21,7 +21,17 @@ const boldRender = (content: string = "") => {
 
 onMounted(() => {
   const projectActivity = props.activity.project;
-  let member, project, taskGroup, task;
+  let member,
+    project,
+    taskGroup,
+    task,
+    oldTask,
+    newTask,
+    comment,
+    attachment,
+    oldAssignee,
+    newAssignee,
+    approval: { reviewedBy: string | undefined };
   switch (props.activity.type) {
     case "update_project":
       content.value = `đã cập nhập dự án này.`;
@@ -170,8 +180,8 @@ onMounted(() => {
       )} trong nhóm công việc ${boldRender(taskGroup?.name)}.`;
       break;
     case "update_task":
-      const oldTask = props.activity.datas.oldTask as ITask;
-      const newTask = props.activity.datas.newTask as ITask;
+      oldTask = props.activity.datas.oldTask as ITask;
+      newTask = props.activity.datas.newTask as ITask;
       content.value = `đã cập nhật công việc ${linkRender("", newTask?.name)}`;
       break;
     case "archive_task":
@@ -187,22 +197,77 @@ onMounted(() => {
       content.value = `đã xóa công việc ${boldRender(task?.name)}.`;
       break;
     case "assign_task":
-      // task = props.activity.task;
-      // const oldAssignee = props.activity.datas.oldTask;
-      // const newAssignee = props.activity.datas.newTask;
-      // content.value = `đã giao công việc ${boldRender(
-      //   task?.name
-      // )} cho ${boldRender(newAssignee?.fullname)}.`;
+      task = props.activity.task;
+      newAssignee = props.activity.datas.newAssignee;
+      content.value = `đã giao công việc ${boldRender(
+        task?.name
+      )} cho ${boldRender(newAssignee?.fullname)}.`;
       break;
     case "unassign_task":
+      task = props.activity.task;
+      oldAssignee = props.activity.datas.oldAssignee;
+      content.value = `đã loại ${boldRender(
+        oldAssignee?.fullname
+      )} khỏi công việc ${boldRender(task?.name)}.`;
       break;
-    case "approval_task":
+    case "create_approval_task":
+      task = props.activity.task;
+      approval = props.activity.datas.approval;
+      const reviewer = props.activity.project?.members?.find(
+        (m) => m.user.id == approval?.reviewedBy
+      );
+
+      content.value = `đã gửi yêu cầu phê duyệt công việc ${boldRender(
+        task?.name
+      )} cho ${boldRender(reviewer?.user.fullname)}.`;
+      break;
+    case "update_approval_task":
+      task = props.activity.task;
+      content.value = `đã sửa yêu cầu phê duyệt công việc ${boldRender(
+        task?.name
+      )}.`;
+      break;
+    case "accept_approval_task":
+      task = props.activity.task;
+
+      content.value = `đã phê duyệt công việc ${boldRender(task?.name)}.`;
+      break;
+    case "reject_approval_task":
+      task = props.activity.task;
+
+      content.value = `đã từ chối phê duyệt công việc ${boldRender(
+        task?.name
+      )}.`;
+      break;
+    case "revoked_approval_task":
+      task = props.activity.task;
+
+      content.value = `đã hủy yêu cầu phê duyệt công việc ${boldRender(
+        task?.name
+      )}.`;
       break;
     case "comment_task":
+      task = props.activity.task;
+      comment = props.activity.datas.comment;
+
+      content.value = `đã bình luận ở công việc ${boldRender(task?.name)}.`;
+      updated.value = `<span class='comment'>${comment.content}</span>`;
       break;
     case "add_attachment_task":
+      task = props.activity.task;
+      attachment = props.activity.datas.attachment;
+
+      content.value = `đã đính kèm tài liệu ${boldRender(
+        attachment?.name
+      )} cho công việc ${boldRender(task?.name)}.`;
       break;
     case "remove_attachment_task":
+      task = props.activity.task;
+      attachment = props.activity.datas.attachment;
+
+      content.value = `đã xóa tài liệu ${boldRender(
+        attachment?.name
+      )} của công việc ${boldRender(task?.name)}.`;
       break;
     default:
       return props.activity.type;
@@ -250,5 +315,11 @@ onMounted(() => {
 
 :deep(.link:hover) {
   text-decoration: underline;
+}
+
+:deep(.comment) {
+  padding: 4px;
+  border-radius: 4px;
+  background: var(--secondary-bg-color);
 }
 </style>
