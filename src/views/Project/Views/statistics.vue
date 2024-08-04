@@ -1,194 +1,135 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from "vue";
-import { Doughnut } from "vue-chartjs";
+import ExportIcon from "@icons/export.svg";
+import PerformancePage from "@/components/Pages/Statistic/PerformancePage.vue";
+import ProgressPage from "@/components/Pages/Statistic/ProgressPage.vue";
+import QuantityPage from "@/components/Pages/Statistic/QuantityPage.vue";
+import USelect from "@/components/UI/USelect.vue";
+import { useProjectStore } from "@/stores";
+import { IOption } from "@/types";
 import {
-  Chart as ChartJS,
-  ChartData,
-  ChartOptions,
-  Plugin,
-  ArcElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { TypedChartComponent } from "node_modules/vue-chartjs/dist/types";
+  addDays,
+  differenceInDays,
+  eachDayOfInterval,
+  eachMonthOfInterval,
+  eachWeekOfInterval,
+  endOfMonth,
+  endOfWeek,
+  endOfYear,
+  format,
+  isSameYear,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+} from "date-fns";
+import { storeToRefs } from "pinia";
+import { computed, ref } from "vue";
+import Popper from "vue3-popper";
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+const { project, statisticTab } = storeToRefs(useProjectStore());
 
-interface ChartItem {
-  label: string;
-  count: number;
-  color: string;
-}
-
-const chartRef = ref<TypedChartComponent<"doughnut"> | null>(null);
-const chartInstance = ref<ChartJS<"doughnut"> | null>(null);
-
-const chartItems = ref<ChartItem[]>([
-  { label: "To Do", count: 10, color: "#E0E0E0" },
-  { label: "In Progress", count: 4, color: "#36A2EB" },
-  { label: "Ready for Launch", count: 4, color: "#FF6384" },
-  { label: "Launched", count: 1, color: "#4BC0C0" },
+const rangeSelected = ref<string>("week");
+const rangeOptions = ref<IOption[]>([
+  { key: "week", value: "Tuần này" },
+  { key: "month", value: "Tháng này" },
+  { key: "year", value: "Năm này" },
+  { key: "all", value: "Tất cả" },
 ]);
 
-const selectedStatus = ref<ChartItem>(chartItems.value[2]);
+const tasks = computed(() => {
+  return (
+    project.value?.taskGroups
+      .flatMap((g) => g.tasks)
+      .filter((t) => !t.isArchived) ?? []
+  );
+});
 
-const totalCount = computed(() =>
-  chartItems.value.reduce((sum, item) => sum + item.count, 0)
-);
+const members = computed(() => {
+  return project.value?.members ?? [];
+});
 
-const chartData = computed<ChartData<"doughnut">>(() => ({
-  labels: chartItems.value.map((item) => item.label),
-  datasets: [
-    {
-      data: chartItems.value.map((item) => item.count),
-      backgroundColor: chartItems.value.map((item) => item.color),
-      borderWidth: 0,
-    },
-  ],
-}));
+const dates = computed(() => {
+  switch (rangeSelected.value) {
+    case "week":
+      const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+      const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+      return eachDayOfInterval({ start: weekStart, end: weekEnd });
+      break;
+    case "month":
+      const monthStart = startOfMonth(new Date());
+      const monthEnd = endOfMonth(new Date());
+      return eachDayOfInterval({ start: monthStart, end: monthEnd });
+      break;
+    case "year":
+      const yearStart = startOfYear(new Date());
+      const yearEnd = endOfYear(new Date());
+      return eachMonthOfInterval({ start: yearStart, end: yearEnd });
+      break;
+    case "all":
+    default:
+      const sortedDates = tasks.value
+        .map((t) => t.updatedAt)
+        .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+      const minDate = sortedDates[0];
+      const maxDate = sortedDates[sortedDates.length - 1];
+      const daysDiff = differenceInDays(maxDate, minDate);
 
-const chartOptions: ChartOptions<"doughnut"> = {
-  responsive: true,
-  cutout: "70%",
-  plugins: {
-    legend: {
-      display: false,
-    },
-    tooltip: {
-      enabled: false,
-    },
-  },
-};
-
-const updateCenterText = (chart: ChartJS<"doughnut">) => {
-  const { ctx, chartArea } = chart;
-  if (!chartArea) return;
-
-  const { width, height } = chartArea;
-
-  ctx.save();
-  ctx.font = "bold 30px Arial";
-  ctx.fillStyle = selectedStatus.value.color;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  const percentage = (
-    (selectedStatus.value.count / totalCount.value) *
-    100
-  ).toFixed(0);
-  ctx.fillText(`${percentage}%`, width / 2, height / 2 - 10);
-
-  ctx.font = "16px Arial";
-  ctx.fillText(selectedStatus.value.label, width / 2, height / 2 + 20);
-  ctx.restore();
-};
-
-const plugins: Plugin<"doughnut">[] = [
-  {
-    id: "centerText",
-    beforeDatasetsDraw: (chart: ChartJS<"doughnut">) => {
-      updateCenterText(chart);
-    },
-  },
-  {
-    id: "hoverPlugin",
-    beforeEvent(chart, args, pluginOptions) {
-      const event = args.event as unknown as Event;
-      if (event.type === "mousemove") {
-        const activeElements = chart.getElementsAtEventForMode(
-          event,
-          "nearest",
-          { intersect: true },
-          false
-        );
-        if (activeElements.length > 0) {
-          selectedStatus.value = chartItems.value[activeElements[0].index];
-        }
+      return eachDayOfInterval({ start: minDate, end: maxDate });
+      if (daysDiff <= 30) {
+        return eachDayOfInterval({ start: minDate, end: maxDate });
+      } else if (daysDiff <= 180) {
+        return eachWeekOfInterval({ start: minDate, end: maxDate });
+      } else {
+        return eachMonthOfInterval({ start: minDate, end: maxDate });
       }
-    },
-  },
-];
-
-const selectStatus = (index: number) => {
-  selectedStatus.value = chartItems.value[index];
-};
-
-watch(
-  selectedStatus,
-  () => {
-    nextTick(() => {
-      if (chartInstance.value) {
-        chartInstance.value.render();
-        updateCenterText(chartInstance.value);
-      }
-    });
-  },
-  { immediate: true }
-);
-
-onMounted(() => {
-  nextTick(() => {
-    chartInstance.value = chartRef.value?.chart;
-  });
+      break;
+  }
 });
 </script>
 
 <template>
-  <div class="chart-container">
-    <div class="w-500px">
-      <Doughnut
-        ref="chartRef"
-        :data="chartData"
-        :options="chartOptions"
-        :plugins="plugins"
-      />
-    </div>
-    <div class="legend w-[300px]">
-      <div
-        v-for="(item, index) in chartItems"
-        :key="index"
-        class="legend-item"
-        @click="selectStatus(index)"
-      >
-        <div class="color-box" :style="{ backgroundColor: item.color }"></div>
-        <span>{{ item.label }}</span>
-        <span class="count">{{ item.count }}</span>
+  <div class="relative h-full w-full">
+    <div
+      class="absolute top-0 left-0 right-0 bottom-0 px-5 my-4 overflow-y-scroll scroll-vert"
+    >
+      <div class="flex items-center justify-between">
+        <span class="text-base font-semibold text-textColor-primary">{{
+          statisticTab == "progress"
+            ? "Tiến độ dự án"
+            : statisticTab == "performance"
+            ? "Hiệu suất làm việc"
+            : "Số lượng công việc"
+        }}</span>
+        <div class="flex items-center">
+          <USelect
+            v-model:selected="rangeSelected"
+            :options="rangeOptions"
+            placeholder="Chọn sắp xếp theo"
+            placement="right-0 w-max min-w-full top-full pt-1"
+          />
+          <Popper hover content="Xuất file excel">
+            <div
+              class="ml-2 flex-shrink-0 w-8 h-8 rounded hover:bg-hover flex flex-center cursor-pointer"
+            >
+              <ExportIcon class="w-6 fill-textColor-secondary" />
+            </div>
+          </Popper>
+        </div>
       </div>
-      <div class="legend-item total">
-        <span>Total</span>
-        <span class="count">{{ totalCount }}</span>
+      <div class="mt-3">
+        <QuantityPage
+          v-if="statisticTab == 'quantity'"
+          :tasks
+          :dates
+          :range="rangeSelected"
+        />
+        <PerformancePage
+          v-if="statisticTab == 'performance'"
+          :tasks
+          :members
+          :range="rangeSelected"
+        />
+        <!-- <ProgressPage /> -->
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.chart-container {
-  display: flex;
-  justify-content: space-between;
-}
-.legend {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.legend-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-  cursor: pointer;
-}
-.color-box {
-  width: 20px;
-  height: 20px;
-  margin-right: 10px;
-}
-.count {
-  margin-left: auto;
-  font-weight: bold;
-}
-.total {
-  border-top: 1px solid #ccc;
-  padding-top: 10px;
-  margin-top: 10px;
-}
-</style>

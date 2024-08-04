@@ -14,7 +14,10 @@ import {
 } from "@/stores";
 import { computed, shallowRef, watch } from "vue";
 import { cloneDeep } from "lodash";
-import { RouterLink } from "vue-router";
+import { RouterLink, useRoute } from "vue-router";
+import StatisticSidebar from "./StatisticSidebar.vue";
+
+const route = useRoute();
 
 const { narrowSidebar } = storeToRefs(useCommonStore());
 const { user } = storeToRefs(useUserStore());
@@ -110,7 +113,10 @@ watch(
     >
       <LeftIcon class="w-4 parent-[.narrow]:rotate-180 fill-current" />
     </div>
-    <div class="h-full py-3 parent-[.narrow]:opacity-0">
+    <div
+      v-if="route.name != 'Statistics'"
+      class="h-full py-3 parent-[.narrow]:opacity-0"
+    >
       <div
         class="w-full h-full flex flex-col items-center pl-4 pr-2 parent-[.narrow]:pr-0 overflow-y-scroll scroll-vert none"
         :class="{ 'no-scrollbar': narrowSidebar }"
@@ -211,5 +217,6 @@ watch(
         </div>
       </div>
     </div>
+    <StatisticSidebar v-else />
   </div>
 </template>

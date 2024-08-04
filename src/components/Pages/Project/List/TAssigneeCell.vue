@@ -1,20 +1,34 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { ICellRendererParams } from "ag-grid-community";
-import { IUserInfo } from "@/types";
+import { ITask, IUserInfo } from "@/types";
 import Avatar from "@/components/Common/Avatar.vue";
-import Popper from "vue3-popper";
+import { storeToRefs } from "pinia";
+import { useProjectStore } from "@/stores";
 
 const props = defineProps<{
-  params: ICellRendererParams;
+  params: ICellRendererParams<ITask>;
 }>();
 
+const { project } = storeToRefs(useProjectStore());
+
 const assignee = ref<IUserInfo | null>(props.params.value);
+
+const assigneeComp = computed(() => {
+  const members = project.value?.members ?? [];
+  return (
+    assignee.value ?? members.find((m) => m.user.id == props.params.value)?.user
+  );
+});
 </script>
 
 <template>
-  <div v-if="assignee" class="flex items-center" :title="assignee?.email">
-    <Avatar class="w-6 h-6 mr-1" :avatarUrl="assignee.avatar" />
-    <span class="">{{ assignee.fullname }}</span>
+  <div
+    v-if="assigneeComp"
+    class="flex items-center"
+    :title="assigneeComp?.email"
+  >
+    <Avatar class="w-6 h-6 mr-1" :avatarUrl="assigneeComp?.avatar" />
+    <span class="">{{ assigneeComp?.fullname }}</span>
   </div>
 </template>

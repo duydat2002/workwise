@@ -288,7 +288,10 @@ onMounted(async () => {
             >Xem nhanh qua các trạng thái của các công việc.</span
           >
           <div class="flex gap-2 items-center">
-            <div v-if="true" class="w-full min-h-[200px] flex flex-center">
+            <div
+              v-if="totalCount == 0"
+              class="w-full min-h-[200px] flex flex-center"
+            >
               <span class="text-textColor-secondary"
                 >Chưa có công việc nào.</span
               >

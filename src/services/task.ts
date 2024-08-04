@@ -44,7 +44,7 @@ export async function updateTask(task: ITask, labels?: string) {
     description: task.description,
     priority: task.priority,
     labels: labels,
-    assignee: task.assignee,
+    assignee: task.assignee?.id,
     startDate: task.startDate,
     dueDate: task.dueDate,
     finishDate: task.finishDate,

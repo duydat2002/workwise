@@ -10,6 +10,7 @@ interface IState {
   showProjectLabel: boolean;
   showTaskLabel: boolean;
   showCreateProject: boolean;
+  statisticTab: "progress" | "performance" | "quantity";
 }
 
 export const useProjectStore = defineStore("project", {
@@ -21,6 +22,7 @@ export const useProjectStore = defineStore("project", {
     showProjectLabel: true,
     showTaskLabel: true,
     showCreateProject: false,
+    statisticTab: "progress",
   }),
   actions: {
     async fetchProjectStore() {

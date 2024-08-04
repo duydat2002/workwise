@@ -92,7 +92,7 @@ const handleClickAttachment = (attachment: IAttachment, index: number) => {
         >Tải tệp hoặc tải lên tại đây</span
       >
       <input
-        v-if="hasPermission"
+        v-if="!task.isArchived && !task.project.isArchived"
         ref="inputAttachmentRef"
         type="file"
         name="attachments"
