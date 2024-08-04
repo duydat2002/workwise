@@ -11,6 +11,7 @@ import { ITask } from "@/types";
 
 const props = defineProps<{
   task: ITask;
+  disabled?: boolean;
 }>();
 
 const { user } = storeToRefs(useUserStore());
@@ -43,6 +44,7 @@ const handleCancelComment = () => {
           class="w-full"
           v-model:value="commentContent"
           name="comment"
+          :disabled="disabled"
           @focus="
             () => {
               showCommentButton = true;

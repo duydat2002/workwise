@@ -7,6 +7,8 @@ export type INotificationAction =
   | "left_project"
   | "was_kicked_project"
   | "request_approval"
+  | "accept_approval"
+  | "reject_approval"
   | "task_assigned";
 
 export interface INotification {

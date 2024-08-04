@@ -153,6 +153,12 @@ export async function getNotifications() {
   );
 }
 
+export async function readAllNotification() {
+  return await api.post<any, IServerData>(
+    prefix + "notifications/" + "read-all"
+  );
+}
+
 export async function readNotification(notificationId: string) {
   return await api.post<any, IServerData>(
     prefix + "notifications/" + notificationId + "/read"

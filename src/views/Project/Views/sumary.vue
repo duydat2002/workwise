@@ -121,7 +121,8 @@ const tasksByAssignee = computed(() => {
     id,
     user: data.user,
     count: data.count,
-    percentage: ((data.count / totalTasks) * 100).toFixed(0),
+    percentage:
+      data.count == 0 ? 0 : ((data.count / totalTasks) * 100).toFixed(0),
   }));
 });
 
@@ -287,42 +288,51 @@ onMounted(async () => {
             >Xem nhanh qua các trạng thái của các công việc.</span
           >
           <div class="flex gap-2 items-center">
-            <div class="w-1/2 r">
-              <div class="p-5">
-                <StatusChart
-                  :statusChartItems
-                  v-model:selected-status="selectedStatus"
-                />
-              </div>
+            <div v-if="true" class="w-full min-h-[200px] flex flex-center">
+              <span class="text-textColor-secondary"
+                >Chưa có công việc nào.</span
+              >
             </div>
-            <div class="w-1/2">
-              <div class="flex flex-col gap-2">
-                <div
-                  v-for="(status, i) in statusChartItems"
-                  :key="i"
-                  @click="clickStatusItem(i)"
-                  class="flex p-1 rounded hover:bg-primary-extraLight active:bg-primary-extraLight cursor-pointer"
-                >
+            <template v-else>
+              <div class="w-1/2 r">
+                <div class="p-5">
+                  <StatusChart
+                    :statusChartItems
+                    v-model:selected-status="selectedStatus"
+                  />
+                </div>
+              </div>
+              <div class="w-1/2">
+                <div class="flex flex-col gap-2">
                   <div
-                    class="w-5 h-5 rounded"
-                    :style="{ background: status.color }"
-                  ></div>
-                  <span
-                    class="mx-2 flex-1 text-textColor-primary font-medium"
-                    >{{ status.label }}</span
+                    v-for="(status, i) in statusChartItems"
+                    :key="i"
+                    @click="clickStatusItem(i)"
+                    class="flex p-1 rounded hover:bg-primary-extraLight active:bg-primary-extraLight cursor-pointer"
                   >
-                  <span class="text-primary font-medium">{{
-                    status.count
-                  }}</span>
-                </div>
-                <div class="flex p-1">
-                  <span class="flex-1 text-textColor-primary font-medium"
-                    >Tổng</span
-                  >
-                  <span class="text-primary font-medium">{{ totalCount }}</span>
+                    <div
+                      class="w-5 h-5 rounded"
+                      :style="{ background: status.color }"
+                    ></div>
+                    <span
+                      class="mx-2 flex-1 text-textColor-primary font-medium"
+                      >{{ status.label }}</span
+                    >
+                    <span class="text-primary font-medium">{{
+                      status.count
+                    }}</span>
+                  </div>
+                  <div class="flex p-1">
+                    <span class="flex-1 text-textColor-primary font-medium"
+                      >Tổng</span
+                    >
+                    <span class="text-primary font-medium">{{
+                      totalCount
+                    }}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            </template>
           </div>
         </div>
         <div class="w-1/2 group p-5 flex flex-col shadow rounded-lg">

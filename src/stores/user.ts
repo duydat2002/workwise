@@ -48,6 +48,9 @@ export const useUserStore = defineStore("user", {
         Object.assign(notificationObj, notification);
       }
     },
+    readAllNotifications() {
+      this.notifications.forEach((n) => n.readBy.push(this.user?.id ?? "0"));
+    },
   },
   persist: true,
 });

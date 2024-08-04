@@ -25,7 +25,10 @@ const approvalEdit = ref<IApproval>();
 const isLoadingApprovals = ref(true);
 
 const showCreateApproval = computed(() => {
+  console.log(task.value);
   return (
+    !task.value?.project.isArchived &&
+    !task.value?.isArchived &&
     task.value?.status != "completed" &&
     approvals.value &&
     !approvals.value.some((a) => a.status == "pending")
@@ -100,7 +103,9 @@ onMounted(async () => {
               hover
               :disabled="showCreateApproval && task?.status != 'completed'"
               :content="
-                task?.status == 'completed'
+                task?.project.isArchived || task?.isArchived
+                  ? 'Công việc đang được lưu trữ'
+                  : task?.status == 'completed'
                   ? 'Công việc đã hoàn thành không thể phê duyệt'
                   : 'Phê duyệt trước đó phải được phê duyệt'
               "

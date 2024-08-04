@@ -47,7 +47,8 @@ export const useProjectStore = defineStore("project", {
     },
 
     addProjectStore(project: IProject) {
-      this.projects.push(project);
+      if (this.projects.some((p) => p.id != project.id))
+        this.projects.push(project);
     },
     updateProjectStore(project: IProject) {
       let projectObj = this.projects.find((p) => p.id == project.id);

@@ -2,17 +2,28 @@
 import Avatar from "@/components/Common/Avatar.vue";
 import UButton from "@/components/UI/UButton.vue";
 import { formatDate } from "@/helpers";
-import { acceptInviteProject, unacceptInviteProject } from "@/services/user";
+import {
+  acceptInviteProject,
+  readNotification,
+  unacceptInviteProject,
+  unreadNotification,
+} from "@/services/user";
 import { useUserStore } from "@/stores";
-import { INotification } from "@/types";
+import { INotification, IProject, ITask } from "@/types";
+import { cloneDeep } from "lodash";
 import { storeToRefs } from "pinia";
 import { computed } from "vue";
+import { useRouter } from "vue-router";
 import Popper from "vue3-popper";
+import { toast } from "vue3-toastify";
 
 const props = defineProps<{
   notification: INotification;
 }>();
 
+const router = useRouter();
+
+const { updateNotification } = useUserStore();
 const { user } = storeToRefs(useUserStore());
 
 const isRead = computed(() =>
@@ -26,11 +37,41 @@ const isShowButtons = computed(() => {
   );
 });
 
+const projectRender = (project: IProject) => {
+  return `<a class='link' href='/projects/${project.id}'>${project.name}</a>`;
+};
+
+const taskRender = (project: IProject, task: ITask) => {
+  return `<a class='link' href='/projects/${project.id}?taskSelected=${task.id}'>${task.name}</a>`;
+};
+
 const content = computed(() => {
-  const project = props.notification.datas.project;
+  const project =
+    props.notification.datas.project ?? props.notification.project;
+  const task = props.notification.datas.task;
+  const approval = props.notification.datas.approval;
   switch (props.notification.action) {
     case "invite_to_project":
-      return `Đã mời bạn tham gia vào dự án <a href='/projects/${project._id}'>${project.name}</a>.`;
+      return `Đã mời bạn tham gia vào dự án ${projectRender(project)}.`;
+    case "accept_join_project":
+      return `Đã tham gia vào dự án ${projectRender(project)}.`;
+    case "unaccept_join_project":
+      return `Đã từ chối tham gia vào dự án ${projectRender(project)}.`;
+    case "left_project":
+      return `Đã rời khỏi dự án ${projectRender(project)}.`;
+    case "was_kicked_project":
+      return `Đã xóa bạn khỏi vào dự án ${projectRender(project)}.`;
+    case "request_approval":
+      return `Đã gửi yêu cầu phê duyệt công việc ${taskRender(
+        project,
+        task
+      )} trong dự án ${projectRender(project)}.`;
+    case "accept_approval":
+      return `Đã mời bạn tham gia vào dự án ${projectRender(project)}.`;
+    case "reject_approval":
+      return `Đã mời bạn tham gia vào dự án ${projectRender(project)}.`;
+    case "task_assigned":
+      return `Đã mời bạn tham gia vào dự án ${projectRender(project)}.`;
     default:
       return props.notification.action;
       break;
@@ -68,6 +109,37 @@ const handleDeny = async () => {
       break;
   }
 };
+
+const handleReadNoti = async () => {
+  let data;
+  if (isRead.value) {
+    data = await unreadNotification(props.notification.id);
+  } else {
+    data = await readNotification(props.notification.id);
+  }
+
+  if (data.success) {
+    const noti = cloneDeep(props.notification);
+    if (isRead.value)
+      noti.readBy = noti.readBy.filter((r) => r != user.value!.id);
+    else noti.readBy.push(user.value!.id);
+    updateNotification(noti);
+  } else {
+    toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
+  }
+};
+
+const openProject = () => {
+  router.push({
+    name: "Project",
+    params: {
+      projectId:
+        props.notification.datas.project.id ??
+        props.notification?.project?.id ??
+        0,
+    },
+  });
+};
 </script>
 
 <template>
@@ -78,7 +150,10 @@ const handleDeny = async () => {
   >
     <div class="px-2 py-2 flex flex-col bg-bgColor-primary rounded-md shadow">
       <div class="flex items-center pb-2 border-b border-borderColor">
-        <div class="flex-1 flex items-center">
+        <div
+          class="flex-1 flex items-center cursor-pointer"
+          @click="openProject"
+        >
           <div
             class="w-8 h-6 bg-cover bg-center aspect-video mr-2"
             :style="{
@@ -102,6 +177,7 @@ const handleDeny = async () => {
         >
           <div
             class="w-6 h-6 flex flex-center rounded hover:bg-primary-extraLight active:bg-primary-extraLight cursor-pointer"
+            @click="handleReadNoti"
           >
             <div
               class="w-4 h-4 rounded-full border"
@@ -146,11 +222,15 @@ const handleDeny = async () => {
 </template>
 
 <style scoped>
-:deep(a) {
+:deep(.bold) {
+  font-weight: 700;
+}
+
+:deep(.link) {
   color: var(--link-color);
 }
 
-:deep(a:hover) {
+:deep(.link:hover) {
   text-decoration: underline;
 }
 </style>

@@ -5,7 +5,10 @@ import NotificationItem from "@/components/Pages/Notification/NotificationItem.v
 import { storeToRefs } from "pinia";
 import { useUserStore } from "@/stores";
 import { computed, ref } from "vue";
+import { readAllNotification } from "@/services/user";
+import { toast } from "vue3-toastify";
 
+const { readAllNotifications } = useUserStore();
 const { user, notifications } = storeToRefs(useUserStore());
 const showOnlyUnread = ref(false);
 
@@ -18,6 +21,20 @@ const notificationsComp = computed(() => {
     return notifications.value;
   }
 });
+
+const showReadAll = computed(() => {
+  return notifications.value.some((n) => !n.readBy.includes(user.value!.id));
+});
+
+const handleReadAll = async () => {
+  const data = await readAllNotification();
+
+  if (data.success) {
+    readAllNotifications();
+  } else {
+    toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
+  }
+};
 </script>
 
 <template>
@@ -39,6 +56,13 @@ const notificationsComp = computed(() => {
         </div>
       </div>
       <div class="flex-1 h-full max-h-[450px] my-3 overflow-y-auto scroll-vert">
+        <div v-if="showReadAll" class="flex justify-end mb-2 px-4">
+          <span
+            class="text-xs text-textColor-secondary hover:text-primary hover:underline cursor-pointer"
+            @click="handleReadAll"
+            >Đánh dấu tất cả đã đọc</span
+          >
+        </div>
         <NotificationItem
           v-if="notificationsComp.length > 0"
           v-for="noti in notificationsComp"

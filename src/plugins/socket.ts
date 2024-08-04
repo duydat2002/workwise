@@ -102,6 +102,11 @@ export function initializeSocket(pinia: Pinia) {
     console.log("notification:updated");
     userStore.updateNotification(notification);
   });
+
+  socket.on("notification:read-all", () => {
+    console.log("notification:read-all");
+    userStore.readAllNotifications();
+  });
 }
 
 export { socket };

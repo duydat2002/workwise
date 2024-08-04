@@ -165,6 +165,7 @@ const handleDeleteProject = async () => {
 
   if (data.success) {
     showProjectOption.value = false;
+    showDeleteConfirm.value = false;
     router.push({ name: "Projects" });
     deleteProjectStore(project.value!.id);
   }

@@ -326,7 +326,17 @@ watch(
         </div>
         <template v-else-if="taskTemp && task && project">
           <div
-            v-if="task.isArchived"
+            v-if="project.isArchived"
+            class="px-3 py-2 flex flex-center bg-primary-extraLight rounded-tl-lg rounded-tr-lg"
+          >
+            <InfoIcon class="w-5 fill-primary-light" />
+            <span class="mx-2"
+              >Dự án này đã được lưu trữ. Khôi phục dự án để thực hiện thay
+              đổi.</span
+            >
+          </div>
+          <div
+            v-else-if="task.isArchived"
             class="px-3 py-2 flex flex-center bg-primary-extraLight rounded-tl-lg rounded-tr-lg"
           >
             <InfoIcon class="w-5 fill-primary-light" />
@@ -346,6 +356,7 @@ watch(
               >
             </template>
           </div>
+
           <div class="px-4 mt-3 flex items-center justify-between">
             <div class="flex flex-center">
               <div
@@ -595,7 +606,11 @@ watch(
                   </div>
                 </div>
                 <div class="flex-1 mt-3">
-                  <TaskComments v-if="showSelected == 'comments'" :task />
+                  <TaskComments
+                    v-if="showSelected == 'comments'"
+                    :task
+                    :disabled="!hasPermission"
+                  />
                   <TaskActivities v-else :task :sortNewest />
                 </div>
               </div>

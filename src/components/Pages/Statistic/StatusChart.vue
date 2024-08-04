@@ -74,9 +74,10 @@ const updateCenterText = (chart: ChartJS<"doughnut">) => {
   ctx.fillStyle = selected.value.textColor ?? selected.value.color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const percentage = ((selected.value.count / totalCount.value) * 100).toFixed(
-    0
-  );
+  const percentage =
+    selected.value.count == 0
+      ? 0
+      : ((selected.value.count / totalCount.value) * 100).toFixed(0);
   ctx.fillText(`${percentage}%`, width / 2, height / 2 - 10);
 
   ctx.font = "16px Segoe UI";
