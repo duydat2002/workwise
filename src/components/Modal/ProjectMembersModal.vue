@@ -16,6 +16,7 @@ import { findUsersByNameOrEmail } from "@/services/user";
 import { inviteProjectMember } from "@/services/project";
 import { cloneDeep } from "lodash";
 import { toast } from "vue3-toastify";
+import { isTaggedTemplateExpression } from "typescript";
 
 const emit = defineEmits(["close"]);
 
@@ -25,14 +26,20 @@ const { project } = storeToRefs(useProjectStore());
 const search = ref("");
 const userInvites = ref<IOption[]>([]);
 const userSearchs = ref<IOption[]>([]);
-const roleSelected = ref<"admin" | "member">("member");
-const roleOptions = ref<IOption[]>([
-  { key: "admin", value: "Quản lý" },
-  { key: "member", value: "Thành viên" },
-]);
+// const roleSelected = ref<"admin" | "member">("member");
+// const roleOptions = ref<IOption[]>([
+//   { key: "admin", value: "Quản lý" },
+//   { key: "member", value: "Thành viên" },
+// ]);
 const tabMembers = ref<"accepted" | "pending">("accepted");
 const isLoadingSearch = ref(false);
 const isLoadingInvite = ref(false);
+
+const isAdmin = computed(() =>
+  project.value!.members.some(
+    (m) => m.user.id == user.value!.id && m.role == "admin"
+  )
+);
 
 const hasOneAdmin = computed(() => {
   const membersTemp = cloneDeep(project.value?.members) ?? [];
@@ -98,7 +105,7 @@ const handleInvite = async () => {
     const data = await inviteProjectMember(
       project.value!.id,
       members,
-      roleSelected.value
+      "member"
     );
 
     if (data.success) {
@@ -162,7 +169,7 @@ watch(search, async () => {
       >
         <div class="px-4 flex items-center justify-between">
           <span class="text-lg font-semibold text-textColor-primary"
-            >Chia sẻ dự án</span
+            >Thành viên dự án</span
           >
           <div
             class="group flex flex-center w-8 h-8 cursor-pointer"
@@ -174,7 +181,7 @@ watch(search, async () => {
           </div>
         </div>
         <div class="px-4 mt-3">
-          <div class="flex not-lastchild:mr-2">
+          <div v-if="isAdmin" class="flex not-lastchild:mr-2 mb-2">
             <div class="relative flex-1">
               <UTagInput
                 v-model:search="search"
@@ -222,13 +229,13 @@ watch(search, async () => {
                 </template>
               </UTagInput>
             </div>
-            <div class="">
+            <!-- <div class="">
               <USelect
                 class=""
                 v-model:selected="roleSelected"
                 :options="roleOptions"
               />
-            </div>
+            </div> -->
             <div class="">
               <UButton
                 class="flex-shrink-0"
@@ -240,8 +247,13 @@ watch(search, async () => {
               >
             </div>
           </div>
+          <div v-if="isAdmin" class="p-2 mb-2 bg-yellow-100">
+            <span class="text-xs text-textColor-secondary"
+              >Trong một dự án chỉ có duy nhất một quản lý.</span
+            >
+          </div>
           <div
-            class="border-b-2 border-borderColor flex not-lastchild:mr-4 mt-2"
+            class="border-b-2 border-borderColor flex not-lastchild:mr-4 mb-2"
           >
             <div class="-mb-[2px] flex items-center not-lastchild:mr-2">
               <div

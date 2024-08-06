@@ -59,31 +59,6 @@ const routes: Readonly<RouteRecordRaw[]> = [
         component: () => import("@/views/Project/Views/list.vue"),
       },
       {
-        path: "calendar",
-        name: "Calendar",
-        component: () => import("@/views/Project/Views/calendar.vue"),
-      },
-      {
-        path: "timeline",
-        name: "Timeline",
-        component: () => import("@/views/Project/Views/timeline.vue"),
-      },
-      {
-        path: "approvals",
-        name: "Approvals",
-        component: () => import("@/views/Project/Views/approvals.vue"),
-      },
-      {
-        path: "attachments",
-        name: "Attachments",
-        component: () => import("@/views/Project/Views/attachments.vue"),
-      },
-      {
-        path: "activities",
-        name: "Activities",
-        component: () => import("@/views/Project/Views/activities.vue"),
-      },
-      {
         path: "statistics",
         name: "Statistics",
         component: () => import("@/views/Project/Views/statistics.vue"),

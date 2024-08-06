@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ExitIcon from "@icons/exit.svg";
+import AdminUserIcon from "@icons/user-gear.svg";
 import USelect from "@/components/UI/USelect.vue";
 import Avatar from "@/components/Common/Avatar.vue";
 import { useProjectStore, useUserStore } from "@/stores";
@@ -7,6 +8,7 @@ import { IMember } from "@/types";
 import { storeToRefs } from "pinia";
 import { computed, ref } from "vue";
 import {
+  changeProjectAdmin,
   changeProjectMemberRole,
   deleteProjectMember,
 } from "@/services/project";
@@ -14,6 +16,7 @@ import { leaveProject } from "@/services/user";
 import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
 import Popper from "vue3-popper";
 import { toast } from "vue3-toastify";
+import UButton from "@/components/UI/UButton.vue";
 
 const props = defineProps<{
   hasOneAdmin: boolean;
@@ -26,7 +29,9 @@ const { user } = storeToRefs(useUserStore());
 const { project } = storeToRefs(useProjectStore());
 
 const isLoadingLeave = ref(false);
+const isLoadingChangeAdmin = ref(false);
 const showLeaveConfirm = ref(false);
+const showAdminConfirm = ref(false);
 
 const roleOptions = computed(() => {
   if (isUser.value && hasAtLeastOneAdmin.value) {
@@ -90,6 +95,24 @@ const handleChangeRole = async () => {
   );
 };
 
+const handleChangeAdmin = async () => {
+  isLoadingChangeAdmin.value = true;
+  const data = await changeProjectAdmin(
+    project.value!.id,
+    props.member.user.id
+  );
+
+  if (data.success) {
+    toast.success(
+      `Bạn đã chuyển giao quyền quản lý cho ${props.member.user.fullname}`
+    );
+  } else {
+    toast.error("Đã có lỗi xảy ra! Vui lòng thử lại sau.");
+  }
+  showAdminConfirm.value = false;
+  isLoadingChangeAdmin.value = false;
+};
+
 const handleLeftProject = async () => {
   isLoadingLeave.value = true;
   let data;
@@ -115,7 +138,17 @@ const handleLeftProject = async () => {
 
 <template>
   <div class="flex items-center flex-1 mr-2">
-    <Avatar class="w-8" :avatarUrl="member.user.avatar" />
+    <Popper hover :content="member.role == 'admin' ? 'Quản lý' : 'Thành viên'">
+      <div class="relative">
+        <Avatar class="w-8" :avatarUrl="member.user.avatar" />
+        <div
+          v-if="member.role == 'admin'"
+          class="absolute w-4 h-4 flex flex-center bg-white rounded-full -bottom-[2px] -right-[2px]"
+        >
+          <AdminUserIcon class="w-3 fill-black" />
+        </div>
+      </div>
+    </Popper>
     <div class="ml-2 flex flex-col">
       <span class="text-sm text-textColor-primary font-medium"
         >{{ member.user.fullname }}
@@ -125,34 +158,47 @@ const handleLeftProject = async () => {
             : isWaitForAccept
             ? " (chờ chấp nhận)"
             : ""
-        }}</span
+        }}{{ member.role == "admin" ? " - Quản lý" : "" }}</span
       >
       <span class="text-sm text-textColor-secondary">{{
         member.user.email
       }}</span>
     </div>
   </div>
-  <div class="flex-shrink-0 mr-2">
-    <USelect
+  <div
+    v-if="isAdmin && member.role != 'admin' && member.status == 'accepted'"
+    class="flex-shrink-0 mr-2"
+  >
+    <!-- <USelect
       class="min-h-8"
       v-model:selected="member.role"
       :options="roleOptions"
       :isDisabled="!isAdmin"
       @change="handleChangeRole"
-    />
+    /> -->
+    <UButton
+      variantType="secondary"
+      @click="
+        () => {
+          showAdminConfirm = true;
+        }
+      "
+      ><span class="">Chuyển quản lý</span></UButton
+    >
   </div>
-  <div
-    v-if="showLeave"
-    class="flex flex-center w-8 h-8 bg-bgColor-secondary rounded-md hover:bg-hover cursor-pointer"
-    :title="isUser ? 'Rời khỏi dự án' : 'Xóa khỏi dự án'"
-    @click="
-      () => {
-        showLeaveConfirm = true;
-      }
-    "
-  >
-    <ExitIcon class="w-4 fill-textColor-primary" />
-  </div>
+  <Popper hover :content="isUser ? 'Rời khỏi dự án' : 'Xóa khỏi dự án'">
+    <div
+      v-if="showLeave"
+      class="flex flex-center w-8 h-8 bg-bgColor-secondary rounded-md hover:bg-hover cursor-pointer"
+      @click="
+        () => {
+          showLeaveConfirm = true;
+        }
+      "
+    >
+      <ExitIcon class="w-4 fill-textColor-primary" />
+    </div>
+  </Popper>
   <ConfirmPopup
     v-if="showLeaveConfirm"
     id="confirm_leave_project"
@@ -164,6 +210,20 @@ const handleLeftProject = async () => {
     @cancel="
       () => {
         showLeaveConfirm = false;
+      }
+    "
+  ></ConfirmPopup>
+  <ConfirmPopup
+    v-if="showAdminConfirm"
+    id="confirm_change_admin"
+    confirmMessage="Chuyển giao"
+    title="Chuyển giao quản lý"
+    :desc="`Bạn sẽ chuyển giao quyền quản lý cho ${member.user.fullname} và bạn sẽ trở thành thành viên.`"
+    :isLoadingConfirm="isLoadingChangeAdmin"
+    @confirm="handleChangeAdmin"
+    @cancel="
+      () => {
+        showAdminConfirm = false;
       }
     "
   ></ConfirmPopup>

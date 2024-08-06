@@ -119,6 +119,15 @@ export async function changeProjectMemberRole(
   );
 }
 
+export async function changeProjectAdmin(projectId: string, member: string) {
+  return await api.patch<any, IServerData>(
+    prefix + projectId + "/change-admin",
+    {
+      member,
+    }
+  );
+}
+
 export async function deleteProjectMember(projectId: string, member: string) {
   return await api.post<any, IServerData>(
     prefix + projectId + "/delete-member",

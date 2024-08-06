@@ -8,10 +8,6 @@ import OwnerIcon from "@icons/group-users.svg";
 import KanbanIcon from "@icons/kanban.svg";
 import DashboardIcon from "@icons/dashboard.svg";
 import ListIcon from "@icons/list.svg";
-import CalendarIcon from "@icons/calendar.svg";
-import TimelineIcon from "@icons/timeline.svg";
-import ApprovedIcon from "@icons/approved.svg";
-import AttachIcon from "@icons/attach.svg";
 import ActivityIcon from "@icons/history.svg";
 import InboxIcon from "@icons/inbox.svg";
 import ChartIcon from "@icons/pie-chart.svg";
@@ -20,6 +16,7 @@ import WaitIcon from "@icons/wait.svg";
 import InfoIcon from "@icons/info-circle.svg";
 import AddUserIcon from "@icons/add-user.svg";
 import AdminUserIcon from "@icons/user-gear.svg";
+import AdminFillIcon from "@icons/user-gear-fill.svg";
 import ArchiveIcon from "@icons/archive.svg";
 import UnarchiveIcon from "@icons/unarchive.svg";
 import DeleteIcon from "@icons/delete.svg";
@@ -64,10 +61,6 @@ const tabs = shallowRef([
   { name: "Tổng quan", link: "Sumary", icon: DashboardIcon },
   { name: "Bảng", link: "Kanban", icon: KanbanIcon },
   { name: "Danh sách", link: "List", icon: ListIcon },
-  // { name: "Lịch", link: "Calendar", icon: CalendarIcon },
-  // { name: "Lịch trình", link: "Timeline", icon: TimelineIcon },
-  // { name: "Phê duyệt", link: "Approvals", icon: ApprovedIcon },
-  // { name: "Tài liệu", link: "Attachments", icon: AttachIcon },
   { name: "Báo cáo", link: "Statistics", icon: ChartIcon },
 ]);
 const sidebarRightTabs = ref<"activities" | "archives">();
@@ -108,6 +101,10 @@ const process = computed(() => {
     value: processCount,
     detail: `Công việc đã hoàn thành/ tổng số công việc: ${taskDone.length}/${tasks.length}`,
   };
+});
+
+const adminUser = computed(() => {
+  return project.value?.members.find((m) => m.role == "admin")?.user!;
 });
 
 const members = computed(() => {
@@ -304,15 +301,15 @@ onBeforeRouteUpdate(async (to, from) => {
                   <Avatar :avatarUrl="member.user.avatar" class="w-8" />
                   <div
                     v-if="member.status == 'pending'"
-                    class="absolute flex flex-center bg-white rounded-full -bottom-[2px] -right-[2px]"
+                    class="absolute w-4 h-4 flex flex-center bg-white rounded-full -bottom-[2px] -right-[2px]"
                   >
                     <WaitIcon class="w-4 fill-error" />
                   </div>
                   <div
                     v-else-if="member.role == 'admin'"
-                    class="absolute flex flex-center bg-white rounded-full -bottom-[2px] -right-[2px]"
+                    class="absolute w-4 h-4 flex flex-center bg-white rounded-full -bottom-[2px] -right-[2px]"
                   >
-                    <AdminUserIcon class="w-4 fill-black" />
+                    <AdminUserIcon class="w-3 fill-black" />
                   </div>
                 </div>
               </div>
@@ -548,7 +545,7 @@ onBeforeRouteUpdate(async (to, from) => {
                   formatDate(project.createdAt, "dd/MM/yyyy, HH:mm")
                 }}</span>
               </div>
-              <div class="flex items-center py-1">
+              <!-- <div class="flex items-center py-1">
                 <OwnerIcon class="w-4 fill-textColor-secondary mr-2" />
                 <span
                   class="w-[100px] text-sm font-semibold text-textColor-secondary"
@@ -560,6 +557,21 @@ onBeforeRouteUpdate(async (to, from) => {
                   </div>
                   <span class="text-sm text-textColor-primary">{{
                     project.createdBy.fullname
+                  }}</span>
+                </div>
+              </div> -->
+              <div class="flex items-center py-1">
+                <AdminFillIcon class="w-4 fill-textColor-secondary mr-2" />
+                <span
+                  class="w-[100px] text-sm font-semibold text-textColor-secondary"
+                  >Quản lý</span
+                >
+                <div class="flex items-center">
+                  <div class="w-6 mr-2">
+                    <Avatar :avatarUrl="adminUser.avatar" />
+                  </div>
+                  <span class="text-sm text-textColor-primary">{{
+                    adminUser.fullname
                   }}</span>
                 </div>
               </div>
@@ -588,17 +600,19 @@ onBeforeRouteUpdate(async (to, from) => {
               </div>
             </div>
             <div class="flex-1 flex flex-col">
-              <span class="text-sm font-semibold text-textColor-secondary"
-                >Mô tả</span
-              >
-              <span
-                v-if="project.description"
-                class="text-sm text-textColor-primary line-clamp-3"
-                >{{ project.description }}</span
-              >
-              <span v-else class="text-sm text-textColor-secondary"
-                >Chưa có mô tả.</span
-              >
+              <div class="flex flex-col">
+                <span class="text-sm font-semibold text-textColor-secondary"
+                  >Mô tả</span
+                >
+                <span
+                  v-if="project.description"
+                  class="text-sm text-textColor-primary line-clamp-3"
+                  >{{ project.description }}</span
+                >
+                <span v-else class="text-sm text-textColor-secondary"
+                  >Chưa có mô tả.</span
+                >
+              </div>
             </div>
           </div>
         </div>
