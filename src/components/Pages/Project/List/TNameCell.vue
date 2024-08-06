@@ -54,6 +54,7 @@ const handleClickName = () => {
       </div>
     </div>
     <div
+      v-if="(params as any).hasPermission"
       class="w-6 h-6 rounded-full bg-bgColor-primary flex flex-center hover:bg-hover shadow-item cursor-pointer"
       @click="openEdit"
     >

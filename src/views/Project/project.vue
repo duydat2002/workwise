@@ -4,7 +4,7 @@ import EditIcon from "@icons/edit.svg";
 import MoreIcon from "@icons/more.svg";
 import ClockIcon from "@icons/clock.svg";
 import TagsIcon from "@icons/tag.svg";
-import OwnerIcon from "@icons/group-users.svg";
+import CheckIcon from "@icons/check.svg";
 import KanbanIcon from "@icons/kanban.svg";
 import DashboardIcon from "@icons/dashboard.svg";
 import ListIcon from "@icons/list.svg";
@@ -36,8 +36,10 @@ import ActivitiesSidebar from "@/components/Pages/Activities/ActivitiesSidebar.v
 import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
 import {
   archiveProject,
+  completeProject,
   deleteProject,
   unarchiveProject,
+  uncompleteProject,
 } from "@/services/project";
 import { toast } from "vue3-toastify";
 import TaskDetail from "@/components/Pages/Task/TaskDetail.vue";
@@ -67,6 +69,7 @@ const sidebarRightTabs = ref<"activities" | "archives">();
 const showProjectMemberModal = ref(false);
 const showUpdateProject = ref(false);
 const showProjectOption = ref(false);
+const showCompleteProject = ref(false);
 const showArchiveConfirm = ref(false);
 const showDeleteConfirm = ref(false);
 
@@ -80,6 +83,7 @@ const hasPermission = computed(() => {
   return (
     project.value &&
     !project.value.isArchived &&
+    !project.value.finishDate &&
     project.value.members.some(
       (m) => m.role == "admin" && m.user.id == user.value?.id
     )
@@ -149,6 +153,32 @@ const handleUnarchiveProject = async () => {
 
   if (data.success) {
     toast.success("Khôi phục dự án thành công!");
+    showProjectOption.value = false;
+  }
+
+  isLoadingAction.value = false;
+};
+
+const handleCompleteProject = async () => {
+  isLoadingAction.value = true;
+  const data = await completeProject(project.value!.id);
+
+  if (data.success) {
+    toast.success("Dự án đã hoàn thành.");
+    showCompleteProject.value = false;
+    showProjectOption.value = false;
+  }
+
+  isLoadingAction.value = false;
+};
+
+const handleUncompleteProject = async () => {
+  isLoadingAction.value = true;
+  const data = await uncompleteProject(project.value!.id);
+
+  if (data.success) {
+    toast.success("Dự án đã được mở lại. Hãy tiếp tục thực hiện dự án.");
+    showCompleteProject.value = false;
     showProjectOption.value = false;
   }
 
@@ -276,6 +306,29 @@ onBeforeRouteUpdate(async (to, from) => {
           >
         </template>
       </div>
+      <div
+        v-else-if="project.finishDate"
+        class="px-3 py-2 flex flex-center bg-green-200"
+      >
+        <span class="font-semibold text-textColor-subtitle mx-2"
+          >Dự án đã được hoàn thành vào
+          {{ formatDate(project.finishDate) }}.</span
+        >
+        <template v-if="isAdmin">
+          <template v-if="!isLoadingAction">
+            <Popper hover content="Mở lại dự án để tiếp tục thực hiện dự án">
+              <span
+                class="text-link hover:underline active:underline cursor-pointer"
+                @click="handleUncompleteProject"
+                >Mở lại dự án</span
+              >
+            </Popper>
+          </template>
+          <span v-else class="text-textColor-secondary"
+            >Đang mở lại dự án...</span
+          >
+        </template>
+      </div>
       <div class="relative group/desc mb-3">
         <div class="px-5 py-2 flex flex-wrap items-center justify-between">
           <span
@@ -366,6 +419,22 @@ onBeforeRouteUpdate(async (to, from) => {
               >
                 <div class="flex flex-col">
                   <div
+                    v-if="!project.finishDate && !project.isArchived"
+                    class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
+                    @click="
+                      () => {
+                        showCompleteProject = true;
+                      }
+                    "
+                  >
+                    <div class="mr-2 w-4 h-4 flex flex-center">
+                      <CheckIcon class="w-3 fill-green-500" />
+                    </div>
+                    <span class="text-sm text-green-500"
+                      >Đánh dấu đã hoàn thành dự án</span
+                    >
+                  </div>
+                  <div
                     class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
                     @click="
                       () => {
@@ -453,9 +522,9 @@ onBeforeRouteUpdate(async (to, from) => {
                       Xem các dự án đã lưu trữ ở trang
                     </span>
                     <RouterLink
-                      :to="{ name: 'Projects' }"
+                      :to="{ name: 'ProjectsArchived' }"
                       class="text-link underline"
-                      >Các dự án của bạn</RouterLink
+                      >Các dự án đã lưu trữ của bạn</RouterLink
                     >
                   </div>
                 </ConfirmPopup>
@@ -729,4 +798,21 @@ onBeforeRouteUpdate(async (to, from) => {
     </div>
   </div>
   <TaskDetail v-if="route.query.taskSelected" />
+  <ConfirmPopup
+    v-if="showCompleteProject"
+    id="confirm_complete_project"
+    title="Hoàn thành dự án?"
+    desc="Bạn có chắc chắn hoàn thành dự án?"
+    confirmMessage="Hoàn thành"
+    confirmType="success"
+    :isLoadingConfirm="isLoadingAction"
+    @confirm="handleCompleteProject"
+    @cancel="
+      () => {
+        showCompleteProject = false;
+        showProjectOption = false;
+      }
+    "
+  >
+  </ConfirmPopup>
 </template>

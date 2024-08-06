@@ -21,8 +21,9 @@ export interface IProject {
   members: IMember[];
   createdTaskLabels: ILabel[];
   isArchived: boolean;
-  startDate?: string;
-  dueDate?: string;
+  startDate: string;
+  dueDate: string;
+  finishDate?: string;
   taskGroups: ITaskGroup[];
   createdAt: string;
   updatedAt: string;

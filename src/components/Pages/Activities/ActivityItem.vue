@@ -91,6 +91,12 @@ onMounted(() => {
     case "unarchive_project":
       content.value = `đã khôi phục dự án này.`;
       break;
+    case "complete_project":
+      content.value = `đã hoàn thành dự án này.`;
+      break;
+    case "reopen_project":
+      content.value = `đã mở lại dự án này.`;
+      break;
     case "member_join_project":
       content.value = `đã tham gia vào dự án này.`;
       break;

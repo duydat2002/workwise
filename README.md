@@ -7,9 +7,9 @@ Learn more about the recommended Project Setup and IDE Support in the [Vue Docs 
 # Note
 
 - Dự án:
-  - Chỉ có một quản lý
-  - Bắt buộc có ngày bắt đầu - ngày kết thúc
-  - Thêm ngày hoàn thành
+  - Chỉ có một quản lý - Done
+  - Bắt buộc có ngày bắt đầu - ngày kết thúc - Done
+  - Thêm ngày hoàn thành - Done
   - Thêm cài đặt
     - Thông báo tiến độ dự án trước n ngày kết thúc (Khi chưa hoàn thành)
     - Thông báo tiến độ công việc trươc n ngày kết thúc (Khi chưa hoàn thành)

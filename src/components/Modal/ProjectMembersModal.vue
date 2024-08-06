@@ -60,6 +60,7 @@ const hasPermission = computed(() => {
   return (
     project.value &&
     !project.value.isArchived &&
+    !project.value.finishDate &&
     project.value.members.some(
       (m) => m.role == "admin" && m.user.id == user.value?.id
     )

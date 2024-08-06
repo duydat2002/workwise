@@ -23,17 +23,18 @@ import {
   GridOptions,
   CellValueChangedEvent,
 } from "ag-grid-community";
-import { ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { IProject, ITask } from "@/types";
 import { ColDef } from "ag-grid-community";
 import { formatDate } from "@/helpers";
 import { storeToRefs } from "pinia";
-import { useProjectStore } from "@/stores";
+import { useProjectStore, useUserStore } from "@/stores";
 import { cloneDeep } from "lodash";
 import Fillters from "@/components/Pages/Project/Filters.vue";
 import TaskNotFound from "@/components/Pages/Task/TaskNotFound.vue";
 import { VueDraggable } from "vue-draggable-plus";
 import { changeStatusTask, updateTask } from "@/services/task";
+import { onMounted } from "vue";
 
 const dateComparator = (
   valueA: any,
@@ -52,8 +53,22 @@ const dateComparator = (
   return dateB - dateA;
 };
 
-const defaultColDef = {
-  editable: true,
+const { user } = storeToRefs(useUserStore());
+const { project } = storeToRefs(useProjectStore());
+
+const hasPermission = computed(() => {
+  return !!(
+    project.value &&
+    !project.value.isArchived &&
+    !project.value.finishDate &&
+    project.value.members.some(
+      (m) => m.role == "admin" && m.user.id == user.value?.id
+    )
+  );
+});
+
+const defaultColDef = ref<ColDef>({
+  editable: (params) => hasPermission.value,
   sortable: true,
   resizable: true,
   suppressAutoSize: false,
@@ -61,9 +76,9 @@ const defaultColDef = {
   enableCellChangeFlash: true,
   suppressHeaderMenuButton: false,
   hide: false,
-};
+});
 
-const defaultColDefs: ColDef[] = [
+const defaultColDefs = ref<ColDef[]>([
   {
     headerName: "Tên công việc",
     field: "name",
@@ -71,6 +86,7 @@ const defaultColDefs: ColDef[] = [
     cellRenderer: TNameCell,
     cellRendererParams: {
       hasLine: true,
+      hasPermission: hasPermission.value,
     },
     cellEditor: TNameEditCell,
     cellEditorParams: {
@@ -182,11 +198,9 @@ const defaultColDefs: ColDef[] = [
     },
     cellEditorPopup: true,
   },
-];
+]);
 
 const priorityOrder = ["none", "low", "medium", "high"];
-
-const { project } = storeToRefs(useProjectStore());
 
 const gridOptions = ref<GridOptions>({
   suppressRowHoverHighlight: true,
@@ -197,14 +211,14 @@ const showDisplaySetting = ref(false);
 const projectTemp = ref<IProject | null>(cloneDeep(project.value));
 const gridApi = ref<GridApi | null>(null);
 const rowData = ref<ITask[]>([]);
-const colDefs = ref<ColDef[]>(cloneDeep(defaultColDefs));
+const colDefs = ref<ColDef[]>(cloneDeep(defaultColDefs.value));
 
 const onGridReady = async (params: GridReadyEvent) => {
   gridApi.value = params.api;
 };
 
 const setDefaultCols = () => {
-  colDefs.value = cloneDeep(defaultColDefs);
+  colDefs.value = cloneDeep(defaultColDefs.value);
 };
 
 const onCellValueChanged = async (event: CellValueChangedEvent<ITask>) => {

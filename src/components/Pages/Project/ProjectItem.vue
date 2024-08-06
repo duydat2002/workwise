@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CheckIcon from "@icons/check.svg";
 import ClockIcon from "@icons/clock-o.svg";
 import Avatar from "@/components/Common/Avatar.vue";
 import { useProjectStore } from "@/stores";
@@ -109,11 +110,25 @@ const toggleShowLabel = () => {
       <div class="mt-3 flex items-center justify-between">
         <Popper
           hover
-          offsetDistance="4"
-          :content="outOfDate ? 'Công việc đã quá hạn' : 'Công việc còn hạn'"
+          :content="
+            project.finishDate
+              ? 'Công việc đã hoàn thành'
+              : outOfDate
+              ? 'Công việc đã quá hạn'
+              : 'Công việc còn hạn'
+          "
         >
           <div
-            v-if="project.dueDate"
+            v-if="project.finishDate"
+            class="px-1 py-[2px] flex items-center rounded bg-green-200 text-green-500 fill-green-500"
+          >
+            <CheckIcon class="w-3 mr-1" />
+            <span class="text-xs">{{
+              formatDate(project.finishDate, "dd/MM/yyyy")
+            }}</span>
+          </div>
+          <div
+            v-else-if="project.dueDate"
             class="px-1 py-[2px] flex items-center rounded"
             :class="
               outOfDate

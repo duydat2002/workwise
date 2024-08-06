@@ -87,6 +87,12 @@ export default {
           "text-overflow": "ellipsis",
         },
       });
+      addUtilities({
+        ".required-field::after": {
+          content: '" *"',
+          color: "var(--error-color)",
+        },
+      });
     }),
   ],
   future: {

@@ -11,11 +11,19 @@ withDefaults(
     desc?: string;
     confirmMessage?: string;
     cancelMessage?: string;
+    confirmType?:
+      | "primary"
+      | "secondary"
+      | "success"
+      | "error"
+      | "white"
+      | "none";
     isLoadingConfirm?: boolean;
   }>(),
   {
     confirmMessage: "Đồng ý",
     cancelMessage: "Hủy",
+    confirmType: "error",
   }
 );
 
@@ -51,7 +59,7 @@ const onClickOutside = () => {
         >
         <UButton
           class="flex-1"
-          variantType="error"
+          :variantType="confirmType"
           @click="onConfirm"
           :isLoading="isLoadingConfirm"
           ><span class="">{{ confirmMessage }}</span></UButton

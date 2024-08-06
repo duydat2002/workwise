@@ -41,6 +41,14 @@ export async function unarchiveProject(projectId: string) {
   return await api.patch<any, IServerData>(prefix + projectId + "/unarchive");
 }
 
+export async function completeProject(projectId: string) {
+  return await api.patch<any, IServerData>(prefix + projectId + "/complete");
+}
+
+export async function uncompleteProject(projectId: string) {
+  return await api.patch<any, IServerData>(prefix + projectId + "/uncomplete");
+}
+
 export async function deleteProject(projectId: string) {
   return await api.delete<any, IServerData>(prefix + projectId);
 }

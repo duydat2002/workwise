@@ -177,7 +177,8 @@ onBeforeUnmount(() => {
         <div class="px-4 mt-3 overflow-y-auto scroll-vert none">
           <div class="not-firstchild:mt-5">
             <div class="flex flex-col">
-              <label class="mb-1 text-sm font-bold text-textColor-subtitle"
+              <label
+                class="mb-1 text-sm font-bold text-textColor-subtitle required-field"
                 >Ảnh bìa
               </label>
               <div
@@ -230,7 +231,8 @@ onBeforeUnmount(() => {
               </div>
             </div>
             <div class="flex flex-col">
-              <label class="mb-1 text-sm font-bold text-textColor-subtitle"
+              <label
+                class="mb-1 text-sm font-bold text-textColor-subtitle required-field"
                 >Tên dự án
               </label>
               <UInput
@@ -258,7 +260,7 @@ onBeforeUnmount(() => {
               <div class="flex items-center">
                 <div class="flex items-center mr-5">
                   <span
-                    class="text-sm font-semibold text-textColor-primary mr-3"
+                    class="text-sm font-semibold text-textColor-primary mr-3 required-field"
                     >Ngày bắt đầu</span
                   >
                   <div class="w-[200px]">
@@ -276,7 +278,7 @@ onBeforeUnmount(() => {
                 </div>
                 <div class="flex items-center">
                   <span
-                    class="text-sm font-semibold text-textColor-primary mr-3"
+                    class="text-sm font-semibold text-textColor-primary mr-3 required-field"
                     >Ngày kết thúc</span
                   >
                   <div class="w-[200px]">
