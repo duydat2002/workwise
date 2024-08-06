@@ -52,7 +52,7 @@ const toggleShowLabel = () => {
       class="h-[100px] object-cover"
     />
     <div class="mt-2 flex flex-col">
-      <span class="text-base font-bold text-textColor-primary">{{
+      <span class="text-base font-bold text-textColor-primary text-dots">{{
         project.name
       }}</span>
     </div>

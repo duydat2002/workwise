@@ -166,7 +166,7 @@ watch(
               class="flex px-4 py-2 items-center hover:bg-primary-extraLight rounded-md cursor-pointer transition-colors"
             >
               <div
-                class="w-8 h-6 bg-cover bg-center aspect-video mr-2"
+                class="w-8 h-6 flex-shrink-0 bg-cover bg-center aspect-video mr-2"
                 :style="{
                   backgroundImage: `url(${encodeURI(project.background)})`,
                 }"

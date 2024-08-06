@@ -131,6 +131,16 @@ const members = computed(() => {
   );
 });
 
+const suggestCompleteProject = computed(() => {
+  const tasks =
+    project.value?.taskGroups
+      .flatMap((g) => g.tasks)
+      .filter((t) => !t.isArchived) ?? [];
+  const completedTasks = tasks?.filter((t) => t.status == "completed") ?? [];
+
+  return tasks.length != 0 && tasks.length == completedTasks.length;
+});
+
 const handleArchiveProject = async () => {
   isLoadingAction.value = true;
   const data = await archiveProject(project.value!.id);
@@ -326,6 +336,31 @@ onBeforeRouteUpdate(async (to, from) => {
           </template>
           <span v-else class="text-textColor-secondary"
             >Đang mở lại dự án...</span
+          >
+        </template>
+      </div>
+      <div
+        v-else-if="suggestCompleteProject"
+        class="px-3 py-2 flex flex-center bg-green-200"
+      >
+        <span class="font-semibold text-textColor-subtitle mx-2"
+          >Tất cả công việc đều đã được hoàn thành. Bạn có muốn hoàn thành dự
+          án?</span
+        >
+        <template v-if="isAdmin">
+          <template v-if="!isLoadingAction">
+            <span
+              class="text-link hover:underline active:underline cursor-pointer"
+              @click="
+                () => {
+                  showCompleteProject = true;
+                }
+              "
+              >Hoàn thành dự án</span
+            >
+          </template>
+          <span v-else class="text-textColor-secondary"
+            >Đang hoàn thành dự án...</span
           >
         </template>
       </div>
