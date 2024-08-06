@@ -16,8 +16,9 @@ export interface ITask {
   assignee?: IUserInfo | null;
   startDate: string;
   dueDate: string;
-  finishDate: string;
+  finishDate?: string;
   status: "todo" | "inprogress" | "completed";
+  progress: number;
   isArchived: boolean;
   project: IProject;
   taskGroup: ITaskGroup;

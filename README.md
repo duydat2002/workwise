@@ -19,9 +19,12 @@ Learn more about the recommended Project Setup and IDE Support in the [Vue Docs 
     - Tự động đổi trạng thái công việc
     - Tự động giao việc cho thành viên
 - Công việc:
-  - Thêm tiến độ công việc
-  - Giao việc cho nhiều thành viên
+  - Thêm tiến độ công việc - Done
+  - Giao việc cho nhiều thành viên - Sau
   - Thành viên muốn tiếp nhận công việc chưa được giao: Tự gửi phê duyệt muốn tiếp nhận công việc
 - Thống kê:
   - Tiến độ:
     - Biểu đồ tròn: tỉ lệ hoành thành dự án ()
+- Thông báo:
+  - Thêm NodeMailer - Done
+  - Thông báo hằng ngày nếu có công việc chưa hoàn thành khi đến hạn

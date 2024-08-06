@@ -1,8 +1,15 @@
 <script setup lang="ts">
+import URange from "@/components/UI/URange.vue";
 import { ref } from "vue";
+
+const range = ref(0);
 </script>
 
 <template>
+  <div class="m-5">
+    <URange v-model:value="range" />
+  </div>
+  <span>{{ range }}</span>
   <div class="flex gap-2">
     <div class="flex flex-col w-3/5 h-[200px]">
       <div class="flex flex-col">

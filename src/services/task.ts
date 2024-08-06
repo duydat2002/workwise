@@ -48,6 +48,7 @@ export async function updateTask(task: ITask, labels?: string) {
     startDate: task.startDate,
     dueDate: task.dueDate,
     finishDate: task.finishDate,
+    progress: task.progress,
   });
 }
 

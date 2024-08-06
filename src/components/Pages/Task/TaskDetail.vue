@@ -41,7 +41,7 @@ import USelect from "@/components/UI/USelect.vue";
 import LabelPopup from "@/components/Popup/LabelPopup/LabelPopup.vue";
 import Avatar from "@/components/Common/Avatar.vue";
 import VueDatePicker from "@vuepic/vue-datepicker";
-import { formatDate } from "@/helpers";
+import { debounce, formatDate } from "@/helpers";
 import ConfirmPopup from "@/components/Popup/ConfirmPopup.vue";
 import { toast } from "vue3-toastify";
 import { compareDesc } from "date-fns";
@@ -52,6 +52,7 @@ import ApprovalModal from "@/components/Modal/ApprovalModal.vue";
 import TaskApproval from "./TaskApproval.vue";
 import TaskNotFound from "./TaskNotFound.vue";
 import Popper from "vue3-popper";
+import URange from "@/components/UI/URange.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -84,6 +85,7 @@ const showArchiveConfirm = ref(false);
 const showDeleteConfirm = ref(false);
 const showApprovalModal = ref(false);
 const isLoadingAction = ref(false);
+const progressInput = ref("0");
 
 const isAdmin = computed(() => {
   return project.value?.members.some(
@@ -164,8 +166,20 @@ const handleChangeStatus = async (
 ) => {
   taskTemp.value!.status = status;
   showStatusDropdown.value = false;
-  if (task.value?.status != status)
+  if (task.value?.status != status) {
+    console.log("trước");
+
+    if (status == "completed") {
+      taskTemp.value!.progress = 100;
+      taskTemp.value!.finishDate = new Date().toString();
+    } else {
+      taskTemp.value!.progress = 0;
+      taskTemp.value!.finishDate = undefined;
+    }
+    taskTemp.value!.progress = status == "completed" ? 100 : 0;
     await changeStatusTask(taskTemp.value!.id, status);
+  }
+  console.log("sau");
 };
 
 const handleChooseAssignee = async (member?: IMember) => {
@@ -198,6 +212,18 @@ const handleUpdateLabel = async (labels: ILabel[]) => {
     } as ITask,
     JSON.stringify(labels.map((l) => l.id))
   );
+};
+
+const handleUpdateProgress = async (closeFn: () => void) => {
+  isLoadingAction.value = true;
+
+  await updateTask({
+    id: taskTemp.value!.id,
+    progress: taskTemp.value?.progress,
+  } as ITask);
+
+  isLoadingAction.value = false;
+  closeFn();
 };
 
 const handleArchiveTask = async () => {
@@ -248,6 +274,17 @@ const closeModal = () => {
   });
 };
 
+const handleInputProgress = () => {
+  let progress = parseFloat(progressInput.value);
+  if (progress < 0) progress = 0;
+  else if (progress > 100) {
+    progress = 100;
+  }
+
+  taskTemp.value!.progress = progress;
+  progressInput.value = progress.toFixed(0);
+};
+
 watch(
   () => route.query.taskSelected,
   async () => {
@@ -278,9 +315,11 @@ watch(
 watch(
   () => task,
   () => {
-    console.log("task updated");
-    taskTemp.value = Object.assign({}, task.value);
-    // sortComments(taskTemp.value.comments, "newest");
+    if (task.value) {
+      console.log("task updated");
+      taskTemp.value = Object.assign({}, task.value);
+      progressInput.value = taskTemp.value.progress.toString();
+    }
   },
   { deep: true }
 );
@@ -311,6 +350,13 @@ watch(
     if (task.value && dueDate != task.value!.dueDate) {
       await updateTask({ id: taskTemp.value!.id, dueDate } as ITask);
     }
+  }
+);
+
+watch(
+  () => taskTemp.value?.progress,
+  (progress) => {
+    progressInput.value = progress?.toString() || "0";
   }
 );
 </script>
@@ -619,6 +665,75 @@ watch(
               class="h-full w-[380px] px-4 overflow-x-hidden overflow-y-auto scroll-vert"
             >
               <div class="flex flex-col">
+                <div class="mb-3">
+                  <div
+                    class="inline-flex px-[10px] py-[6px] border border-borderColor rounded-md cursor-pointer"
+                    :class="[
+                      taskTemp.status == 'completed'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-bgColor-primary text-textColor-primary',
+                    ]"
+                  >
+                    <span class="font-semibold">Hoàn thành</span>
+                    <span class="mx-2 text-textColor-secondary">|</span>
+                    <Popper @open:popper="taskTemp.progress = task.progress">
+                      <span class="font-semibold"
+                        >{{ taskTemp.progress }}%</span
+                      >
+                      <template #content="{ close }">
+                        <div
+                          class="w-[400px] px-4 py-2 flex flex-col bg-bgColor-primary rounded-lg shadow"
+                        >
+                          <span
+                            class="inline-block mb-3 text-base text-textColor-primary font-semibold"
+                            >Tiến độ công việc</span
+                          >
+                          <div class="mb-3 flex flex-col">
+                            <div class="">
+                              <div class="mx-2">
+                                <URange v-model:value="taskTemp.progress" />
+                              </div>
+                              <div
+                                class="flex justify-between text-textColor-secondary text-center"
+                              >
+                                <span class="">0%</span>
+                                <span class="">25%</span>
+                                <span class="">50%</span>
+                                <span class="">75%</span>
+                                <span class="">100%</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="mb-3 flex items-center">
+                            <span class="text-textColor-primary"
+                              >Nhập tiến độ</span
+                            >
+                            <div class="w-[60px] mx-2">
+                              <UInput
+                                v-model:propValue="progressInput"
+                                type="number"
+                                min="0"
+                                max="100"
+                                padding="px-1 py-1 min-h-[36px]"
+                                @change="handleInputProgress"
+                              ></UInput>
+                            </div>
+                            <span class="text-textColor-primary">%</span>
+                          </div>
+                          <div class="ml-auto">
+                            <UButton
+                              variantType="primary"
+                              @click="handleUpdateProgress(close)"
+                              :isLoading="isLoadingAction"
+                              :isDisabled="task.progress == taskTemp.progress"
+                              ><span class="">Xác nhận</span></UButton
+                            >
+                          </div>
+                        </div>
+                      </template>
+                    </Popper>
+                  </div>
+                </div>
                 <div class="flex gap-2">
                   <div
                     class="relative"
@@ -950,3 +1065,9 @@ watch(
     "
   />
 </template>
+
+<style scoped>
+:deep(.popper) {
+  background: transparent !important;
+}
+</style>

@@ -7,6 +7,10 @@ import CheckIcon from "@icons/check.svg";
 
 import { ref, computed, InputTypeHTMLAttribute, useSlots } from "vue";
 
+defineOptions({
+  inheritAttrs: false,
+});
+
 const emit = defineEmits([
   "update:propValue",
   "focus",
@@ -120,6 +124,7 @@ const togglePasswordVisibility = () => {
             :placeholder="placeholder"
             v-model="inputValue"
             :disabled="disabled"
+            v-bind="$attrs"
           />
         </div>
         <div v-if="slots.right" class="flex-shrink-0 ml-2">
