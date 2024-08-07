@@ -130,6 +130,7 @@ const completedTasksLastWeek = computed(() => {
   return tasks.value.filter(
     (t) =>
       t.status == "completed" &&
+      t.finishDate &&
       isWithinInterval(t.finishDate, {
         start: sevenDaysAgo,
         end: endOfDay(new Date()),

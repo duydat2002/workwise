@@ -128,7 +128,12 @@ const dates = computed(() => {
           :members
           :range="rangeSelected"
         />
-        <!-- <ProgressPage /> -->
+        <ProgressPage
+          v-if="statisticTab == 'progress'"
+          :tasks
+          :dates
+          :range="rangeSelected"
+        />
       </div>
     </div>
   </div>

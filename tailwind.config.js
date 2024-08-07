@@ -40,6 +40,7 @@ export default {
       boxShadow: {
         DEFAULT: "4px 0 24px rgba(0,0,0,0.15)",
         item: "0px 1px 1px #091E4240, 0px 0px 1px #091E424F",
+        box: "0px 3px 8px rgba(0,0,0,0.24) ",
       },
     },
   },

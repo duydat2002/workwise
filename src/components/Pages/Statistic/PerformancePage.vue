@@ -83,6 +83,7 @@ const testData = computed(() => {
       else acc[assigneeId].notComplete++;
     } else if (
       task.dueDate &&
+      task.finishDate &&
       new Date(task.dueDate).getTime() < new Date(task.finishDate).getTime()
     ) {
       acc[assigneeId].completedAfterDuedate++;

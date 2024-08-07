@@ -109,6 +109,9 @@ const lineOptions = ref<ChartOptions<"line">>({
         display: true,
         text: "Công việc",
       },
+      ticks: {
+        stepSize: 1,
+      },
     },
   },
 });
@@ -124,7 +127,7 @@ const lineOptions = ref<ChartOptions<"line">>({
         >Biểu đồ thể hiện số công việc đã tạo và số công việc đã hoàn
         thành.</span
       >
-      <div class="p-5">
+      <div class="p-5 max-w-[800px]">
         <LineChart :options="lineOptions" :data="speedChartData" />
       </div>
       <div class="">

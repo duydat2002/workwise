@@ -362,9 +362,9 @@ watch(
 
 <template>
   <Modal @click-outside="closeModal">
-    <div class="flex flex-center w-full my-5 mx-10">
+    <div class="my-5 mx-10">
       <div
-        class="flex flex-col h-[calc(100vh-40px)] w-full max-w-[1000px] bg-bgColor-primary pb-3 rounded-lg"
+        class="flex flex-col h-[calc(100vh-40px)] w-screen max-w-[1000px] bg-bgColor-primary pb-3 rounded-lg"
       >
         <div v-if="isLoadingTask" class="flex-1 h-full flex flex-center">
           <LoadingIcon class="w-6 fill-textColor-secondary animate-spin" />

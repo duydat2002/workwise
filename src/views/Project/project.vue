@@ -453,7 +453,7 @@ onBeforeRouteUpdate(async (to, from) => {
                 class="absolute mt-1 top-full right-0 w-max bg-bgColor-primary overflow-hidden rounded-lg shadow z-10"
               >
                 <div class="flex flex-col">
-                  <div
+                  <!-- <div
                     v-if="!project.finishDate && !project.isArchived"
                     class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
                     @click="
@@ -468,7 +468,7 @@ onBeforeRouteUpdate(async (to, from) => {
                     <span class="text-sm text-green-500"
                       >Đánh dấu đã hoàn thành dự án</span
                     >
-                  </div>
+                  </div> -->
                   <div
                     class="px-2 py-2 flex items-center hover:bg-hover active:bg-hover cursor-pointer"
                     @click="
