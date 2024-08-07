@@ -1,3 +1,4 @@
+import { IProject } from "./project";
 import { IUserInfo } from "./user";
 
 export type INotificationAction =
@@ -9,17 +10,15 @@ export type INotificationAction =
   | "request_approval"
   | "accept_approval"
   | "reject_approval"
-  | "task_assigned";
+  | "task_assigned"
+  | "project_due"
+  | "task_due";
 
 export interface INotification {
   id: string;
-  sender: IUserInfo;
+  sender?: IUserInfo;
   receivers: string[];
-  project?: {
-    id: string;
-    name: string;
-    background: string;
-  };
+  project?: IProject;
   type: "normal" | "invitation";
   datas: any;
   action: INotificationAction;

@@ -11,8 +11,8 @@ Learn more about the recommended Project Setup and IDE Support in the [Vue Docs 
   - Bắt buộc có ngày bắt đầu - ngày kết thúc - Done
   - Thêm ngày hoàn thành - Done
   - Thêm cài đặt
-    - Thông báo tiến độ dự án trước n ngày kết thúc (Khi chưa hoàn thành)
-    - Thông báo tiến độ công việc trươc n ngày kết thúc (Khi chưa hoàn thành)
+    - Thông báo tiến độ dự án trước n ngày kết thúc (Khi chưa hoàn thành) - Sau
+    - Thông báo tiến độ công việc trươc n ngày kết thúc (Khi chưa hoàn thành) - Sau
     - Yêu cầu phê duyệt trước khi hoàn thành công việc
 - Nhóm công việc:
   - Quy trình tự động
@@ -26,5 +26,5 @@ Learn more about the recommended Project Setup and IDE Support in the [Vue Docs 
   - Tiến độ:
     - Biểu đồ tròn: tỉ lệ hoành thành dự án ()
 - Thông báo:
-  - Thêm NodeMailer - Done
-  - Thông báo hằng ngày nếu có công việc chưa hoàn thành khi đến hạn
+  - Thêm NodeMaile - Done
+  - Thông báo hằng ngày nếu có công việc chưa hoàn thành khi đến hạn - Done

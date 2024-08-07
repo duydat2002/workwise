@@ -37,12 +37,34 @@ const isShowButtons = computed(() => {
   );
 });
 
+const boldRender = (content: string = "") => {
+  return `<span class='font-semibold'>${content}</span>`;
+};
+
+(window as any).projectRoute = (projectId: string) => {
+  router.push({
+    name: "Project",
+    params: { projectId },
+  });
+};
+
 const projectRender = (project: IProject) => {
-  return `<a class='link' href='/projects/${project.id}'>${project.name}</a>`;
+  const projectId = project._id ?? project.id;
+  return `<span class='link' onclick="projectRoute('${projectId}')" >${project.name}</span>`;
+};
+
+(window as any).taskRoute = (projectId: string, taskId: string) => {
+  router.push({
+    name: "Project",
+    params: { projectId },
+    query: { taskSelected: taskId },
+  });
 };
 
 const taskRender = (project: IProject, task: ITask) => {
-  return `<a class='link' href='/projects/${project.id}?taskSelected=${task.id}'>${task.name}</a>`;
+  const projectId = project._id ?? project.id;
+  const taskId = task._id ?? task.id;
+  return `<span class='link' onclick="taskRoute('${projectId}', '${taskId}')" >${task.name}</span>`;
 };
 
 const content = computed(() => {
@@ -72,6 +94,14 @@ const content = computed(() => {
       return `Đã mời bạn tham gia vào dự án ${projectRender(project)}.`;
     case "task_assigned":
       return `Đã mời bạn tham gia vào dự án ${projectRender(project)}.`;
+    case "project_due":
+      return `${boldRender("Nhắc nhở:")} Dự án sắp đến hạn: ${boldRender(
+        formatDate(project.dueDate)
+      )}.`;
+    case "task_due":
+      return `${boldRender("Nhắc nhở:")} Công việc sắp đến hạn: ${boldRender(
+        formatDate(task.dueDate)
+      )}.`;
     default:
       return props.notification.action;
       break;
@@ -85,7 +115,7 @@ const handleAccept = async () => {
     case "invite_to_project":
       await acceptInviteProject(
         project!.id,
-        props.notification.sender.id,
+        props.notification.sender!.id,
         props.notification.id
       );
       break;
@@ -101,7 +131,7 @@ const handleDeny = async () => {
     case "invite_to_project":
       await unacceptInviteProject(
         project!.id,
-        props.notification.sender.id,
+        props.notification.sender!.id,
         props.notification.id
       );
       break;
@@ -134,9 +164,24 @@ const openProject = () => {
     name: "Project",
     params: {
       projectId:
-        props.notification.datas.project.id ??
+        props.notification?.datas?.project?.id ??
         props.notification?.project?.id ??
         0,
+    },
+  });
+};
+
+const openTask = () => {
+  router.push({
+    name: "Project",
+    params: {
+      projectId:
+        props.notification?.datas?.project?._id ??
+        props.notification?.project?.id ??
+        0,
+    },
+    query: {
+      taskSelected: props.notification?.datas?.task?._id ?? 0,
     },
   });
 };
@@ -151,7 +196,7 @@ const openProject = () => {
     <div class="px-2 py-2 flex flex-col bg-bgColor-primary rounded-md shadow">
       <div class="flex items-center pb-2 border-b border-borderColor">
         <div
-          class="flex-1 flex items-center cursor-pointer"
+          class="flex-1 flex items-center cursor-pointer overflow-hidden"
           @click="openProject"
         >
           <div
@@ -192,17 +237,30 @@ const openProject = () => {
       </div>
       <div class="flex items-start mt-2">
         <div class="mr-2">
-          <Avatar class="w-6" :avatarUrl="notification.sender.avatar" />
+          <Avatar
+            v-if="notification.sender"
+            class="w-6"
+            :avatarUrl="notification.sender.avatar"
+          />
+          <div v-else class="w-6 h-6"></div>
         </div>
-        <div class="flex flex-col">
+        <div class="flex-1 flex flex-col">
           <span class="text-sm font-semibold text-textColor-primary">{{
-            notification.sender.fullname
+            notification.sender?.fullname
           }}</span>
+          <div
+            v-if="notification.action == 'task_due'"
+            class="w-full px-3 py-2 rounded-md bg-bgColor-primary border border-borderColor cursor-pointer shadow-md mb-2"
+            @click="openTask"
+          >
+            <span class="text-sm text-textColor-primary">{{
+              notification.datas.task?.name
+            }}</span>
+          </div>
           <span
             class="text-sm text-textColor-primary py-1"
             v-html="content"
           ></span>
-          <span class="text-xs text-textColor-secondary">{{}}</span>
           <div v-if="isShowButtons" class="flex mt-1">
             <UButton
               class="mr-2"

@@ -315,11 +315,10 @@ watch(
 watch(
   () => task,
   () => {
-    if (task.value) {
-      console.log("task updated");
-      taskTemp.value = Object.assign({}, task.value);
+    console.log("task updated");
+    taskTemp.value = Object.assign({}, task.value);
+    if (taskTemp.value.progress)
       progressInput.value = taskTemp.value.progress.toString();
-    }
   },
   { deep: true }
 );

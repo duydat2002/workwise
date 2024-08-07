@@ -12,6 +12,7 @@ export interface IMember {
 }
 
 export interface IProject {
+  _id?: string;
   id: string;
   name: string;
   description?: string;

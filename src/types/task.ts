@@ -7,6 +7,7 @@ import { ITaskGroup } from "./taskGroup";
 import { IUserInfo } from "./user";
 
 export interface ITask {
+  _id?: string;
   id: string;
   name: string;
   description?: string;
