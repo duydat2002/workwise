@@ -31,7 +31,7 @@ export function initializeSocket(pinia: Pinia) {
   });
 
   socket.on("project:updated", (project: IProject) => {
-    console.log("project:updated");
+    console.log("project:updated", project);
     projectStore.updateProjectStore(project);
   });
 

@@ -114,20 +114,22 @@ const adminUser = computed(() => {
 const members = computed(() => {
   const projectTemp = cloneDeep(project.value);
   return (
-    projectTemp?.members.sort((a, b) => {
-      if (a.user.id == user.value!.id) return -1;
-      if (b.user.id == user.value!.id) return 1;
+    projectTemp?.members
+      .filter((m) => m.status == "accepted")
+      .sort((a, b) => {
+        if (a.user.id == user.value!.id) return -1;
+        if (b.user.id == user.value!.id) return 1;
 
-      if (a.status !== b.status) {
-        return a.status === "accepted" ? -1 : 1;
-      }
+        if (a.status !== b.status) {
+          return a.status === "accepted" ? -1 : 1;
+        }
 
-      if (a.status === "accepted" && b.status === "accepted") {
-        return a.role === "admin" ? -1 : 1;
-      }
+        if (a.status === "accepted" && b.status === "accepted") {
+          return a.role === "admin" ? -1 : 1;
+        }
 
-      return 0;
-    }) ?? []
+        return 0;
+      }) ?? []
   );
 });
 

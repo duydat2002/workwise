@@ -69,6 +69,20 @@ const outOfDate = computed(() => {
   else return false;
 });
 
+const progressColor = computed(() => {
+  const progress = props.task.progress;
+
+  if (progress == 0) {
+    return "text-gray-200";
+  } else if (progress <= 50) {
+    return "text-red-500";
+  } else if (progress < 100) {
+    return "text-orange-400";
+  } else {
+    return "text-green-400";
+  }
+});
+
 const toggleShowLabel = () => {
   showTaskLabel.value = !showTaskLabel.value;
 };
@@ -110,7 +124,7 @@ const hanldeClickTask = () => {
         </template>
       </div>
       <span
-        class="text-sm mb-1"
+        class="text-sm mb-1 font-medium"
         :class="
           task.status == 'completed'
             ? 'line-through text-textColor-secondary'
@@ -118,9 +132,6 @@ const hanldeClickTask = () => {
         "
         >{{ task.name }}</span
       >
-      <!-- <span class="text-xs font-semibold bg-hover px-1 py-[1px] rounded">
-        {{ task.id }}
-      </span> -->
       <div v-if="showTaskGroup" class="mb-1">
         <span class="text-xs font-semibold bg-hover px-1 py-[1px] rounded">
           {{ task.taskGroup.name }}
@@ -170,8 +181,11 @@ const hanldeClickTask = () => {
           </div>
         </div>
         <div class="w-[40px]">
-          <UCircular :progress="60" stroke="3"
-            ><span class="text-xs">60%</span></UCircular
+          <UCircular
+            :progress="task.progress"
+            stroke="3"
+            :progressBg="progressColor"
+            ><span class="text-xs">{{ task.progress }}%</span></UCircular
           >
         </div>
       </div>

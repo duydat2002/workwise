@@ -183,7 +183,6 @@ const speedChartData = computed<ChartData<"line">>(() => ({
       data: testData.value.map((i) => i.totalTasks - i.totalCompleted),
       borderColor: "rgba(255, 99, 132, 1)",
       backgroundColor: "rgba(255, 99, 132, 1)",
-      fill: true,
     },
   ],
 }));

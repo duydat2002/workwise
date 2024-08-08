@@ -25,6 +25,10 @@ const outOfDate = computed(() => {
   else return false;
 });
 
+const membersShow = computed(() => {
+  return props.project.members.slice(0, 3);
+});
+
 watchEffect(() => {
   const tasks = props.project.taskGroups.flatMap((g) => g.tasks);
   const taskDone = tasks.filter((t) => t.status == "completed");
@@ -145,12 +149,20 @@ const toggleShowLabel = () => {
           </div>
         </Popper>
         <div class="flex items-center not-firstchild:-ml-[6px]">
-          <div v-for="member in project.members">
+          <div v-for="member in membersShow">
             <Avatar
               class="w-5"
               :avatarUrl="member.user.avatar"
               :title="member.user.fullname"
             />
+          </div>
+          <div
+            v-if="project.members.length - membersShow.length > 0"
+            class="w-5 h-5 flex flex-center rounded-full bg-bgColor-secondary"
+          >
+            <span class="text-xs text-textColor-secondary">
+              +{{ project.members.length - membersShow.length }}
+            </span>
           </div>
         </div>
       </div>
