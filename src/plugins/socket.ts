@@ -3,7 +3,7 @@ import { INotification, IProject, ITask, ITaskGroup, IUser } from "@/types";
 import { Pinia } from "pinia";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5555");
+const socket = io(import.meta.env.VITE_SOCKET_BASE_URL);
 
 export function initializeSocket(pinia: Pinia) {
   const projectStore = useProjectStore(pinia);

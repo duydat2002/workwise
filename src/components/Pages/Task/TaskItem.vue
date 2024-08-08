@@ -16,6 +16,7 @@ import Popper from "vue3-popper";
 import Avatar from "@/components/Common/Avatar.vue";
 import { computed } from "vue";
 import { formatDate } from "@/helpers";
+import UCircular from "@/components/UI/UCircular.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -145,26 +146,38 @@ const hanldeClickTask = () => {
           }}
         </span>
       </div>
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <div class="flex items-center flex-1">
+          <template v-if="task.assignee">
+            <Popper
+              hover
+              offsetDistance="8"
+              :content="`${task.assignee.fullname} (${task.assignee.email})`"
+            >
+              <div class="mr-2">
+                <Avatar class="w-6" :avatarUrl="task.assignee.avatar" />
+              </div>
+            </Popper>
+          </template>
+          <div v-if="task.priority != 'none'" class="">
+            <Popper
+              hover
+              offsetDistance="8"
+              :content="`Độ ưu tiên: ${priority.name}`"
+            >
+              <component :is="priority.icon" class="w-4" />
+            </Popper>
+          </div>
+        </div>
+        <div class="w-[40px]">
+          <UCircular :progress="60" stroke="3"
+            ><span class="text-xs">60%</span></UCircular
+          >
+        </div>
+      </div>
+      <div class="w-full h-[1px] bg-borderColor mb-2"></div>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex flex-wrap items-center">
-          <Popper
-            hover
-            offsetDistance="8"
-            :content="outOfDate ? 'Công việc đã quá hạn' : 'Công việc còn hạn'"
-          >
-            <div
-              v-if="dateComp"
-              class="px-1 py-[2px] flex items-center rounded mr-2"
-              :class="
-                outOfDate
-                  ? 'bg-red-200 text-red-500 fill-red-500'
-                  : 'fill-textColor-primary text-textColor-secondary'
-              "
-            >
-              <ClockIcon class="w-3 mr-1" />
-              <span class="text-xs">{{ dateComp }}</span>
-            </div>
-          </Popper>
           <Popper hover offsetDistance="8" content="Công việc có mô tả">
             <div v-if="task.description" class="h-6 flex flex-center mr-2">
               <DescIcon class="w-3 fill-textColor-primary" />
@@ -206,22 +219,24 @@ const hanldeClickTask = () => {
           </Popper>
         </div>
         <div class="flex items-center justify-end flex-1">
-          <div v-if="task.priority != 'none'" class="">
-            <Popper
-              hover
-              offsetDistance="8"
-              :content="`Độ ưu tiên: ${priority.name}`"
-            >
-              <component :is="priority.icon" class="w-4" />
-            </Popper>
-          </div>
-          <div
-            v-if="task.assignee"
-            class="ml-2"
-            :title="`${task.assignee.fullname} (${task.assignee.email})`"
+          <Popper
+            hover
+            offsetDistance="8"
+            :content="outOfDate ? 'Công việc đã quá hạn' : 'Công việc còn hạn'"
           >
-            <Avatar class="w-6" :avatarUrl="task.assignee.avatar" />
-          </div>
+            <div
+              v-if="dateComp"
+              class="px-1 py-[2px] flex items-center rounded"
+              :class="
+                outOfDate
+                  ? 'bg-red-200 text-red-500 fill-red-500'
+                  : 'fill-textColor-primary text-textColor-secondary'
+              "
+            >
+              <ClockIcon class="w-3 mr-1" />
+              <span class="text-xs">{{ dateComp }}</span>
+            </div>
+          </Popper>
         </div>
       </div>
     </div>
