@@ -274,7 +274,8 @@ watch(
                   class="w-5 h-5 rounded-full flex flex-center bg-hover mr-[2px]"
                 >
                   <span class="text-xs text-white">{{
-                    taskGroup.tasks.filter((t) => !t.isHidden).length
+                    taskGroup.tasks.filter((t) => !t.isHidden && !t.isArchived)
+                      .length
                   }}</span>
                 </div>
                 <div class="relative">

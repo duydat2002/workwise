@@ -130,10 +130,6 @@ const newApproval = computed(() => {
   if (task.value?.approvals && task.value?.approvals.length > 0) {
     const approval = task.value.approvals[0];
 
-    // if (
-    //   approval.status == "pending" &&
-    //   (approval.reviewedBy as unknown as string) == user.value?.id
-    // )
     if (approval.status == "pending") return task.value.approvals[0];
   }
   return null;
@@ -283,6 +279,12 @@ const handleInputProgress = () => {
 
   taskTemp.value!.progress = progress;
   progressInput.value = progress.toFixed(0);
+};
+
+const handleNotAllow = () => {
+  if (project.value?.isArchived || task.value?.isArchived || !!newApproval) {
+    toast.error("Công việc đang chờ phê duyệt.");
+  }
 };
 
 watch(
@@ -666,16 +668,25 @@ watch(
               <div class="flex flex-col">
                 <div class="mb-3">
                   <div
-                    class="inline-flex px-[10px] py-[6px] border border-borderColor rounded-md cursor-pointer"
+                    class="inline-flex px-[10px] py-[6px] border border-borderColor rounded-md"
                     :class="[
                       taskTemp.status == 'completed'
                         ? 'bg-green-500 text-white'
                         : 'bg-bgColor-primary text-textColor-primary',
+                      project?.isArchived || task?.isArchived || !!newApproval
+                        ? 'cursor-not-allowed'
+                        : 'cursor-pointer',
                     ]"
+                    @click="handleNotAllow"
                   >
                     <span class="font-semibold">Hoàn thành</span>
                     <span class="mx-2 text-textColor-secondary">|</span>
-                    <Popper @open:popper="taskTemp.progress = task.progress">
+                    <Popper
+                      :disabled="
+                        project?.isArchived || task?.isArchived || !!newApproval
+                      "
+                      @open:popper="taskTemp.progress = task.progress"
+                    >
                       <span class="font-semibold"
                         >{{ taskTemp.progress }}%</span
                       >
@@ -742,37 +753,32 @@ watch(
                       }
                     "
                   >
-                    <Popper
-                      :disabled="!newApproval"
-                      content="Công việc đang chờ phê duyệt"
-                    >
-                      <div
-                        class="flex items-center px-[10px] py-[6px] hover:opacity-80 active:opacity-80 rounded"
-                        :class="[
-                          taskTemp.status == 'todo'
-                            ? 'bg-bgColor-secondary text-textColor-primary'
-                            : taskTemp.status == 'inprogress'
-                            ? 'bg-primary text-white'
-                            : 'bg-green-500 text-white',
-                          newApproval ? 'cursor-not-allowed' : 'cursor-pointer',
-                        ]"
-                        @click="
+                    <div
+                      class="flex items-center px-[10px] py-[6px] hover:opacity-80 active:opacity-80 rounded"
+                      :class="[
+                        taskTemp.status == 'todo'
+                          ? 'bg-bgColor-secondary text-textColor-primary'
+                          : taskTemp.status == 'inprogress'
+                          ? 'bg-primary text-white'
+                          : 'bg-green-500 text-white',
+                        newApproval ? 'cursor-not-allowed' : 'cursor-pointer',
+                      ]"
+                      @click="
                         () => {
                           if (!project!.isArchived && !task?.isArchived && !newApproval)
                           showStatusDropdown = true;
                         }
                       "
-                      >
-                        <span class="text-sm font-semibold mr-2">{{
-                          taskTemp.status == "todo"
-                            ? "Cần thực hiện"
-                            : taskTemp.status == "inprogress"
-                            ? "Đang thực hiện"
-                            : "Đã hoàn thành"
-                        }}</span>
-                        <DownIcon class="w-4 fill-current" />
-                      </div>
-                    </Popper>
+                    >
+                      <span class="text-sm font-semibold mr-2">{{
+                        taskTemp.status == "todo"
+                          ? "Cần thực hiện"
+                          : taskTemp.status == "inprogress"
+                          ? "Đang thực hiện"
+                          : "Đã hoàn thành"
+                      }}</span>
+                      <DownIcon class="w-4 fill-current" />
+                    </div>
                     <div
                       v-if="showStatusDropdown"
                       class="absolute top-full left-0 min-w-full w-max pt-1 z-10"

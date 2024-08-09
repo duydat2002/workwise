@@ -14,17 +14,15 @@ const props = defineProps<{
 }>();
 
 const defaultColRefComp = computed(() => {
-  return (
-    props.defaultColDef ??
-    ({
-      sortable: true,
-      resizable: true,
-      suppressAutoSize: false,
-      enableCellChangeFlash: true,
-      suppressHeaderMenuButton: false,
-      hide: false,
-    } as ColDef)
-  );
+  return {
+    sortable: true,
+    resizable: true,
+    suppressAutoSize: false,
+    enableCellChangeFlash: true,
+    suppressHeaderMenuButton: false,
+    hide: false,
+    ...props.defaultColDef,
+  } as ColDef;
 });
 
 const gridOptionsComp = computed(() => {

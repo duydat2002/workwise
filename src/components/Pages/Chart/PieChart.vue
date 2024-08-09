@@ -19,20 +19,19 @@ const props = defineProps<{
 }>();
 
 const optionsComp = computed(() => {
-  return (
-    props.options ??
-    ({
-      responsive: true,
-      plugins: {
-        legend: {
-          position: "bottom",
-        },
-        tooltip: {
-          enabled: true,
-        },
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "bottom",
       },
-    } as ChartOptions<"pie">)
-  );
+      tooltip: {
+        enabled: true,
+      },
+    },
+    ...props.options,
+  } as ChartOptions<"pie">;
 });
 </script>
 

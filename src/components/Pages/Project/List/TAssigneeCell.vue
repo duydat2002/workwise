@@ -28,7 +28,10 @@ const assigneeComp = computed(() => {
     class="flex items-center"
     :title="assigneeComp?.email"
   >
-    <Avatar class="w-6 h-6 mr-1" :avatarUrl="assigneeComp?.avatar" />
+    <Avatar
+      class="flex-shrink-0 w-6 h-6 mr-1"
+      :avatarUrl="assigneeComp?.avatar"
+    />
     <span class="">{{ assigneeComp?.fullname }}</span>
   </div>
 </template>
