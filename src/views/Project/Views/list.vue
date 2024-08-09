@@ -35,6 +35,7 @@ import TaskNotFound from "@/components/Pages/Task/TaskNotFound.vue";
 import { VueDraggable } from "vue-draggable-plus";
 import { changeStatusTask, updateTask } from "@/services/task";
 import { onMounted } from "vue";
+import TProgressCell from "@/components/Pages/Project/List/TProgressCell.vue";
 
 const dateComparator = (
   valueA: any,
@@ -113,6 +114,12 @@ const defaultColDefs = ref<ColDef[]>([
     cellEditorPopup: true,
   },
   {
+    headerName: "Tiến độ",
+    field: "progress",
+    width: 150,
+    cellRenderer: TProgressCell,
+  },
+  {
     headerName: "Ngày đến hạn",
     field: "dueDate",
     width: 150,
@@ -127,6 +134,16 @@ const defaultColDefs = ref<ColDef[]>([
     cellEditorPopup: true,
   },
   {
+    headerName: "Người thực hiện",
+    field: "assignee",
+    width: 150,
+    valueFormatter: (p) => p.value,
+    valueParser: (p) => p.newValue,
+    cellRenderer: TAssigneeCell,
+    cellEditor: TAssigneeEditCell,
+    cellEditorPopup: true,
+  },
+  {
     headerName: "Nhãn",
     field: "labels",
     width: 200,
@@ -135,16 +152,6 @@ const defaultColDefs = ref<ColDef[]>([
     valueParser: (p) => p.newValue,
     cellRenderer: TLabelCell,
     cellEditor: TLabelEditCell,
-    cellEditorPopup: true,
-  },
-  {
-    headerName: "Người thực hiện",
-    field: "assignee",
-    width: 150,
-    valueFormatter: (p) => p.value,
-    valueParser: (p) => p.newValue,
-    cellRenderer: TAssigneeCell,
-    cellEditor: TAssigneeEditCell,
     cellEditorPopup: true,
   },
   {

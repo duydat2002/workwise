@@ -2,14 +2,14 @@
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { AgGridVue } from "ag-grid-vue3";
-import { GridOptions, ColDef } from "ag-grid-community";
+import { GridOptions, ColDef, ColGroupDef } from "ag-grid-community";
 import { computed } from "vue";
 import TaskNotFound from "../Pages/Task/TaskNotFound.vue";
 
 const props = defineProps<{
   gridOptions?: GridOptions;
   defaultColDef?: ColDef;
-  columnDefs: ColDef[];
+  columnDefs: (ColDef | ColGroupDef)[];
   rowData: any;
 }>();
 

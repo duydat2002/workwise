@@ -60,6 +60,9 @@ const statusChartOptions = ref<ChartOptions<"doughnut">>({
     tooltip: {
       enabled: false,
     },
+    datalabels: {
+      display: false,
+    },
   },
 });
 

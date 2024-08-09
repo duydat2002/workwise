@@ -43,6 +43,9 @@ const optionsComp = computed(() => {
         tooltip: {
           enabled: true,
         },
+        datalabels: {
+          display: false,
+        },
       },
     } as ChartOptions<"line">)
   );

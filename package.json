@@ -16,6 +16,7 @@
     "ag-grid-vue3": "^32.0.2",
     "axios": "^1.7.2",
     "chart.js": "^4.4.3",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "date-fns": "^3.6.0",
     "firebase": "^10.12.2",
     "lodash": "^4.17.21",

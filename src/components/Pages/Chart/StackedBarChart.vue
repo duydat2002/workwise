@@ -11,6 +11,7 @@ import {
   ChartOptions,
   ChartData,
 } from "chart.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 import { computed } from "vue";
 
 ChartJS.register(
@@ -19,40 +20,42 @@ ChartJS.register(
   Legend,
   BarElement,
   CategoryScale,
-  LinearScale
+  LinearScale,
+  ChartDataLabels
 );
 
 const props = defineProps<{
-  options?: ChartOptions<"bar">;
+  options?: any;
   data: ChartData<"bar">;
 }>();
 
 const optionsComp = computed(() => {
-  return (
-    props.options ??
-    ({
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: "y",
-      scales: {
-        x: {
-          stacked: true,
-        },
-        y: {
-          stacked: true,
-          ticks: {
-            stepSize: 1,
-          },
-          display: false,
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: "y",
+    scales: {
+      x: {
+        stacked: true,
+        ticks: {
+          stepSize: 1,
         },
       },
-      plugins: {
-        legend: {
-          display: false,
+      y: {
+        stacked: true,
+        ticks: {
+          stepSize: 1,
         },
+        display: false,
       },
-    } as ChartOptions<"bar">)
-  );
+    },
+    plugins: {
+      legend: {
+        display: false,
+      },
+    },
+    ...props.options,
+  } as ChartOptions<"bar">;
 });
 </script>
 

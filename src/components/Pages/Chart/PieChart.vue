@@ -29,6 +29,9 @@ const optionsComp = computed(() => {
       tooltip: {
         enabled: true,
       },
+      datalabels: {
+        display: false,
+      },
     },
     ...props.options,
   } as ChartOptions<"pie">;

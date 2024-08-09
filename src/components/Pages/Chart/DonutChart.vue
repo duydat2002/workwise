@@ -49,6 +49,9 @@ const optionsComp = computed(() => {
           },
         },
       },
+      datalabels: {
+        display: false,
+      },
     },
     ...props.options,
   } as ChartOptions<"doughnut">;

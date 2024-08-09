@@ -282,7 +282,7 @@ const handleInputProgress = () => {
 };
 
 const handleNotAllow = () => {
-  if (project.value?.isArchived || task.value?.isArchived || !!newApproval) {
+  if (!project.value?.isArchived && !task.value?.isArchived && !newApproval) {
     toast.error("Công việc đang chờ phê duyệt.");
   }
 };
