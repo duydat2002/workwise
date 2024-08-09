@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CheckIcon from "@icons/check.svg";
+import TaskIcon from "@icons/task.svg";
 import EditIcon from "@icons/edit.svg";
 import PlusIcon from "@icons/plus.svg";
 import ClockIcon from "@icons/clock-o.svg";
@@ -217,16 +218,14 @@ onMounted(async () => {
           <div
             class="w-10 h-10 mr-2 flex flex-center bg-bgColor-secondary rounded-full"
           >
-            <CheckIcon
-              class="w-4 fill-green-500 group-hover:w-5 transition-all"
-            />
+            <TaskIcon class="w-4 fill-primary group-hover:w-5 transition-all" />
           </div>
           <div class="flex flex-col">
-            <span class="text-base font-semibold text-green-500"
-              >{{ completedTasksLastWeek }} đã hoàn thành</span
+            <span class="text-base font-semibold text-primary"
+              >Tổng số công việc</span
             >
             <span class="text-sm font-semibold text-textColor-secondary"
-              >trong 7 ngày qua</span
+              >{{ tasks.length }} công việc</span
             >
           </div>
         </div>
@@ -234,11 +233,13 @@ onMounted(async () => {
           <div
             class="w-10 h-10 mr-2 flex flex-center bg-bgColor-secondary rounded-full"
           >
-            <EditIcon class="w-4 fill-primary group-hover:w-5 transition-all" />
+            <CheckIcon
+              class="w-4 fill-green-500 group-hover:w-5 transition-all"
+            />
           </div>
           <div class="flex flex-col">
-            <span class="text-base font-semibold text-primary"
-              >{{ updatedTasksLastWeek }} đã cập nhật</span
+            <span class="text-base font-semibold text-green-500"
+              >{{ completedTasksLastWeek }} đã hoàn thành</span
             >
             <span class="text-sm font-semibold text-textColor-secondary"
               >trong 7 ngày qua</span

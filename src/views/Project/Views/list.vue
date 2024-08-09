@@ -118,6 +118,7 @@ const defaultColDefs = ref<ColDef[]>([
     field: "progress",
     width: 150,
     cellRenderer: TProgressCell,
+    editable: false,
   },
   {
     headerName: "Ngày đến hạn",

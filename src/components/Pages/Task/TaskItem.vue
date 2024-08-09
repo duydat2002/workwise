@@ -31,7 +31,7 @@ const props = withDefaults(
   }
 );
 
-const { showTaskLabel } = storeToRefs(useProjectStore());
+const { showTaskLabel, project } = storeToRefs(useProjectStore());
 
 const priority = computed(() => {
   switch (props.task.priority) {
@@ -90,6 +90,14 @@ const toggleShowLabel = () => {
 const hanldeClickTask = () => {
   router.push({ query: { ...route.query, taskSelected: props.task.id } });
 };
+
+const assignee = computed(() => {
+  if (typeof props.task.assignee == "object") return props.task.assignee;
+
+  return project.value?.members.find(
+    (m) => m.user.id == (props.task.assignee as unknown as string)
+  )?.user;
+});
 </script>
 
 <template>
@@ -159,14 +167,14 @@ const hanldeClickTask = () => {
       </div>
       <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
         <div class="flex items-center flex-1">
-          <template v-if="task.assignee">
+          <template v-if="assignee">
             <Popper
               hover
               offsetDistance="8"
-              :content="`${task.assignee.fullname} (${task.assignee.email})`"
+              :content="`${assignee.fullname} (${assignee.email})`"
             >
               <div class="mr-2">
-                <Avatar class="w-6" :avatarUrl="task.assignee.avatar" />
+                <Avatar class="w-6" :avatarUrl="assignee.avatar" />
               </div>
             </Popper>
           </template>

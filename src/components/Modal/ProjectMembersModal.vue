@@ -191,7 +191,9 @@ watch(search, async () => {
                 placeholder="Tìm kiếm người dùng theo tên hoặc mail"
               >
                 <template v-if="search != ''" #dropdown>
-                  <div class="p-2 bg-bgColor-primary rounded-lg shadow">
+                  <div
+                    class="p-2 bg-bgColor-primary rounded-lg shadow overflow-y-scroll scroll-vert max-h-[200px]"
+                  >
                     <div class="flex flex-col">
                       <div v-if="isLoadingSearch" class="flex flex-center p-3">
                         <LoadingIcon

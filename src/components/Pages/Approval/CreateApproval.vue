@@ -20,7 +20,7 @@ const { project, task } = storeToRefs(useProjectStore());
 
 const attachments = ref<File[]>([]);
 const searchReviewer = ref("");
-const reviewUser = ref<IMember>();
+// const reviewUser = ref<IMember>();
 const description = ref("");
 const showReviewUserDropdown = ref(false);
 const isLoading = ref(false);
@@ -41,12 +41,16 @@ const members = computed(() => {
   );
 });
 
+const reviewUser = computed(() => {
+  return project.value?.members.find((m) => m.role == "admin")?.user;
+});
+
 const handleCreateApproval = async () => {
   if (reviewUser.value) {
     isLoading.value = true;
     const formData = new FormData();
 
-    formData.append("reviewedBy", reviewUser.value.user.id);
+    formData.append("reviewedBy", reviewUser.value.id);
     formData.append("description", description.value);
 
     attachments.value.forEach((file) => {
@@ -71,10 +75,10 @@ const handleCreateApproval = async () => {
   }
 };
 
-const handleChooseReviewer = async (member?: IMember) => {
-  reviewUser.value = member;
-  showReviewUserDropdown.value = false;
-};
+// const handleChooseReviewer = async (member?: IMember) => {
+//   reviewUser.value = member;
+//   showReviewUserDropdown.value = false;
+// };
 
 const removeAttachment = (file: File, i: number) => {
   attachments.value.splice(i, 1);
@@ -107,6 +111,17 @@ const handleBack = () => {
           Người phê duyệt
         </div>
         <div class="w-3/5">
+          <div
+            class="flex items-center px-2 py-1 bg-bgColor-secondary rounded hover:bg-hover active:bg-hover cursor-pointer"
+          >
+            <Avatar
+              class="w-6 h-6 mr-2 flex-shrink-0"
+              :avatarUrl="reviewUser?.avatar"
+            />
+            <span class="text-dots">{{ reviewUser?.fullname }}</span>
+          </div>
+        </div>
+        <!-- <div class="w-3/5">
           <div
             class="relative"
             v-click-outside.short="
@@ -177,7 +192,7 @@ const handleBack = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> -->
       </div>
       <div class="flex flex-col">
         <label class="mb-1 text-sm font-semibold text-textColor-subtitle"

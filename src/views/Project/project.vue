@@ -38,6 +38,7 @@ import {
   archiveProject,
   completeProject,
   deleteProject,
+  getProjectById,
   unarchiveProject,
   uncompleteProject,
 } from "@/services/project";
@@ -227,8 +228,14 @@ const changeHeightInfo = () => {
   }
 };
 
-const getProject = (projectId: string) => {
+const getProject = async (projectId: string) => {
   isLoadingProject.value = true;
+  // const data = await getProjectById(projectId);
+
+  // if (data.success) {
+  //   project.value = data.result!.project;
+  // }
+
   project.value = projects.value.find((p) => p.id == projectId) || null;
 
   if (project.value) {
@@ -257,8 +264,9 @@ const getProject = (projectId: string) => {
 
 watch(
   projects,
-  () => {
-    getProject(route.params.projectId as string);
+  async () => {
+    console.log("update projects");
+    await getProject(route.params.projectId as string);
   },
   { immediate: true }
 );
@@ -286,7 +294,7 @@ onBeforeRouteUpdate(async (to, from) => {
   if (to.params.projectId != from.params.projectId) {
     projectActivities.value = [];
     taskActivities.value = [];
-    getProject(to.params.projectId as string);
+    await getProject(to.params.projectId as string);
   }
 });
 </script>

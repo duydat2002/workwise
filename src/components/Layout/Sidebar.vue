@@ -71,7 +71,9 @@ const tasksForYou = computed(() => {
     )
     .flatMap((p) => p.taskGroups)
     .flatMap((g) => g.tasks)
-    .filter((t) => !t.isArchived && t.dueDate)
+    .filter(
+      (t) => !t.isArchived && t.dueDate && t.assignee?.id == user.value?.id
+    )
     .sort((t1, t2) => {
       if (!t1.dueDate) return 1;
       if (!t2.dueDate) return -1;

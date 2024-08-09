@@ -163,3 +163,9 @@ export async function getProjectActivities(
     }
   );
 }
+
+export async function getActivities() {
+  return await api.get<any, IServerData<{ activities: IActivity[] }>>(
+    prefix + "activities"
+  );
+}

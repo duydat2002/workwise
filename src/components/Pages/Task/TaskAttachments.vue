@@ -6,7 +6,7 @@ import LoadingIcon from "@icons/loading.svg";
 import XIcon from "@icons/x.svg";
 import DownloadIcon from "@icons/downloads.svg";
 import { storeToRefs } from "pinia";
-import { useUserStore } from "@/stores";
+import { useProjectStore, useUserStore } from "@/stores";
 import { ref } from "vue";
 import { IAttachment, ITask } from "@/types";
 import { toast } from "vue3-toastify";
@@ -20,6 +20,7 @@ const props = defineProps<{
 }>();
 
 const { user } = storeToRefs(useUserStore());
+const { project } = storeToRefs(useProjectStore());
 
 const inputAttachmentRef = ref<HTMLInputElement>();
 const showPreview = ref(false);
@@ -92,7 +93,7 @@ const handleClickAttachment = (attachment: IAttachment, index: number) => {
         >Tải tệp hoặc tải lên tại đây</span
       >
       <input
-        v-if="!task.isArchived && !task.project.isArchived"
+        v-if="!task.isArchived && !project?.isArchived"
         ref="inputAttachmentRef"
         type="file"
         name="attachments"
