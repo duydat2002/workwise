@@ -89,9 +89,9 @@ const content = computed(() => {
         task
       )} trong dự án ${projectRender(project)}.`;
     case "accept_approval":
-      return `Đã mời bạn tham gia vào dự án ${projectRender(project)}.`;
+      return `Đã phê duyệt công việc ${taskRender(project, task)}.`;
     case "reject_approval":
-      return `Đã mời bạn tham gia vào dự án ${projectRender(project)}.`;
+      return `Đã từ chối phê duyệt công việc ${taskRender(project, task)}.`;
     case "task_assigned":
       return `Đã mời bạn tham gia vào dự án ${projectRender(project)}.`;
     case "project_due":

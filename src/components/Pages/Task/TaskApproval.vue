@@ -108,7 +108,7 @@ const focusFeedBack = () => {
         >
       </div>
       <div
-        v-if="approval.reviewedBy.id == user?.id"
+        v-if="approval?.reviewedBy?.id == user?.id"
         class="flex items-center mt-2"
       >
         <Popper :disabled="!isShowFeedback">
