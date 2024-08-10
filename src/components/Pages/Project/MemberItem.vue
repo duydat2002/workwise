@@ -176,7 +176,7 @@ const handleLeftProject = async () => {
       :isDisabled="!isAdmin"
       @change="handleChangeRole"
     /> -->
-    <UButton
+    <!-- <UButton
       variantType="secondary"
       @click="
         () => {
@@ -184,7 +184,7 @@ const handleLeftProject = async () => {
         }
       "
       ><span class="">Chuyển quản lý</span></UButton
-    >
+    > -->
   </div>
   <Popper hover :content="isUser ? 'Rời khỏi dự án' : 'Xóa khỏi dự án'">
     <div

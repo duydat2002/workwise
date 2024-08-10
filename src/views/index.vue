@@ -119,7 +119,7 @@ onMounted(async () => {
     <div
       class="absolute top-0 left-0 right-0 bottom-0 px-5 my-4 overflow-y-scroll scroll-vert"
     >
-      <div class="pt-2 flex flex-wrap gap-3">
+      <div class="pt-2 flex max-md:flex-wrap gap-3">
         <div class="w-3/5 max-md:w-full">
           <div class="flex flex-col mb-4">
             <span class="text-base font-semibold text-textColor-primary mb-3"
