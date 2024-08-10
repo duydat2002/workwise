@@ -119,8 +119,8 @@ onMounted(async () => {
     <div
       class="absolute top-0 left-0 right-0 bottom-0 px-5 my-4 overflow-y-scroll scroll-vert"
     >
-      <div class="pt-2 flex gap-3">
-        <div class="w-3/5">
+      <div class="pt-2 flex flex-wrap gap-3">
+        <div class="w-3/5 max-md:w-full">
           <div class="flex flex-col mb-4">
             <span class="text-base font-semibold text-textColor-primary mb-3"
               >Tổng số công việc</span
@@ -138,7 +138,7 @@ onMounted(async () => {
                 <div class="w-[80px]">
                   <UCircular
                     :progress="
-                      tasks.length != 0
+                      tasksForMe.length != 0
                         ? Math.round(
                             (tasksByStatus.todo.length / tasksForMe.length) *
                               100
@@ -148,7 +148,7 @@ onMounted(async () => {
                     progress-bg="text-[#979797]"
                     ><span class="text-base font-bold text-[#979797]"
                       >{{
-                        tasks.length != 0
+                        tasksForMe.length != 0
                           ? Math.round(
                               (tasksByStatus.todo.length / tasksForMe.length) *
                                 100
@@ -171,7 +171,7 @@ onMounted(async () => {
                 <div class="w-[80px]">
                   <UCircular
                     :progress="
-                      tasks.length != 0
+                      tasksForMe.length != 0
                         ? Math.round(
                             (tasksByStatus.inprogress.length /
                               tasksForMe.length) *
@@ -182,7 +182,7 @@ onMounted(async () => {
                     progress-bg="text-blue-500"
                     ><span class="text-base font-bold text-blue-500"
                       >{{
-                        tasks.length != 0
+                        tasksForMe.length != 0
                           ? Math.round(
                               (tasksByStatus.inprogress.length /
                                 tasksForMe.length) *
@@ -206,7 +206,7 @@ onMounted(async () => {
                 <div class="w-[80px]">
                   <UCircular
                     :progress="
-                      tasks.length != 0
+                      tasksForMe.length != 0
                         ? Math.round(
                             (tasksByStatus.completed.length /
                               tasksForMe.length) *
@@ -217,7 +217,7 @@ onMounted(async () => {
                     progress-bg="text-green-500"
                     ><span class="text-base font-bold text-green-500"
                       >{{
-                        tasks.length != 0
+                        tasksForMe.length != 0
                           ? Math.round(
                               (tasksByStatus.completed.length /
                                 tasksForMe.length) *
@@ -299,7 +299,7 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-        <div class="w-2/5">
+        <div class="w-2/5 max-md:w-full">
           <div class="flex flex-col mb-3">
             <span class="text-base font-semibold text-textColor-primary mb-1"
               >Công việc sắp tới</span
