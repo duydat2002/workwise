@@ -1,30 +1,47 @@
-# Vue 3 + TypeScript + Vite
+# Workwise - Task Management Tool
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+**Workwise** is a flexible, easy-to-use task management tool designed to help you organize your projects and tasks visually, similar to **Trello**. With Workwise, users can create boards, add tasks, assign team members, and track progress in real-time.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## Features
 
-# Note
+- **Boards and Lists**: Organize your tasks into customizable boards and lists.
+- **Drag-and-Drop Interface**: Easily move tasks between lists to reflect progress.
+- **Comments and Collaboration**: Add comments to tasks and collaborate with team members in real-time.
+- **Document Sharing**: Attach and share documents directly within tasks for easy collaboration.
+- **Approval Workflow**: Implement a task approval system where certain tasks need to be approved by designated members before being marked as completed.
+- **History Reports**: Generate and view detailed reports of all tasks and activities, including completed tasks, approvals, and changes made over time.
+- **Real-Time Sync**: Instant updates across all team members, so everyone stays on the same page.
+- **Reports**: Generate reports on project progress, task completion, and team performance.
 
-- Dự án:
-  - Chỉ có một quản lý - Done
-  - Bắt buộc có ngày bắt đầu - ngày kết thúc - Done
-  - Thêm ngày hoàn thành - Done
-  - Thêm cài đặt
-    - Thông báo tiến độ dự án trước n ngày kết thúc (Khi chưa hoàn thành) - Sau
-    - Thông báo tiến độ công việc trươc n ngày kết thúc (Khi chưa hoàn thành) - Sau
-    - Yêu cầu phê duyệt trước khi hoàn thành công việc
-- Nhóm công việc:
-  - Quy trình tự động
-    - Tự động đổi trạng thái công việc
-    - Tự động giao việc cho thành viên
-- Công việc:
-  - Thêm tiến độ công việc - Done
-  - Giao việc cho nhiều thành viên - Sau
-  - Thành viên muốn tiếp nhận công việc chưa được giao: Tự gửi phê duyệt muốn tiếp nhận công việc
-- Thống kê:
-  - Tiến độ:
-    - Biểu đồ tròn: tỉ lệ hoành thành dự án ()
-- Thông báo:
-  - Thêm NodeMaile - Done
-  - Thông báo hằng ngày nếu có công việc chưa hoàn thành khi đến hạn - Done
+## Technologies Used
+
+- **Frontend**:
+  - Vue.js
+  - Pinia
+  - Tailwind CSS
+  - Chart.js
+  - vue-draggable-plus
+  - ag-grid-vue3
+
+- **Backend**:
+  - Node.js with Express
+  - MongoDB for storing tasks, boards, and user data
+  - Socket.io for real-time task and board updates
+  - Firebase for authentication and cloud storage
+
+## Preview
+
+![duan](https://github.com/user-attachments/assets/87f2ca72-85ac-4867-8467-a052a77a16d6)
+
+![tongquan](https://github.com/user-attachments/assets/0181c4cb-6226-43ee-bff8-613a475276ef)
+
+![share](https://github.com/user-attachments/assets/7b5a4231-7101-4d88-b2e5-e7028637e63b)
+
+![danhsach](https://github.com/user-attachments/assets/0dd54e0c-61cf-4f7a-a70f-978af142f6f7)
+
+https://github.com/user-attachments/assets/c969bb43-030d-45c8-99ef-aba9285a24fd
+
+https://github.com/user-attachments/assets/aa58cdd2-1763-493f-b4f0-2b021f7137cd
+
+
+ 
