@@ -202,21 +202,25 @@ const handleChoosePriority = async (priority: string) => {
 };
 
 const handleUpdateLabel = async (labels: ILabel[]) => {
-  await updateTask(
-    {
-      id: taskTemp.value!.id,
-    } as ITask,
-    JSON.stringify(labels.map((l) => l.id))
-  );
+  debounce(async () => {
+    await updateTask(
+      {
+        id: taskTemp.value!.id,
+      } as ITask,
+      JSON.stringify(labels.map((l) => l.id))
+    );
+  }, 100);
 };
 
 const handleUpdateProgress = async (closeFn: () => void) => {
   isLoadingAction.value = true;
 
-  await updateTask({
-    id: taskTemp.value!.id,
-    progress: taskTemp.value?.progress,
-  } as ITask);
+  debounce(async () => {
+    await updateTask({
+      id: taskTemp.value!.id,
+      progress: taskTemp.value?.progress,
+    } as ITask);
+  }, 100);
 
   isLoadingAction.value = false;
   closeFn();
@@ -872,13 +876,13 @@ watch(
                                 </template>
                               </UInput>
                               <div
-                                class="flex flex-col max-h-[200px] overflow-y-auto scroll-vert mt-3"
+                                class="flex flex-col max-h-[200px] overflow-x-hidden overflow-y-auto scroll-vert mt-3"
                               >
                                 <div
                                   class="flex items-center px-2 py-1 rounded hover:bg-hover active:bg-hover cursor-pointer"
                                   @click="handleChooseAssignee()"
                                 >
-                                  <Avatar class="w-6 mr-2" />
+                                  <Avatar class="w-6 mr-2 flex-shrink-0" />
                                   <span class="text-dots font-medium">
                                     Không chỉ định
                                   </span>
@@ -890,10 +894,12 @@ watch(
                                   @click="handleChooseAssignee(member)"
                                 >
                                   <Avatar
-                                    class="w-6 mr-2"
+                                    class="w-6 mr-2 flex-shrink-0"
                                     :avatarUrl="member.user.avatar"
                                   />
-                                  <div class="flex flex-col">
+                                  <div
+                                    class="flex flex-col flex-1 overflow-hidden"
+                                  >
                                     <span
                                       class="text-sm text-textColor-primary font-medium text-dots"
                                       >{{ member.user.fullname

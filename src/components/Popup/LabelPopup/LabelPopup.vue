@@ -35,7 +35,7 @@ const activedLabels = computed({
 });
 
 const handleToogleLabel = (label: ILabel) => {
-  if (!activedLabels.value.includes(label)) {
+  if (!activedLabels.value.find((l) => l.id == label.id)) {
     activedLabels.value.push(label);
     emit("choose", activedLabels.value);
   } else {
